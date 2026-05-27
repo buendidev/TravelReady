@@ -1,0 +1,20 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.gr.dart"
+    - "lib/firebase_options.dart"
+  errors:
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    use_super_parameters: true
+    sized_box_for_whitespace: true
+    avoid_unnecessary_containers: true

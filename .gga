@@ -1,0 +1,16 @@
+# Gentleman Guardian Angel Configuration
+# TravelReady! — Flutter/Dart Project
+
+PROVIDER="claude"
+
+# Dart/Flutter files
+FILE_PATTERNS="*.dart"
+
+# Exclude generated files and tests from review
+EXCLUDE_PATTERNS="*.g.dart,*.freezed.dart,*.gr.dart,*_test.dart"
+
+RULES_FILE="AGENTS.md"
+
+STRICT_MODE="true"
+
+TIMEOUT="300"

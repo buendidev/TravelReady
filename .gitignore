@@ -1,0 +1,121 @@
+# Dependencias de Node.js
+node_modules/
+
+# Variables de entorno y secretos — NUNCA subir
+.env
+.env.local
+.env.production
+
+# Firebase config — generado por FlutterFire CLI
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+
+# Editor
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+.pub-cache/
+.pub/
+pubspec.lock
+
+# Generados por build_runner
+*.g.dart
+*.freezed.dart
+*.gr.dart
+
+# Logs
+*.log
+npm-debug.log*
+
+# Android
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+
+# iOS
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Coverage
+coverage/
+
+# ── IA / Agentes / Skills ───────────────────────────────────────────────
+# Directorios de configuración de agentes y skills
+.atl/
+.windsurf/
+skills/
+.sdd/
+
+# Archivos de configuración de IA y prompts
+CLAUDE.md
+CONTEXT.md
+WINDSURF_PROMPT.md
+AGENTS.md
+prompt.txt
+undefined_errors.txt
+task_tavelReady
+
+# Directorios temporales de asistentes de IA
+stitch_travel_ready_login_screen/
+
+# ── Documentación personal del TravelReady ───────────────────────────────────────
+# Archivos PDF del TravelReady (subir solo la versión final en docs/)
+*.pdf
+!docs/*.md
+
+# ── Archivos temporales y notas personales ───────────────────────────────
+*.txt
+!docs/*.txt
+!README.md
+!SECURITY.md
+!DATABASE_GUIDE.md
+!DB_SETUP.md
+!MARIADB_SETUP.md
+!TravelReady_DOCUMENTATION.md
+!l10n.yaml
+!analysis_options.yaml
+
+# ── Firebase ────────────────────────────────────────────────────────────
+# Reglas y configuración de Firebase (sensible)
+firebase.json
+firestore.rules
+firestore.indexes.json
+storage.rules
+google-services.json
+GoogleService-Info.plist
+
+# ── Claves de firma ───────────────────────────────────────────────────────
+key.properties
+*.jks
+*.keystore
