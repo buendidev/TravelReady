@@ -12,7 +12,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static const String _databaseName = 'travelready.db';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 2;
 
   // Tablas
   static const String tableUsers = 'users';
@@ -25,6 +25,7 @@ class DatabaseHelper {
   static const String tableChatMembers = 'chat_members';
   static const String tableMessages = 'messages';
   static const String tableSessions = 'user_sessions';
+  static const String tableWeatherCache = 'weather_cache';
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -243,6 +244,8 @@ class DatabaseHelper {
       END
     ''');
 
+    await _createWeatherCacheTable(db);
+
     // Insertar datos de prueba
     await _insertTestData(db);
   }
@@ -305,7 +308,25 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Migraciones futuras
+    await upgradeSchema(db, oldVersion, newVersion);
+  }
+
+  /// Additive migration: sqflite runs onUpgrade in a transaction and advances
+  /// user_version only after it succeeds. Existing tables and rows are untouched.
+  static Future<void> upgradeSchema(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2 && newVersion >= 2) {
+      await _createWeatherCacheTable(db);
+    }
+  }
+
+  static Future<void> _createWeatherCacheTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableWeatherCache (
+        location_key TEXT PRIMARY KEY,
+        weather_json TEXT NOT NULL,
+        retrieved_at TEXT NOT NULL
+      )
+    ''');
   }
 
   // Métodos utilitarios
