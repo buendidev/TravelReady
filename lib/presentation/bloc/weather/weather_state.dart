@@ -13,8 +13,17 @@ final class WeatherLoading extends WeatherState {
 }
 final class WeatherLoaded extends WeatherState {
   final WeatherModel weather;
-  const WeatherLoaded(this.weather);
-  @override List<Object> get props => [weather];
+  final bool isStale;
+  final DateTime retrievedAt;
+
+  const WeatherLoaded(
+    this.weather, {
+    this.isStale = false,
+    required this.retrievedAt,
+  });
+
+  @override
+  List<Object> get props => [weather, isStale, retrievedAt];
 }
 final class WeatherError extends WeatherState {
   final String message;

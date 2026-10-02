@@ -132,6 +132,8 @@
   "recentTrips": "Recent trips",
   "seeAll": "See all",
   "weatherNotAvailable": "Weather not available",
+  "weatherStaleAge": "Stale data · {minutes} min ago",
+  "@weatherStaleAge": { "placeholders": { "minutes": { "type": "int" } } },
   "retry": "Retry",
 
   "daysLeft": "{days} days left",

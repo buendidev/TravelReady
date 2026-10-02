@@ -3,15 +3,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:travel_ready/presentation/bloc/weather/weather_bloc.dart';
+import 'package:travel_ready/data/datasources/local/weather_cache_datasource.dart';
 import 'package:travel_ready/data/datasources/remote/weather_service.dart';
 import 'package:travel_ready/data/models/weather_model.dart';
 import 'package:travel_ready/core/errors/failures.dart';
 
 // ── Mock ──────────────────────────────────────────────────────────────────
 class MockWeatherService extends Mock implements WeatherService {}
+class MockWeatherCacheDataSource extends Mock implements WeatherCacheDataSource {}
 
 // ── Datos de prueba ────────────────────────────────────────────────────────
-final tWeather = WeatherModel(
+const tWeather = WeatherModel(
   city:        'Madrid',
   country:     'ES',
   tempCelsius: 22.5,
@@ -28,10 +30,21 @@ final tWeather = WeatherModel(
 void main() {
   late WeatherBloc bloc;
   late MockWeatherService service;
+  late MockWeatherCacheDataSource cache;
+  final retrievedAt = DateTime.utc(2026, 4, 1, 12);
 
   setUp(() {
     service = MockWeatherService();
-    bloc    = WeatherBloc(service: service);
+    cache = MockWeatherCacheDataSource();
+    when(() => cache.saveByCity(any(), tWeather,
+            retrievedAt: any(named: 'retrievedAt')))
+        .thenAnswer((_) async {});
+    when(() => cache.saveByCoords(any(), any(), tWeather,
+            retrievedAt: any(named: 'retrievedAt')))
+        .thenAnswer((_) async {});
+    when(() => cache.getByCity(any())).thenAnswer((_) async => null);
+    when(() => cache.getByCoords(any(), any())).thenAnswer((_) async => null);
+    bloc = WeatherBloc(service: service, cache: cache, now: () => retrievedAt);
   });
 
   tearDown(() => bloc.close());
@@ -49,7 +62,44 @@ void main() {
       act: (b) => b.add(const WeatherFetchByCity('Madrid')),
       expect: () => [
         const WeatherLoading(),
-        WeatherLoaded(tWeather),
+        WeatherLoaded(tWeather, retrievedAt: retrievedAt),
+      ],
+      verify: (_) {
+        verify(() => cache.saveByCity('Madrid', tWeather,
+            retrievedAt: retrievedAt)).called(1);
+      },
+    );
+
+    blocTest<WeatherBloc, WeatherState>(
+      'emite una lectura obsoleta para el mismo destino tras un fallo recuperable',
+      build: () {
+        when(() => service.getWeatherByCity('Madrid'))
+            .thenThrow(const ServerException('Sin conexión o error de red'));
+        when(() => cache.getByCity('Madrid'))
+            .thenAnswer((_) async => CachedWeather(tWeather, retrievedAt));
+        return bloc;
+      },
+      act: (b) => b.add(const WeatherFetchByCity('Madrid')),
+      expect: () => [
+        const WeatherLoading(),
+        WeatherLoaded(tWeather, isStale: true, retrievedAt: retrievedAt),
+      ],
+      verify: (_) {
+        verify(() => cache.getByCity('Madrid')).called(1);
+      },
+    );
+
+    blocTest<WeatherBloc, WeatherState>(
+      'mantiene el error cuando no hay caché para la ciudad solicitada',
+      build: () {
+        when(() => service.getWeatherByCity('Sevilla'))
+            .thenThrow(const ServerException('Sin conexión o error de red'));
+        return bloc;
+      },
+      act: (b) => b.add(const WeatherFetchByCity('Sevilla')),
+      expect: () => [
+        const WeatherLoading(),
+        const WeatherError('Sin conexión o error de red'),
       ],
     );
 
@@ -65,6 +115,9 @@ void main() {
         const WeatherLoading(),
         const WeatherError('Ciudad "xyz" no encontrada.'),
       ],
+      verify: (_) {
+        verifyNever(() => cache.getByCity(any()));
+      },
     );
 
     blocTest<WeatherBloc, WeatherState>(
@@ -81,6 +134,9 @@ void main() {
         const WeatherError(
             'OPENWEATHER_API_KEY no configurada. Añádela en .env'),
       ],
+      verify: (_) {
+        verifyNever(() => cache.getByCity(any()));
+      },
     );
 
     blocTest<WeatherBloc, WeatherState>(
@@ -111,8 +167,31 @@ void main() {
       act: (b) => b.add(const WeatherFetchByCoords(40.4, -3.7)),
       expect: () => [
         const WeatherLoading(),
-        WeatherLoaded(tWeather),
+        WeatherLoaded(tWeather, retrievedAt: retrievedAt),
       ],
+      verify: (_) {
+        verify(() => cache.saveByCoords(40.4, -3.7, tWeather,
+            retrievedAt: retrievedAt)).called(1);
+      },
+    );
+
+    blocTest<WeatherBloc, WeatherState>(
+      'recupera solo la caché de las coordenadas solicitadas tras un fallo de red',
+      build: () {
+        when(() => service.getWeatherByCoords(40.4, -3.7))
+            .thenThrow(const ServerException('Error de red: timeout'));
+        when(() => cache.getByCoords(40.4, -3.7))
+            .thenAnswer((_) async => CachedWeather(tWeather, retrievedAt));
+        return bloc;
+      },
+      act: (b) => b.add(const WeatherFetchByCoords(40.4, -3.7)),
+      expect: () => [
+        const WeatherLoading(),
+        WeatherLoaded(tWeather, isStale: true, retrievedAt: retrievedAt),
+      ],
+      verify: (_) {
+        verifyNever(() => cache.getByCoords(40.4, -3.8));
+      },
     );
   });
 
@@ -120,7 +199,10 @@ void main() {
 
   group('WeatherState', () {
     test('WeatherLoaded con mismo weather son iguales', () {
-      expect(WeatherLoaded(tWeather), equals(WeatherLoaded(tWeather)));
+      expect(
+        WeatherLoaded(tWeather, retrievedAt: DateTime.utc(2026)),
+        equals(WeatherLoaded(tWeather, retrievedAt: DateTime.utc(2026))),
+      );
     });
 
     test('WeatherError con mismo mensaje son iguales', () {

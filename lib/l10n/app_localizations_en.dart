@@ -369,6 +369,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weatherNotAvailable => 'Weather not available';
 
   @override
+  String weatherStaleAge(int minutes) {
+    return 'Stale data · $minutes min ago';
+  }
+
+  @override
   String daysLeft(int days) {
     return '$days days left';
   }

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../core/database/database_helper.dart';
 import '../core/network/connectivity_checker.dart';
 import '../data/datasources/local/trips_local_datasource.dart';
+import '../data/datasources/local/weather_cache_datasource.dart';
 import '../data/datasources/remote/firebase_auth_datasource.dart';
 import '../data/datasources/remote/firestore_chats_datasource.dart';
 import '../data/datasources/remote/weather_service.dart';
@@ -53,6 +54,9 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<TripsLocalDataSource>(
     () => TripsLocalDataSource(database: getIt()),
   );
+  getIt.registerLazySingleton<WeatherCacheDataSource>(
+    () => WeatherCacheDataSource(openDatabase: () => getIt<DatabaseHelper>().database),
+  );
   getIt.registerLazySingleton<FirestoreChatsDataSource>(
     () => FirestoreChatsDataSource(),
   );
@@ -95,7 +99,8 @@ Future<void> setupDependencies() async {
     ),
   );
   getIt.registerFactory<PackingBloc>(() => PackingBloc(repo: getIt()));
-  getIt.registerFactory<WeatherBloc>(() => WeatherBloc(service: getIt()));
+  getIt.registerFactory<WeatherBloc>(
+      () => WeatherBloc(service: getIt(), cache: getIt()));
   getIt.registerFactory<ChatsBloc>(() => ChatsBloc(repo: getIt()));
   // ChatDetailBloc se instancia directamente en ChatDetailPage (requiere currentUserId y chatName)
 }

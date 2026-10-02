@@ -132,6 +132,8 @@
   "recentTrips": "Viajes recientes",
   "seeAll": "Ver todos",
   "weatherNotAvailable": "Clima no disponible",
+  "weatherStaleAge": "Datos sin actualizar · hace {minutes} min",
+  "@weatherStaleAge": { "placeholders": { "minutes": { "type": "int" } } },
   "retry": "Reintentar",
 
   "daysLeft": "Faltan {days} días",

@@ -770,6 +770,12 @@ abstract class AppLocalizations {
   /// **'Clima no disponible'**
   String get weatherNotAvailable;
 
+  /// No description provided for @weatherStaleAge.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos sin actualizar · hace {minutes} min'**
+  String weatherStaleAge(int minutes);
+
   /// No description provided for @daysLeft.
   ///
   /// In es, this message translates to:

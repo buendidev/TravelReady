@@ -36,7 +36,7 @@ class HomePage extends StatelessWidget {
             // WeatherBloc — solo si hay API key
             if (AppEnv.hasWeatherKey)
               BlocProvider<WeatherBloc>(
-                create: (_) => WeatherBloc(service: getIt()),
+                create: (_) => WeatherBloc(service: getIt(), cache: getIt()),
               ),
           ],
           child: _HomeContent(user: user),
@@ -324,8 +324,10 @@ class _WeatherCardState extends State<_WeatherCard> {
     return BlocBuilder<WeatherBloc, WeatherState>(
       builder: (context, state) => switch (state) {
         WeatherLoading() => _WeatherSkeleton(),
-        WeatherLoaded(:final weather) => _WeatherData(
+        WeatherLoaded(:final weather, :final isStale, :final retrievedAt) => WeatherDataCard(
           weather: weather,
+          isStale: isStale,
+          retrievedAt: retrievedAt,
           onRefresh: (city) =>
               context.read<WeatherBloc>().add(WeatherFetchByCity(city)),
         ),
@@ -340,13 +342,30 @@ class _WeatherCardState extends State<_WeatherCard> {
   }
 }
 
-class _WeatherData extends StatelessWidget {
+class WeatherDataCard extends StatelessWidget {
   final WeatherModel weather;
+  final bool isStale;
+  final DateTime retrievedAt;
+  final DateTime? currentTime;
   final ValueChanged<String> onRefresh;
-  const _WeatherData({required this.weather, required this.onRefresh});
+
+  const WeatherDataCard({
+    super.key,
+    required this.weather,
+    required this.isStale,
+    required this.retrievedAt,
+    required this.onRefresh,
+    this.currentTime,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final ageMinutes = (currentTime ?? DateTime.now())
+        .difference(retrievedAt)
+        .inMinutes
+        .clamp(0, 1 << 31)
+        .toInt();
     return GestureDetector(
       onTap: () => _showCitySearch(context),
       child: Container(
@@ -373,6 +392,10 @@ class _WeatherData extends StatelessWidget {
               Text(weather.descriptionCapitalized,
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 13)),
+              if (isStale)
+                Text(l10n.weatherStaleAge(ageMinutes),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 11)),
               const SizedBox(height: 4),
               Text('💧 ${weather.humidity}%   💨 ${weather.windSpeed.toStringAsFixed(1)} m/s',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.7),
@@ -622,7 +645,7 @@ class _TripSummaryCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.success.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppSizes.radiusFull)),
-                  child: Text(l10n.inProgress, style: TextStyle(color: AppColors.success,
+                  child: Text(l10n.inProgress, style: const TextStyle(color: AppColors.success,
                       fontSize: 10, fontWeight: FontWeight.w600))),
             ]),
             const SizedBox(height: 3),
