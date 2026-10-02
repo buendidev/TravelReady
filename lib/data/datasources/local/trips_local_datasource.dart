@@ -225,6 +225,25 @@ class TripsLocalDataSource {
     }
   }
 
+  Future<PackingListModel> getPackingListById(String listId) async {
+    try {
+      final rows = await _db.query(
+        DatabaseHelper.tablePackingLists,
+        where: 'id = ?',
+        whereArgs: [listId],
+        limit: 1,
+      );
+
+      if (rows.isEmpty) {
+        throw const ServerException('Lista no encontrada');
+      }
+
+      return await _loadPackingListWithItems(rows.first);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
   Stream<List<PackingListModel>> watchPackingLists(String tripId) {
     final controller = _packingControllers.putIfAbsent(
       tripId,

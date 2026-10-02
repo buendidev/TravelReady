@@ -87,12 +87,8 @@ class PackingRepositoryImpl implements PackingRepository {
 
   @override
   Future<Either<Failure, PackingList>> getListById(String listId) async {
-    // En SQLite buscamos en todas las listas
-    try {
-      final lists = await _local.getPackingLists(''); // No filtra por trip
-      final list = lists.firstWhere((l) => l.id == listId, orElse: () => throw const ServerException('Lista no encontrada'));
-      return Right(list);
-    } on ServerException catch (e) { return Left(ServerFailure(e.message)); }
+    try { return Right(await _local.getPackingListById(listId)); }
+    on ServerException catch (e) { return Left(ServerFailure(e.message)); }
     catch (e) { return Left(UnexpectedFailure(e.toString())); }
   }
 
