@@ -350,12 +350,23 @@ class TripsLocalDataSource {
 
   Future<void> toggleItemPacked(String itemId, bool isPacked) async {
     try {
+      final rows = await _db.query(
+        DatabaseHelper.tablePackingItems,
+        columns: ['trip_id'],
+        where: 'id = ?',
+        whereArgs: [itemId],
+        limit: 1,
+      );
+      final tripId = rows.isNotEmpty ? rows.first['trip_id'] as String : null;
+
       await _db.update(
         DatabaseHelper.tablePackingItems,
         {'is_packed': isPacked ? 1 : 0},
         where: 'id = ?',
         whereArgs: [itemId],
       );
+
+      if (tripId != null) await _notifyPackingChanged(tripId);
     } catch (e) {
       throw ServerException(e.toString());
     }
