@@ -1,6 +1,20 @@
 # Gentleman Guardian Angel Configuration
 # TravelReady! — Flutter/Dart Project
 
+# AI Provider (required)
+# Options: claude, gemini, codex, opencode, ollama:<model>, lmstudio[:model], github:<model>
+# Examples:
+#   PROVIDER="claude"
+#   PROVIDER="gemini"
+#   PROVIDER="codex"
+#   PROVIDER="opencode"
+#   PROVIDER="opencode:anthropic/claude-opus-4-5"
+#   PROVIDER="ollama:llama3.2"
+#   PROVIDER="ollama:codellama"
+#   PROVIDER="lmstudio"
+#   PROVIDER="lmstudio:qwen2.5-coder-7b-instruct"
+#   PROVIDER="github:gpt-4o"
+#   PROVIDER="github:deepseek-r1"
 PROVIDER="claude"
 
 # Dart/Flutter files
@@ -9,8 +23,19 @@ FILE_PATTERNS="*.dart"
 # Exclude generated files and tests from review
 EXCLUDE_PATTERNS="*.g.dart,*.freezed.dart,*.gr.dart,*_test.dart"
 
+# File containing code review rules
+# Default: AGENTS.md
 RULES_FILE="AGENTS.md"
 
+# Strict mode: fail if AI response is ambiguous
+# Default: true
 STRICT_MODE="true"
 
+# Timeout in seconds for AI provider response
+# Default: 300 (5 minutes)
+# Increase for large changesets or slow connections
 TIMEOUT="300"
+
+# Base branch for --pr-mode (auto-detects main/master/develop if empty)
+# Default: auto-detect
+# PR_BASE_BRANCH="main"
