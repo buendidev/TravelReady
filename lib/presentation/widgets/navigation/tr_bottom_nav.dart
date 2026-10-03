@@ -22,16 +22,18 @@ class TRBottomNav extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final selColor = isDark ? AppColors.primaryLight : AppColors.primary;
-    final unselColor = isDark
-        ? AppColors.textSecondaryDark
-        : AppColors.textSecondaryLight;
+    final unselColor =
+        isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
 
     final items = [
-      _NavItem(Icons.home_outlined,              Icons.home_rounded,              l10n.home),
-      _NavItem(Icons.luggage_outlined,           Icons.luggage_rounded,           l10n.packingLists),
-      _NavItem(Icons.flight_outlined,            Icons.flight_rounded,            l10n.myTrips),
-      _NavItem(Icons.chat_bubble_outline_rounded,Icons.chat_bubble_rounded,       l10n.chats),
-      _NavItem(Icons.person_outline_rounded,     Icons.person_rounded,            l10n.profile),
+      _NavItem(Icons.home_outlined, Icons.home_rounded, l10n.home),
+      _NavItem(
+          Icons.luggage_outlined, Icons.luggage_rounded, l10n.packingLists),
+      _NavItem(Icons.flight_outlined, Icons.flight_rounded, l10n.myTrips),
+      _NavItem(Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded,
+          l10n.chats),
+      _NavItem(
+          Icons.person_outline_rounded, Icons.person_rounded, l10n.profile),
     ];
 
     return Scaffold(
@@ -91,47 +93,53 @@ class _GlassNav extends StatelessWidget {
               children: List.generate(items.length, (i) {
                 final sel = i == selectedIndex;
                 return Expanded(
-                  child: GestureDetector(
-                    // GestureDetector en vez de InkWell — sin ripple que cause flash
-                    behavior: HitTestBehavior.opaque,
+                  child: Semantics(
+                    label: items[i].label,
+                    button: true,
+                    selected: sel,
                     onTap: () => onTap(i),
-                    child: SizedBox(
-                      height: AppSizes.bottomNavHeight,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Línea indicadora animada
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOutCubic,
-                            width: sel ? 32 : 0,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: selColor,
-                              borderRadius:
-                                  BorderRadius.circular(AppSizes.radiusFull),
+                    excludeSemantics: true,
+                    child: GestureDetector(
+                      // GestureDetector en vez de InkWell — sin ripple que cause flash
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onTap(i),
+                      child: SizedBox(
+                        height: AppSizes.bottomNavHeight,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Línea indicadora animada
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOutCubic,
+                              width: sel ? 32 : 0,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: selColor,
+                                borderRadius:
+                                    BorderRadius.circular(AppSizes.radiusFull),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          // Icono — sin AnimatedSwitcher para evitar rebuild innecesario
-                          Icon(
-                            sel ? items[i].activeIcon : items[i].icon,
-                            size: AppSizes.iconMd,
-                            color: sel ? selColor : unselColor,
-                          ),
-                          const SizedBox(height: 3),
-                          // Label
-                          Text(
-                            items[i].label,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: sel
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
+                            const SizedBox(height: 6),
+                            // Icono — sin AnimatedSwitcher para evitar rebuild innecesario
+                            Icon(
+                              sel ? items[i].activeIcon : items[i].icon,
+                              size: AppSizes.iconMd,
                               color: sel ? selColor : unselColor,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 3),
+                            // Label
+                            Text(
+                              items[i].label,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight:
+                                    sel ? FontWeight.w600 : FontWeight.w400,
+                                color: sel ? selColor : unselColor,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
