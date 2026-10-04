@@ -82,6 +82,12 @@ class _HomeContent extends StatelessWidget {
             final active   = trips.where((t) =>
                 t.startDate.isBefore(DateTime.now()) &&
                 t.endDate.isAfter(DateTime.now())).toList();
+            final prioritizedTrip = active.isNotEmpty
+                ? active.first
+                : upcoming.isNotEmpty
+                    ? upcoming.reduce((first, next) =>
+                        first.startDate.isBefore(next.startDate) ? first : next)
+                    : null;
 
             return CustomScrollView(
               // RepaintBoundary implícita en CustomScrollView
@@ -111,45 +117,54 @@ class _HomeContent extends StatelessWidget {
                           ),
                         ],
                       )),
-                      GestureDetector(
+                      Semantics(
+                        label: l10n.profile,
+                        button: true,
                         onTap: () => context.go(AppRoutes.profile),
-                        child: user?.photoUrl != null
-                            ? CircleAvatar(radius: 22,
-                                backgroundImage: NetworkImage(user!.photoUrl!))
-                            : CircleAvatar(
-                                radius: 22,
-                                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                                child: Text(_initials(user?.name ?? 'U'),
-                                    style: const TextStyle(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14)),
-                              ),
+                        excludeSemantics: true,
+                        child: GestureDetector(
+                          onTap: () => context.go(AppRoutes.profile),
+                          child: user?.photoUrl != null
+                              ? CircleAvatar(radius: 22,
+                                  backgroundImage: NetworkImage(user!.photoUrl!))
+                              : CircleAvatar(
+                                  radius: 22,
+                                  backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                                  child: Text(_initials(user?.name ?? 'U'),
+                                      style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14)),
+                                ),
+                        ),
                       ),
                     ]),
                   ),
                 ),
 
-                // ── Próximo viaje destacado ─────────────────────────────
-                if (upcoming.isNotEmpty)
+                // ── Viaje prioritario ───────────────────────────────────
+                if (prioritizedTrip != null)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSizes.screenPaddingH),
-                      child: _NextTripCard(trip: upcoming.first),
+                      child: _ContextualTripCard(
+                        trip: prioritizedTrip,
+                        isActive: active.isNotEmpty,
+                      ),
                     ),
                   ),
 
-                if (upcoming.isNotEmpty)
+                if (prioritizedTrip != null)
                   const SliverToBoxAdapter(child: SizedBox(height: AppSizes.md)),
 
-                // ── Weather card (destino del próximo viaje) ──────────
+                // ── Weather card (destino del viaje prioritario) ──────
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSizes.screenPaddingH),
                     child: AppEnv.hasWeatherKey
-                        ? _WeatherCard(city: upcoming.isNotEmpty ? upcoming.first.destination : null)
+                        ? _WeatherCard(city: prioritizedTrip?.destination)
                         : _WeatherPlaceholder(),
                   ),
                 ),
@@ -666,9 +681,10 @@ class _TripSummaryCard extends StatelessWidget {
 
 // ── Próximo viaje destacado ────────────────────────────────────────────────────
 
-class _NextTripCard extends StatelessWidget {
+class _ContextualTripCard extends StatelessWidget {
   final Trip trip;
-  const _NextTripCard({required this.trip});
+  final bool isActive;
+  const _ContextualTripCard({required this.trip, required this.isActive});
 
   int get _daysLeft {
     final now = DateTime.now();
@@ -681,9 +697,7 @@ class _NextTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n   = AppLocalizations.of(context);
     final days = _daysLeft;
-    return GestureDetector(
-      onTap: () => context.push(AppRoutes.tripDetailPath(trip.id), extra: trip),
-      child: Container(
+    return Container(
         padding: const EdgeInsets.all(AppSizes.md),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -703,15 +717,18 @@ class _NextTripCard extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(AppSizes.radiusFull)),
               child: Text(
-                days == 0
-                    ? l10n.todayTrip
-                    : days == 1
-                        ? l10n.dayLeft
-                        : l10n.daysLeft(days),
+                isActive
+                    ? l10n.inProgress
+                    : days == 0
+                        ? l10n.todayTrip
+                        : days == 1
+                            ? l10n.dayLeft
+                            : l10n.daysLeft(days),
                 style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
             ),
             const Spacer(),
-            const Icon(Icons.flight_takeoff_rounded, color: Colors.white, size: 20),
+            Icon(isActive ? Icons.flight_rounded : Icons.flight_takeoff_rounded,
+                color: Colors.white, size: 20),
           ]),
           const SizedBox(height: AppSizes.md),
           Text(trip.name,
@@ -742,9 +759,24 @@ class _NextTripCard extends StatelessWidget {
             Text('${trip.progress}%',
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           ]),
+          const SizedBox(height: AppSizes.md),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.push(
+                AppRoutes.tripDetailPath(trip.id),
+                extra: trip,
+              ),
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: Text(l10n.luggagePrep),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.primary,
+              ),
+            ),
+          ),
         ]),
-      ),
-    );
+      );
   }
 }
 
