@@ -30,7 +30,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   final Set<String>          _selected   = {};
   bool _loadingUsers  = true;
   bool _creating      = false;
-  String? _currentUserId;
 
   @override
   void initState() {
@@ -48,7 +47,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   void _subscribeUsers() {
     final auth = context.read<AuthBloc>().state;
     if (auth is! AuthAuthenticated) return;
-    _currentUserId = auth.user.id;
 
     _usersSub = _repo.watchUsersExcept(auth.user.id).listen(
       (users) {

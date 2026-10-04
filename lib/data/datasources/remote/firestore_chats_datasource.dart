@@ -43,7 +43,7 @@ class FirestoreChatsDataSource {
         final otherId = members.firstWhere((id) => id != userId, orElse: () => '');
         if (otherId.isNotEmpty) {
           final userDoc = await _db.collection('users').doc(otherId).get();
-          name = (userDoc.data() as Map<String, dynamic>?)?['name'] as String? ?? 'Usuario';
+          name = userDoc.data()?['name'] as String? ?? 'Usuario';
         }
       }
 
@@ -81,7 +81,7 @@ class FirestoreChatsDataSource {
           final otherId = members.firstWhere((id) => id != userId, orElse: () => '');
           if (otherId.isNotEmpty) {
             final userDoc = await _db.collection('users').doc(otherId).get();
-            name = (userDoc.data() as Map<String, dynamic>?)?['name'] as String? ?? 'Usuario';
+            name = userDoc.data()?['name'] as String? ?? 'Usuario';
           }
         }
 
