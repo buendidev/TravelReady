@@ -1,0 +1,27 @@
+# Scoped production threat model
+
+Status: design risks and required verification, not a penetration test or deployed-rules audit.
+Scope: Firebase rules, subscriptions, invitations, user directory, secrets, weather API, local SQLite and notifications. No controls below are claimed deployed unless explicitly stated as a current observation.
+
+## Assets, actors and trust boundaries
+
+Assets: identity/session tokens, personal trips/messages, memberships, entitlements, invite capabilities, API credentials, local records and notification metadata. Actors: unauthenticated outsiders, authenticated cross-account attackers, invite recipients, modified clients, compromised devices and overprivileged operators/providers.
+
+Boundaries: untrusted Flutter/local device ↔ Firebase; client ↔ proposed backend ↔ subscription/weather/notification providers; privileged operations ↔ backups/logs. TLS does not make the client trustworthy. No self-hosted backend currently exists.
+
+| Surface / threat | Required mitigation (proposed) | Verification before release |
+| --- | --- | --- |
+| Firebase rules: cross-user reads/writes, forged memberships, mass listing and privileged field changes | Deny by default; validate identity, ownership/membership and allowed fields/transitions. Enforce authorization for shared records and queries; restrict administrative bypass identities. Deployed rules are unverified. | Capture deployed rules; emulator tests for anonymous, owner, other user, former member and unauthorized field/query access; verify deployment matches tested version. |
+| Subscriptions: modified client grants Premium, forged/replayed webhook or stale purchase after refund | Server-owned entitlements; validate provider events/purchases, bind correct account, enforce idempotency and handle expiry/refunds. Clients cannot write entitlement fields. Current client subscription writes require remediation. | Attempt direct entitlement writes; fake/replayed/wrong-account events; renewal, cancellation, refund and stale/offline state cases. |
+| Invitations: replay, guessing, leakage, racing redemption or unauthorized creator | Server-issued high-entropy capability; protect stored token representation; authorize creator and scope/recipient as required; atomic single-use consumption; server-clock **24h expiry**; revoke on membership/account changes; rate-limit. Avoid token logs. | Concurrent redemption admits at most one; reject second use, expired/revoked invites and wrong scope; test exact expiry boundary and untrusted client clock. |
+| User directory: enumeration, bulk scraping, email/profile leakage | Minimize exposed fields; explicit visibility policy; authenticated, bounded lookup only where necessary; server throttling and per-result authorization. Do not equate login with unrestricted directory access. | Anonymous/bulk/alternate-identifier searches, hidden users, pagination and returned-field checks. |
+| Secrets: extraction from APK/assets, repository or logs | Bundled `.env` cannot contain backend secrets. Move privileged operations to trusted service; inventory keys, restrict public keys where supported, rotate exposed secrets via owner, redact logs. | Artifact/static inspection without exposing values; reject direct unauthorized privileged calls; verify secret-store access and rotation procedure. |
+| Weather API: extracted key, quota abuse, location leakage, injection into proxy | Assess key privilege; proxy secret-bearing requests; allowlist upstream/parameters, limit quotas/timeouts and minimize location. Avoid arbitrary upstream URLs and precise device location by default. | Invalid coordinates/parameters, timeouts, quota abuse and arbitrary-URL rejection; ensure no secret/location-rich logs. |
+| Local SQLite: lost/rooted device, OS backups, cross-account stale records | Current SQLite is unencrypted. Assess encryption with OS-protected keys, backup exclusions and account-bound data; cleanup on logout/deletion and safe account switching. Device compromise remains a residual risk. | Inspect database/backup exposure in authorized test devices; account-switch isolation, cleanup/offline deletion, migration and key-recovery tests. |
+| Notifications: wrong-recipient content, leaked lock-screen text, stale tokens or unauthorized scheduling | Server-authorize recipient/membership at dispatch; invalidate stale tokens; honor preferences; minimize payload, default to generic lock-screen content and re-authorize deep links. Local reminders need separate device permission/cleanup handling. | Removed member/account, reused token, opt-out, reminder cancellation, timezone/duplicate delivery and unauthorized deep-link cases. |
+
+## Priorities and acceptance boundary
+
+Release blockers until proven: cross-account access, client-controlled entitlements, backend secrets in assets and non-atomic/expired invite redemption. Directory exposure, device data and notification privacy require explicit product/security decisions and evidence before their production use. This prioritization is qualitative; it does not certify a measured risk score.
+
+Keep test results, deployed configuration provenance and accepted residual risks in later implementation work units. No emulator tests or security changes were performed in PRF-1. Broader abuse, supply-chain, incident-response and availability analysis remains outside this narrowly scoped model; operational controls are in the [baseline](architecture-security-baseline.md).
