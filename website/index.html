@@ -5,129 +5,437 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TravelReady — Tu viaje, perfectamente preparado</title>
   <meta name="description"
-        content="TravelReady organiza tus viajes: equipaje inteligente, itinerario por días, descubrimiento de lugares y chat con tu grupo.">
+        content="TravelReady organiza tus viajes: equipaje con plantillas, itinerario por días, descubrimiento de lugares, clima del destino y chat con tu grupo. Todo en una app.">
+  <meta name="theme-color" content="#006571">
+  <meta name="color-scheme" content="light dark">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
   <header class="site-header">
-    <nav class="nav" aria-label="Principal">
-      <a class="brand" href="#">
+    <nav class="nav" aria-label="Navegación principal">
+      <a class="brand" href="#inicio">
         <span class="brand-mark" aria-hidden="true">🧳</span>
-        TravelReady
+        <span class="brand-name">TravelReady</span>
       </a>
+
       <ul class="nav-links">
         <li><a href="#funciones">Funciones</a></li>
-        <li><a href="#itinerario">Itinerario</a></li>
-        <li><a href="#descubre">Descubrir</a></li>
-        <li><a href="#descargar">Descargar</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#capturas">Capturas</a></li>
+        <li><a href="#estado">Estado</a></li>
+        <li><a href="#faq">Preguntas</a></li>
       </ul>
+
+      <a class="btn btn-primary btn-small" href="#descargar">Descargar</a>
     </nav>
   </header>
 
   <main id="contenido">
-    <!-- Hero -->
-    <section class="hero">
-      <div class="hero-text">
-        <p class="eyebrow">Beta · Android</p>
-        <h1>Tu viaje, perfectamente preparado.</h1>
-        <p class="lede">
-          Organiza el equipaje, planifica cada día y descubre qué ver
-          en tu destino — todo en una sola app, sin hojas de cálculo
-          ni notas perdidas.
-        </p>
-        <p class="hero-cta">
-          <a class="btn btn-primary" href="#descargar">Quiero la app</a>
-          <a class="btn btn-ghost" href="#funciones">Ver funciones</a>
-        </p>
-      </div>
-      <div class="hero-visual" aria-hidden="true">
-        <div class="phone-mock">
-          <div class="phone-row strong">Viaje a París</div>
-          <div class="phone-row">✈️ Vuelo · 09:40</div>
-          <div class="phone-row">🏛️ Museo del Prado · 10:00</div>
-          <div class="phone-row">🍽️ Mercado de San Miguel · 13:30</div>
-          <div class="phone-row done">✅ Pasaporte · Cargador · Adaptador</div>
+
+    <!-- ── Hero ─────────────────────────────────────────────────────── -->
+    <section class="hero" id="inicio">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <p class="eyebrow">Beta · Android</p>
+          <h1>Tu viaje, <span class="accent">perfectamente</span> preparado.</h1>
+          <p class="lede">
+            Maleta, itinerario, lugares que ver, clima y chat con tu grupo.
+            Todo en una app, sin hojas de cálculo ni notas perdidas.
+          </p>
+
+          <p class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="#descargar">Quiero probarla</a>
+            <a class="btn btn-ghost btn-lg" href="#funciones">Ver funciones</a>
+          </p>
+
+          <ul class="hero-facts">
+            <li>Sin publicidad</li>
+            <li>Sin rastreadores en esta página</li>
+            <li>Equipaje disponible sin conexión</li>
+          </ul>
+        </div>
+
+        <div class="hero-visual">
+          <div class="phone" role="img"
+               aria-label="Captura de la pantalla de itinerario de TravelReady: planes del día con hora, categoría y estado de la maleta.">
+            <div class="phone-notch" aria-hidden="true"></div>
+            <div class="phone-screen">
+              <p class="phone-eyebrow">Escapada a Valencia</p>
+              <p class="phone-title">Itinerario · Día 2</p>
+
+              <ul class="phone-list">
+                <li>
+                  <span class="dot dot-sight" aria-hidden="true"></span>
+                  <span class="phone-item">
+                    <strong>Ciudad de las Artes</strong>
+                    <small>10:00 · Visita</small>
+                  </span>
+                </li>
+                <li>
+                  <span class="dot dot-food" aria-hidden="true"></span>
+                  <span class="phone-item">
+                    <strong>Mercado Central</strong>
+                    <small>13:30 · Comida</small>
+                  </span>
+                </li>
+                <li>
+                  <span class="dot dot-travel" aria-hidden="true"></span>
+                  <span class="phone-item">
+                    <strong>Vuelo de vuelta</strong>
+                    <small>19:40 · Transporte</small>
+                  </span>
+                </li>
+              </ul>
+
+              <div class="phone-card">
+                <span class="phone-card-label">Maleta principal</span>
+                <div class="progress" aria-hidden="true"><span style="width: 75%"></span></div>
+                <span class="phone-card-value">9 de 12 cosas listas</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Funciones -->
-    <section id="funciones" class="section">
-      <h2>Todo el viaje en un sitio</h2>
+    <!-- ── Franja de valor ──────────────────────────────────────────── -->
+    <section class="strip" aria-label="Qué resuelve TravelReady">
+      <div class="strip-item">
+        <span class="strip-icon" aria-hidden="true">🧳</span>
+        <h2>No te olvidas nada</h2>
+        <p>Plantillas de maleta por tipo de viaje, con progreso a la vista.</p>
+      </div>
+      <div class="strip-item">
+        <span class="strip-icon" aria-hidden="true">📅</span>
+        <h2>Cada día tiene un plan</h2>
+        <p>Día, hora, categoría y notas. Reordena arrastrando.</p>
+      </div>
+      <div class="strip-item">
+        <span class="strip-icon" aria-hidden="true">💬</span>
+        <h2>El grupo, en la misma app</h2>
+        <p>Chat privado y de grupo para decidir sin salir de TravelReady.</p>
+      </div>
+    </section>
+
+    <!-- ── Funciones ────────────────────────────────────────────────── -->
+    <section class="section" id="funciones">
+      <header class="section-head">
+        <p class="eyebrow">Funciones</p>
+        <h2>Todo el viaje en un sitio</h2>
+        <p class="section-lede">
+          Seis piezas que se usan de verdad durante un viaje, no una lista
+          de funciones de folleto.
+        </p>
+      </header>
+
       <div class="grid">
         <article class="card">
-          <h3>🧳 Equipaje inteligente</h3>
-          <p>Listas de equipaje por viaje con plantillas según el tipo
-             (playa, montaña, ciudad, trabajo). Marca, comparte y olvida
-             el «¿me dejo algo?».</p>
+          <span class="card-icon" aria-hidden="true">🧳</span>
+          <h3>Equipaje inteligente</h3>
+          <p>Listas por viaje con plantillas según el tipo (playa, montaña,
+             ciudad, trabajo). Marca lo que ya llevas y comparte la lista
+             con quien viaja contigo.</p>
         </article>
+
         <article class="card">
-          <h3>🗺️ Viajes</h3>
-          <p>Crea viajes con fechas, destino y transporte. Sigue el
-             progreso de preparación de un vistazo.</p>
+          <span class="card-icon" aria-hidden="true">🗺️</span>
+          <h3>Viajes ordenados</h3>
+          <p>Fechas, destino y transporte, con el progreso de preparación
+             de un vistazo y filtros para ver solo el próximo, el que está
+             en curso o los pasados.</p>
         </article>
-        <article class="card" id="itinerario">
-          <h3>📅 Itinerario por días</h3>
-          <p>Planes con día y hora, ordenables, con categorías y notas.
-             Añade lugares descubiertos directamente al día que toca.</p>
-        </article>
-        <article class="card" id="descubre">
-          <h3>🔍 Descubrimiento</h3>
-          <p>Explora museos, restaurantes y rincones del destino con
-             horarios y precios orientativos, y abre la web oficial para
-             reservar. <em>Proveedor de mapas en preparación.</em></p>
-        </article>
+
         <article class="card">
-          <h3>💬 Chat de grupo</h3>
-          <p>Habla con tus compañeros de viaje sin salir de la app:
-             chats privados y de grupo.</p>
+          <span class="card-icon" aria-hidden="true">📅</span>
+          <h3>Itinerario por días</h3>
+          <p>Planes con día y hora, ordenables, con categoría y notas.
+             Los lugares que descubres se añaden al día que toca sin
+             volver a escribirlos.</p>
         </article>
+
         <article class="card">
-          <h3>🌦️ Clima del destino</h3>
-          <p>Consulta el tiempo previsto para decidir qué meter en la
-             maleta.</p>
+          <span class="card-icon" aria-hidden="true">🔍</span>
+          <h3>Descubrir el destino</h3>
+          <p>Busca museos, restaurantes y rincones con horarios y precios
+             orientativos, y abre la web oficial del sitio para reservar
+             cuando la reserva se hace fuera de la app.</p>
+          <p class="card-note">Proveedor de mapas real en preparación:
+             ahora mismo muestra datos de ejemplo marcados como tales.</p>
+        </article>
+
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">💬</span>
+          <h3>Chat de grupo</h3>
+          <p>Habla con tus compañeros de viaje dentro de la app, en chats
+             privados y de grupo, con los mensajes de cada viaje juntos.</p>
+        </article>
+
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">🌦️</span>
+          <h3>Clima del destino</h3>
+          <p>El tiempo previsto donde vas, para decidir qué entra en la
+             maleta. La última lectura queda guardada por si te quedas
+             sin conexión.</p>
         </article>
       </div>
     </section>
 
-    <!-- Descarga -->
-    <section id="descargar" class="section cta">
-      <h2>Descarga</h2>
-      <p>TravelReady está en desarrollo activo (TravelReady). La app Android
-         llegará como APK de prueba.</p>
-      <p class="cta-box">
+    <!-- ── Cómo funciona ────────────────────────────────────────────── -->
+    <section class="section section-alt" id="como-funciona">
+      <header class="section-head">
+        <p class="eyebrow">Cómo funciona</p>
+        <h2>Tres pasos, y el viaje está listo</h2>
+      </header>
+
+      <ol class="steps">
+        <li>
+          <span class="step-num" aria-hidden="true">1</span>
+          <h3>Crea el viaje</h3>
+          <p>Destino, fechas y transporte. TravelReady calcula cuánto
+             llevas preparado.</p>
+        </li>
+        <li>
+          <span class="step-num" aria-hidden="true">2</span>
+          <h3>Prepara la maleta</h3>
+          <p>Elige una plantilla, añade lo tuyo y marca mientras metes
+             cosas. La lista queda en el dispositivo.</p>
+        </li>
+        <li>
+          <span class="step-num" aria-hidden="true">3</span>
+          <h3>Planifica y descubre</h3>
+          <p>Arma el itinerario por días, añade sitios que encuentres y
+             comparte el plan con el grupo.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ── Capturas ─────────────────────────────────────────────────── -->
+    <section class="section" id="capturas">
+      <header class="section-head">
+        <p class="eyebrow">Capturas</p>
+        <h2>Así se ve por dentro</h2>
+        <p class="section-lede">
+          Reproducidas con el mismo estilo de la app: verde TravelReady,
+          tarjetas redondeadas y nada que estorbe.
+        </p>
+      </header>
+
+      <div class="screens">
+        <figure class="screen">
+          <div class="phone phone-small" role="img"
+               aria-label="Pantalla de equipaje con el progreso de la maleta.">
+            <div class="phone-notch" aria-hidden="true"></div>
+            <div class="phone-screen">
+              <p class="phone-eyebrow">Maleta principal</p>
+              <p class="phone-title">12 cosas · 9 listas</p>
+              <div class="progress" aria-hidden="true"><span style="width: 75%"></span></div>
+              <ul class="phone-checklist">
+                <li class="is-done">Pasaporte</li>
+                <li class="is-done">Cargador</li>
+                <li class="is-done">Protector solar</li>
+                <li>Adaptador de enchufe</li>
+                <li>Bañador</li>
+              </ul>
+            </div>
+          </div>
+          <figcaption>Equipaje con progreso, plantillas y marcas por
+            elemento.</figcaption>
+        </figure>
+
+        <figure class="screen">
+          <div class="phone phone-small" role="img"
+               aria-label="Pantalla de descubrimiento con lugares del destino y su categoría.">
+            <div class="phone-notch" aria-hidden="true"></div>
+            <div class="phone-screen">
+              <p class="phone-eyebrow">Descubrir · Valencia</p>
+              <p class="phone-title">Lugares cerca</p>
+              <ul class="phone-chips" aria-hidden="true">
+                <li class="chip is-active">Museos</li>
+                <li class="chip">Comida</li>
+                <li class="chip">Naturaleza</li>
+              </ul>
+              <ul class="phone-cards">
+                <li><strong>Museo de Bellas Artes</strong><small>Museos · entrada orientativa 2 €</small></li>
+                <li><strong>Mercado Central</strong><small>Comida · horario de mañana</small></li>
+              </ul>
+            </div>
+          </div>
+          <figcaption>Búsqueda por categoría, con enlace a la web oficial
+            del lugar.</figcaption>
+        </figure>
+
+        <figure class="screen">
+          <div class="phone phone-small" role="img"
+               aria-label="Pantalla de viajes con los próximos viajes y su estado.">
+            <div class="phone-notch" aria-hidden="true"></div>
+            <div class="phone-screen">
+              <p class="phone-eyebrow">Mis viajes</p>
+              <p class="phone-title">3 viajes</p>
+              <ul class="phone-cards">
+                <li><strong>Valencia</strong><small>En curso · 75 % preparado</small></li>
+                <li><strong>París</strong><small>Próximo · 30 % preparado</small></li>
+                <li><strong>Roma</strong><small>Pasado · 100 % preparado</small></li>
+              </ul>
+            </div>
+          </div>
+          <figcaption>Viajes con estado, filtros y buscador por nombre o
+            destino.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ── Estado del producto ──────────────────────────────────────── -->
+    <section class="section section-alt" id="estado">
+      <header class="section-head">
+        <p class="eyebrow">Estado</p>
+        <h2>Qué está listo y qué falta</h2>
+        <p class="section-lede">
+          TravelReady está en desarrollo activo. Preferimos decirlo claro
+          antes de que descargues nada.
+        </p>
+      </header>
+
+      <div class="status-grid">
+        <div class="status-col">
+          <h3><span aria-hidden="true">✅</span> Ya funciona</h3>
+          <ul class="status-list">
+            <li>Registro e inicio de sesión, incluido con Google</li>
+            <li>Viajes con fechas, destino, transporte y progreso</li>
+            <li>Equipaje con plantillas, marcado y progreso</li>
+            <li>Itinerario por días, con orden y categorías</li>
+            <li>Descubrimiento de lugares (datos de ejemplo)</li>
+            <li>Chat privado y de grupo</li>
+            <li>Clima del destino con última lectura guardada</li>
+            <li>Idioma (español e inglés) y tema claro u oscuro</li>
+          </ul>
+        </div>
+
+        <div class="status-col">
+          <h3><span aria-hidden="true">🛠️</span> En preparación</h3>
+          <ul class="status-list">
+            <li>Mapas y lugares con proveedor real</li>
+            <li>Notificaciones y recordatorios</li>
+            <li>Versión para iOS</li>
+            <li>Sincronización de equipaje entre dispositivos</li>
+            <li>Planes de pago: todavía sin precios publicados</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Preguntas ────────────────────────────────────────────────── -->
+    <section class="section" id="faq">
+      <header class="section-head">
+        <p class="eyebrow">Preguntas</p>
+        <h2>Lo que suele preguntarse</h2>
+      </header>
+
+      <div class="faq">
+        <details>
+          <summary>¿Cuánto cuesta?</summary>
+          <p>Empezar es gratis. Habrá funciones de pago, pero todavía no
+             hay precios publicados: primero queremos cerrar el producto.</p>
+        </details>
+
+        <details>
+          <summary>¿Necesito crear una cuenta?</summary>
+          <p>Sí, para que tus viajes y tus listas sigan siendo tuyos y
+             puedas compartirlos con quien viaja contigo. Se puede
+             registrar con correo o con Google.</p>
+        </details>
+
+        <details>
+          <summary>¿Funciona sin conexión?</summary>
+          <p>El equipaje y el itinerario se guardan en el dispositivo, así
+             que los consultas sin cobertura. El clima y el descubrimiento
+             de lugares sí necesitan internet.</p>
+        </details>
+
+        <details>
+          <summary>¿Y en iPhone?</summary>
+          <p>Todavía no. La primera versión es para Android; iOS viene
+             después, cuando podamos probarlo en dispositivo real.</p>
+        </details>
+
+        <details>
+          <summary>¿Qué pasa con mis datos?</summary>
+          <p>La app no usa analítica ni rastreadores, y esta página no
+             instala cookies. La política de privacidad completa se
+             publicará antes del lanzamiento; mientras tanto, está
+             pendiente en el apartado de contacto.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ── Descarga ─────────────────────────────────────────────────── -->
+    <section class="section cta" id="descargar">
+      <header class="section-head">
+        <p class="eyebrow">Descargar</p>
+        <h2>Prueba la beta en Android</h2>
+        <p class="section-lede">
+          Vamos a repartir un APK de prueba. Todavía no hay enlace público:
+          no ponemos un botón que no descargue nada.
+        </p>
+      </header>
+
+      <p class="cta-row">
         <span class="btn btn-disabled" aria-disabled="true">
           APK de Android — próximamente
         </span>
       </p>
+
       <p class="muted">
-        ¿Quieres probarla antes? Escríbenos y te avisamos —
+        ¿Quieres probarla antes y contarnos qué falla? Pásate por
         <a href="#contacto">contacto</a>.
       </p>
     </section>
 
-    <!-- Contacto / privacidad (placeholders del owner) -->
-    <section id="contacto" class="section muted-block">
+    <!-- ── Contacto y privacidad (placeholders del owner) ───────────── -->
+    <section class="section muted-block" id="contacto">
       <h2>Contacto y privacidad</h2>
+
       <p>
-        <!-- TODO(owner): email/contacto real antes de publicar -->
-        <strong>Contacto:</strong> pendiente — el autor añadirá el
-        canal oficial aquí.
+        <!-- TODO(owner): canal de contacto real antes de publicar -->
+        <strong>Contacto:</strong> pendiente — quien mantiene el proyecto
+        añadirá aquí el canal oficial.
       </p>
+
       <p>
         <!-- TODO(owner): política de privacidad real antes de publicar -->
-        <strong>Privacidad:</strong> pendiente — la política de
-        privacidad se publicará aquí. La app no usa analítica,
-        cookies ni rastreadores en esta página.
+        <strong>Privacidad:</strong> pendiente — la política de privacidad
+        se publicará aquí. Esta página no usa analítica, cookies ni
+        rastreadores, y no hay ningún formulario que envíe datos a
+        ningún servidor.
       </p>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>© <span id="year">2026</span> TravelReady · Proyecto TravelReady —
-       Pablo Buendicho Ortín</p>
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand">
+          <span class="brand-mark" aria-hidden="true">🧳</span> TravelReady
+        </p>
+        <p class="muted">TravelReady — Pablo Buendicho Ortín.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Navegación del pie">
+        <a href="#funciones">Funciones</a>
+        <a href="#como-funciona">Cómo funciona</a>
+        <a href="#capturas">Capturas</a>
+        <a href="#estado">Estado</a>
+        <a href="#faq">Preguntas</a>
+        <a href="#descargar">Descargar</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+    </div>
+
+    <p class="footer-legal">
+      © 2026 TravelReady · Aviso legal y política de privacidad pendientes
+      de publicación.
+    </p>
   </footer>
 </body>
 </html>

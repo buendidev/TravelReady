@@ -1,37 +1,80 @@
 # TravelReady landing
 
-Static landing page (Spanish-first). No build step, no JS, no
-analytics/cookies/trackers, no deployment config.
+Static landing page, Spanish-first. No build step, no JavaScript, no
+analytics, no cookies, no trackers, no external fonts or CDNs, no images
+and no deployment config. The app screens shown on the page are drawn
+with CSS, so there is nothing to host besides these two files.
 
 ## Files
 
-- `index.html` — semantic markup, skip-link, `aria` where needed.
-- `styles.css` — design tokens matching the app palette
-  (`#006571` primary), dark-mode via `prefers-color-scheme`,
-  reduced-motion via `prefers-reduced-motion`, responsive grid.
+- `index.html` — semantic markup: skip link, sticky header, hero with an
+  app mockup, value strip, six feature cards, three steps, three screen
+  mockups, an honest ready-versus-pending product status, a native
+  `<details>` FAQ, the download block and the owner placeholders.
+- `styles.css` — design tokens matching the app palette (`#006571`),
+  light and dark schemes via `prefers-color-scheme`, responsive layout,
+  `:focus-visible` rings and a `prefers-reduced-motion` guard.
+
+## Sections
+
+| Anchor | Content |
+| --- | --- |
+| `#inicio` | Hero, claims and the itinerary mockup |
+| `#funciones` | Six feature cards |
+| `#como-funciona` | Three steps |
+| `#capturas` | Equipaje, descubrimiento and viajes mockups |
+| `#estado` | What already works and what is still pending |
+| `#faq` | Five questions, answers honest about what is not ready |
+| `#descargar` | APK placeholder and the owner TODO |
+| `#contacto` | Contact and privacy placeholders |
+
+The header and footer navigation point at those sections.
 
 ## Preview locally
 
 Any static server works — the page has zero dependencies:
 
 ```powershell
-# Python (bundled with most setups)
 python -m http.server 8080 -d website
 # → http://localhost:8080
 ```
 
-or just open `website/index.html` in a browser.
+Or just open `website/index.html` in a browser.
+
+## Structural check
+
+Run this after touching the page. It needs no dependencies and exits
+non-zero on failure:
+
+```powershell
+python tool/check_landing.py
+```
+
+It verifies what can break without a browser: duplicate ids, anchors that
+point nowhere, classes used in the markup with no rule in the stylesheet,
+unbalanced braces, leaked external resources, and stray `<script>` or
+`<img>` tags. It also reports unused CSS rules as a warning.
 
 ## Pending owner content (marked in the HTML)
 
-- **APK download** — the CTA is a disabled placeholder, not a fake
-  link. Point it at a real artifact only when a signed APK exists.
+- **APK download** — the call to action is an honest disabled
+  placeholder, not a fake link. Point it at a real artifact only when a
+  signed APK exists.
 - **Contact channel** — `TODO(owner)` in `#contacto`.
-- **Privacy policy** — `TODO(owner)` in `#contacto`. Do not publish
-  without it.
+- **Privacy policy and legal notice** — `TODO(owner)` in `#contacto` and
+  in the footer. Do not publish without them.
+
+## Pending verification
+
+- **No browser or device render has been done.** Layout, contrast,
+  focus order, the dark scheme and the phone mockups still need a real
+  look in a browser and on a phone. The structural check above does not
+  replace that.
+- Nobody has confirmed the copy against the shipped app beyond the
+  features already implemented in this repository.
 
 ## Non-goals (by design)
 
-No forms, no analytics, no cookies, no external fonts/CDNs, no
-hosting config. If a form is ever added it needs a backend decision
-first — nothing here posts data anywhere.
+No forms, no analytics, no cookies, no external assets, no hosting
+config. A form would need a backend decision first: nothing here posts
+data anywhere.
