@@ -28,7 +28,6 @@ Thumbs.db
 build/
 .pub-cache/
 .pub/
-pubspec.lock
 
 # Generados por build_runner
 *.g.dart
