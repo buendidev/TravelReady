@@ -21,8 +21,12 @@ abstract final class SecurityLog {
   }
 
   /// Evento de sesión (login OK, logout). Sin PII.
+  ///
+  /// El id puede ser más corto que el prefijo que se registra, así que se
+  /// recorta de forma segura: un id corto no debe tumbar la operación.
   static void sessionEvent(String event, String userId) {
-    _log('SESSION', 'event=$event uid_prefix=${userId.substring(0, 6)}...');
+    final prefix = userId.length > 6 ? '${userId.substring(0, 6)}...' : userId;
+    _log('SESSION', 'event=$event uid_prefix=$prefix');
   }
 
   static void _log(String type, String detail) {

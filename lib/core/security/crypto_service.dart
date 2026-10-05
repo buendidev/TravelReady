@@ -106,8 +106,11 @@ class CryptoService {
     final domain = parts[1];
     
     // Mostrar solo primeros 2 y últimos 2 caracteres del local
+    if (local.isEmpty) {
+      return '***@$domain';
+    }
     if (local.length <= 4) {
-      return '${local[0]}***@${domain}';
+      return '${local[0]}***@$domain';
     }
     
     return '${local.substring(0, 2)}***${local.substring(local.length - 2)}@${domain}';
