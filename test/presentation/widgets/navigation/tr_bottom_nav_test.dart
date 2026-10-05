@@ -134,4 +134,59 @@ void main() {
     expect(find.text('HOME_PAGE'), findsOneWidget);
     expect(find.text('DETAIL_PAGE'), findsNothing);
   });
+
+  testWidgets('a nested page FAB stays above the navigation bar',
+      (tester) async {
+    // La barra se pinta encima del contenido (extendBody), así que una página
+    // anidada que ancle algo abajo —un FloatingActionButton, por ejemplo—
+    // termina detrás de ella y el usuario no puede tocarlo.
+    final handle = tester.ensureSemantics();
+
+    final router = GoRouter(
+      initialLocation: '/fab',
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (_, __, shell) => TRBottomNav(navigationShell: shell),
+          branches: [
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: '/fab',
+                builder: (_, __) => Scaffold(
+                  body: const SizedBox.expand(),
+                  floatingActionButton: FloatingActionButton(
+                    onPressed: () {},
+                    tooltip: 'FAB_DE_PRUEBA',
+                    child: const Icon(Icons.add),
+                  ),
+                ),
+              ),
+            ]),
+            for (final path in ['/b', '/c', '/d', '/e'])
+              StatefulShellBranch(routes: [
+                GoRoute(path: path, builder: (_, __) => const SizedBox()),
+              ]),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final fab = tester.getRect(find.byTooltip('FAB_DE_PRUEBA'));
+    final navItem = tester.getRect(find.bySemanticsLabel('Inicio'));
+
+    expect(fab.bottom, lessThanOrEqualTo(navItem.top),
+        reason: 'el FAB queda detrás de la barra de navegación');
+
+    handle.dispose();
+  });
 }

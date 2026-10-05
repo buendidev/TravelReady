@@ -37,8 +37,13 @@ class TRBottomNav extends StatelessWidget {
     ];
 
     return Scaffold(
-      // extendBody permite que el contenido de cada tab quede detrás de la nav bar
-      extendBody: true,
+      // Sin extendBody: el cuerpo de cada tab termina donde empieza la barra.
+      // Con extendBody el cuerpo llega hasta el borde de la pantalla y todo lo
+      // que una página ancle abajo —los FloatingActionButton, por ejemplo—
+      // queda dibujado detrás de la barra y el usuario no puede tocarlo. No se
+      // puede compensar con MediaQuery: Scaffold coloca el FAB con
+      // viewInsets.bottom, no con el padding.
+      extendBody: false,
       body: navigationShell,
       bottomNavigationBar: _GlassNav(
         isDark: isDark,
