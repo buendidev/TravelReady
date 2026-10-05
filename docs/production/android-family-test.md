@@ -1,36 +1,48 @@
-# Local Android family-test runbook
+# Local Android build and family-test runbook
 
-## Current blocker
+## Verified state on the controlled machine
 
-No APK can be built on this machine yet. `flutter doctor` reports that the Android SDK is missing, and both `ANDROID_HOME` and `ANDROID_SDK_ROOT` are empty. This runbook does not assert that an Android toolchain, signing credential, or device is available.
+- `flutter doctor` reports a healthy Android toolchain (Android SDK 37.0.0). The SDK path is recorded in `android/local.properties`, so `ANDROID_HOME` and `ANDROID_SDK_ROOT` do **not** need to be set for Flutter to find it.
+- `flutter build apk --debug` succeeds and writes `build/app/outputs/flutter-apk/app-debug.apk`.
+- Latest artifact: **178,311,398 bytes**, SHA-256 `56cdd703a234b363e22a0de4734d07aa601ce3ba019500a439f6cf310f77babb`.
+- **No Android device is connected.** `flutter devices` lists only Chrome, and `adb devices` is empty, so the on-device walkthrough below has not been run.
+- `android/key.properties` is **not** present in this checkout, so a signed *release* APK cannot be produced yet. The debug artifact is the only one available, and it is suitable for a controlled sideload test — not for distribution.
 
-## Owner prerequisite
+## Owner prerequisite for the device test
 
-1. Install Android Studio and its Android SDK on the controlled local machine.
-2. Install the required SDK platform/build tools and accept the Android SDK licences in the installed toolchain.
-3. Record the actual SDK path. Do not guess it or share credentials.
-4. Only after that path is known, configure Flutter if needed:
+1. Connect an Android phone over USB and enable USB debugging in developer options.
+2. Accept the RSA authorization prompt on the phone.
+3. Confirm the connection: `adb devices` must list the phone as `device` (not `unauthorized`, not empty).
 
-   ```text
-   flutter config --android-sdk <actual-sdk-path>
-   ```
+## Build and install
 
-No credential, keystore path, password, or store link is requested at this stage.
+```powershell
+flutter doctor                     # the Android toolchain line must be green
+flutter build apk --debug          # writes build/app/outputs/flutter-apk/app-debug.apk
+flutter install --debug            # or: adb install -r <apk path>
+```
 
-## Agent steps after the prerequisite is complete
+Re-record the artifact size and SHA-256 whenever the APK is rebuilt: an APK reports what the code did, not what the documentation says.
 
-1. Run `flutter doctor` and stop if Android toolchain checks still fail.
-2. Confirm the available signing configuration without exposing its contents. The repository contains `android/key.properties`; build a signed release APK only when the local signing setup is valid.
-3. Build the release APK with the repository's normal Flutter release command.
-4. Generate and record a checksum for the produced APK.
-5. Give the tester the APK path, checksum, and standard Android installation guidance. The tester must allow installation from the selected local source if Android asks.
+## Checklist for the walkthrough
 
-## Family-test scope
+Run this on the device and record the result of each line.
 
-Direct APK sideloading bypasses Google Play. It is suitable for a controlled local family test, not proof of Play distribution, store review, production signing ownership, or release readiness.
-
-Offline-only testing is limited. Local SQLite trips and packing data work on the device without network access. Firebase authentication and chats, Google Sign-In, and weather/maps require network access and valid provider configuration. Test those provider-backed flows only after their owner-controlled configuration is available.
+- Splash and login; register with email; sign out and back in; Google sign-in.
+- Home: greeting with the real name, avatar initials, weather card, next or active trip.
+- Trips: create, search, filters (todos, próximos, en curso, pasados), open a detail page.
+- Trip detail: planning cards present; a trip with **no packing lists** renders the empty state without the overflow banner that used to appear.
+- Packing: create a list, toggle an item, watch the progress update.
+- Itinerary: add, edit, delete, reorder, and check the day grouping.
+- Discovery: search, change category, open the official site, add the place to a day.
+- Chats: private chat and group chat.
+- Profile: avatar initials with a padded or repeated-space name, theme switch, language switch.
+- Airplane mode: packing and itinerary still readable; weather and discovery degrade without a crash.
 
 ## Evidence to retain
 
-Record the `flutter doctor` result, APK build command/result, APK checksum, device model/Android version, installation result, and tested online/offline scenarios. Do not record passwords, private keys, recovery codes, or other credentials.
+`flutter doctor` output, the build command and its result, the artifact size and SHA-256, the device model and Android version, the install result, and the checklist results. Do not record passwords, private keys, recovery codes or any other credential.
+
+## Scope limitation
+
+Sideloading bypasses Google Play. It is suitable for a controlled local family test, and it is not proof of store review, production signing ownership, Play distribution or release readiness.

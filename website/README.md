@@ -78,3 +78,34 @@ unbalanced braces, leaked external resources, and stray `<script>` or
 No forms, no analytics, no cookies, no external assets, no hosting
 config. A form would need a backend decision first: nothing here posts
 data anywhere.
+
+## Visual verification
+
+The page has been rendered and inspected in a real browser engine, not
+only checked structurally:
+
+```powershell
+python -m http.server 8123 -d website
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu `
+  --hide-scrollbars --no-first-run --force-device-scale-factor=1 `
+  --user-data-dir=$env:TEMP\chrome-shot --virtual-time-budget=5000 `
+  --window-size=1440,900 --screenshot=build\screenshots\hero-desktop.png `
+  http://localhost:8123/
+```
+
+What that verified:
+
+- **Desktop at 1440 px in both colour schemes.** The host OS selects the
+  dark scheme; the light one was rendered by temporarily disabling the
+  dark block and then restoring the file byte for byte.
+- **Mobile at 320, 375 and 414 CSS pixels with no horizontal overflow**:
+  `scrollWidth == clientWidth` in every case. This was measured inside a
+  full-width `<iframe>`, because Chrome headless on Windows refuses to
+  honour a window narrower than roughly 500 px and silently keeps a wider
+  layout viewport, which produces cropped screenshots that look like a
+  layout bug.
+- **The mobile menu wraps onto two rows** instead of hiding links behind a
+  horizontal scroll strip.
+
+Still not verified: a real touch device, Safari and Firefox, and the copy
+against a released build.
