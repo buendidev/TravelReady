@@ -779,8 +779,18 @@ img, svg { max-width: 100%; }
 }
 
 @media (max-width: 560px) {
-  .nav { flex-wrap: wrap; }
-  .nav-links { order: 3; flex-basis: 100%; margin-inline-start: 0; }
+  /* En movil el encabezado no se queda pegado: con los enlaces envueltos en
+     dos o tres lineas, fijarlo se comeria media pantalla. */
+  .site-header { position: static; }
+  .nav { flex-wrap: wrap; row-gap: 0.35rem; }
+  .nav-links {
+    order: 3;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    overflow: visible;
+    row-gap: 0.15rem;
+    margin-inline-start: 0;
+  }
   .nav .btn-small { margin-inline-start: auto; }
   .btn-lg { width: 100%; }
   .hero-cta { flex-direction: column; align-items: stretch; }
