@@ -12,6 +12,7 @@ import '../../bloc/itinerary/itinerary_bloc.dart';
 import '../../widgets/common/tr_button.dart';
 import '../../widgets/common/tr_loading.dart';
 import '../../widgets/common/tr_text_field.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Returns the reordered ids while accounting for Flutter's pre-removal index.
 List<String> reorderItineraryIds(
@@ -41,22 +42,28 @@ class ItineraryPage extends StatelessWidget {
   }
 }
 
-/// Etiquetas en español de las categorías de itinerario.
+/// Etiqueta visible de [category] en el idioma activo.
 ///
-/// Los ficheros l10n quedan fuera de la superficie autorizada del feature, así
-/// que el texto vive aquí, igual que en `placeCategoryLabels`.
-const Map<ItineraryCategory, String> itineraryCategoryLabels = {
-  ItineraryCategory.sightseeing: 'Visita',
-  ItineraryCategory.food: 'Comida',
-  ItineraryCategory.transport: 'Transporte',
-  ItineraryCategory.lodging: 'Alojamiento',
-  ItineraryCategory.activity: 'Actividad',
-  ItineraryCategory.other: 'Otro',
-};
-
-/// Etiqueta visible de [category], con respaldo si el mapa no la cubre.
-String itineraryCategoryLabel(ItineraryCategory category) =>
-    itineraryCategoryLabels[category] ?? 'Otro';
+/// Un `switch` sobre este enum cerrado hace que añadir una categoría rompa la
+/// compilación en lugar de la pantalla, que es lo que pasaba con el mapa y su
+/// `!` anteriores.
+String itineraryCategoryLabel(
+    AppLocalizations l10n, ItineraryCategory category) {
+  switch (category) {
+    case ItineraryCategory.sightseeing:
+      return l10n.itineraryCategorySightseeing;
+    case ItineraryCategory.food:
+      return l10n.itineraryCategoryFood;
+    case ItineraryCategory.transport:
+      return l10n.transport;
+    case ItineraryCategory.lodging:
+      return l10n.itineraryCategoryLodging;
+    case ItineraryCategory.activity:
+      return l10n.itineraryCategoryActivity;
+    case ItineraryCategory.other:
+      return l10n.itineraryCategoryOther;
+  }
+}
 
 class _Content extends StatelessWidget {
   final Trip trip;
@@ -67,11 +74,13 @@ class _Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dayFmt = DateFormat('EEE d MMM',
+    final dayFmt = DateFormat.MMMEd(
         Localizations.localeOf(context).languageCode);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Itinerario · ${trip.name}')),
+      appBar: AppBar(
+          title: Text(AppLocalizations.of(context)
+              .itineraryTitleWithTrip(trip.name))),
       body: SafeArea(
         child: BlocBuilder<ItineraryBloc, ItineraryState>(
           builder: (context, state) {
@@ -90,7 +99,7 @@ class _Content extends StatelessWidget {
                       Text(state.message, textAlign: TextAlign.center),
                       const SizedBox(height: AppSizes.lg),
                       TRButton(
-                        label: 'Reintentar',
+                        label: AppLocalizations.of(context).retry,
                         onPressed: () => context.read<ItineraryBloc>().add(
                             ItineraryLoaded(tripId: trip.id)),
                       ),
@@ -117,18 +126,17 @@ class _Content extends StatelessWidget {
                             size: 40, color: AppColors.primary),
                       ),
                       const SizedBox(height: AppSizes.lg),
-                      Text('Aún no hay planes',
+                      Text(AppLocalizations.of(context).itineraryEmptyTitle,
                           style: Theme.of(context).textTheme.titleLarge),
                       const SizedBox(height: AppSizes.sm),
                       Text(
-                        'Añade tu primera visita, comida o actividad '
-                        'con día y hora.',
+                        AppLocalizations.of(context).itineraryEmptyBody,
                         style: Theme.of(context).textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSizes.xl),
                       TRButton(
-                        label: 'Añadir plan',
+                        label: AppLocalizations.of(context).itineraryAddPlan,
                         onPressed: () => _showEditor(context),
                       ),
                     ],
@@ -183,7 +191,9 @@ class _Content extends StatelessWidget {
                               item: dayItems[i],
                               fmt: _fmtMinutes,
                               categoryLabel:
-                                  itineraryCategoryLabel(dayItems[i].category),
+                                  itineraryCategoryLabel(
+                                      AppLocalizations.of(context),
+                                      dayItems[i].category),
                               onTap: () =>
                                   _showEditor(context, item: dayItems[i]),
                               onDelete: () =>
@@ -204,7 +214,7 @@ class _Content extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showEditor(context),
         backgroundColor: AppColors.primary,
-        tooltip: 'Añadir plan',
+        tooltip: AppLocalizations.of(context).itineraryAddPlan,
         child: const Icon(Icons.add_rounded, color: Colors.white),
       ),
     );
@@ -219,7 +229,6 @@ class _Content extends StatelessWidget {
         child: _ItemEditorSheet(
           trip: trip,
           item: item,
-          categoryLabels: itineraryCategoryLabels,
         ),
       ),
     );
@@ -299,7 +308,8 @@ class _ItemCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.delete_outline_rounded,
                   color: AppColors.error, size: 20),
-              tooltip: 'Eliminar plan',
+              tooltip:
+                  AppLocalizations.of(context).itineraryDeletePlan,
               onPressed: onDelete,
             ),
             const Icon(Icons.drag_indicator_rounded, size: 20),
@@ -314,12 +324,10 @@ class _ItemCard extends StatelessWidget {
 class _ItemEditorSheet extends StatefulWidget {
   final Trip trip;
   final ItineraryItem? item;
-  final Map<ItineraryCategory, String> categoryLabels;
 
   const _ItemEditorSheet({
     required this.trip,
     this.item,
-    required this.categoryLabels,
   });
 
   @override
@@ -410,7 +418,7 @@ class _ItemEditorSheetState extends State<_ItemEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final dayFmt = DateFormat('d MMM yyyy',
+    final dayFmt = DateFormat.yMMMd(
         Localizations.localeOf(context).languageCode);
     return Padding(
       padding: EdgeInsets.only(
@@ -424,12 +432,15 @@ class _ItemEditorSheetState extends State<_ItemEditorSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.item == null ? 'Nuevo plan' : 'Editar plan',
+            Text(
+                widget.item == null
+                    ? AppLocalizations.of(context).itineraryNewPlan
+                    : AppLocalizations.of(context).itineraryEditPlan,
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: AppSizes.md),
             TRTextField(
-              label: 'Título',
-              hint: 'Museo, restaurante, actividad…',
+              label: AppLocalizations.of(context).itineraryFieldTitle,
+              hint: AppLocalizations.of(context).itineraryFieldTitleHint,
               controller: _titleCtrl,
               autofocus: widget.item == null,
             ),
@@ -448,10 +459,11 @@ class _ItemEditorSheetState extends State<_ItemEditorSheet> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.schedule_rounded, size: 18),
-                  label: Text('Inicio · ${TimeOfDay(
-                          hour: _startMinutes ~/ 60,
-                          minute: _startMinutes % 60)
-                      .format(context)}'),
+                  label: Text(AppLocalizations.of(context).itineraryStartAt(
+                      TimeOfDay(
+                              hour: _startMinutes ~/ 60,
+                              minute: _startMinutes % 60)
+                          .format(context))),
                   onPressed: () => _pickTime(false),
                 ),
               ),
@@ -460,11 +472,12 @@ class _ItemEditorSheetState extends State<_ItemEditorSheet> {
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.schedule_rounded, size: 18),
                   label: Text(_endMinutes == null
-                      ? 'Fin · opcional'
-                      : 'Fin · ${TimeOfDay(
-                              hour: _endMinutes! ~/ 60,
-                              minute: _endMinutes! % 60)
-                          .format(context)}'),
+                      ? AppLocalizations.of(context).itineraryEndOptional
+                      : AppLocalizations.of(context).itineraryEndAt(
+                          TimeOfDay(
+                                  hour: _endMinutes! ~/ 60,
+                                  minute: _endMinutes! % 60)
+                              .format(context))),
                   onPressed: () => _pickTime(true),
                 ),
               ),
@@ -473,26 +486,28 @@ class _ItemEditorSheetState extends State<_ItemEditorSheet> {
             Wrap(
               spacing: AppSizes.sm,
               children: [
-                for (final e in widget.categoryLabels.entries)
+                for (final c in ItineraryCategory.values)
                   ChoiceChip(
-                    label: Text(e.value),
-                    selected: _category == e.key,
-                    onSelected: (_) =>
-                        setState(() => _category = e.key),
+                    label: Text(itineraryCategoryLabel(
+                        AppLocalizations.of(context), c)),
+                    selected: _category == c,
+                    onSelected: (_) => setState(() => _category = c),
                   ),
               ],
             ),
             const SizedBox(height: AppSizes.md),
             TRTextField(
-              label: 'Notas',
-              hint: 'Opcional',
+              label: AppLocalizations.of(context).itineraryFieldNotes,
+              hint: AppLocalizations.of(context).itineraryFieldNotesHint,
               controller: _notesCtrl,
             ),
             const SizedBox(height: AppSizes.lg),
             SizedBox(
               width: double.infinity,
               child: TRButton(
-                label: widget.item == null ? 'Añadir' : 'Guardar',
+                label: widget.item == null
+                    ? AppLocalizations.of(context).itineraryAdd
+                    : AppLocalizations.of(context).save,
                 onPressed: _save,
               ),
             ),

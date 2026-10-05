@@ -1,31 +1,48 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:travel_ready/core/services/places/place_category.dart';
 import 'package:travel_ready/domain/entities/itinerary/itinerary_item.dart';
+import 'package:travel_ready/l10n/app_localizations.dart';
 import 'package:travel_ready/presentation/pages/itinerary/itinerary_page.dart';
+import 'package:travel_ready/presentation/widgets/discovery/place_category_labels.dart';
 
-/// Las páginas resuelven la etiqueta con un respaldo, así que un valor nuevo
-/// del enum ya no puede romper la pantalla. Lo que sí puede pasar es que quede
-/// sin texto propio: esta guarda falla en ese caso en lugar de dejar que la UI
-/// muestre una etiqueta genérica sin que nadie se entere.
+/// Guarda de traducciones: ninguna categoría puede quedarse sin etiqueta y las
+/// etiquetas tienen que existir en los dos idiomas.
+///
+/// Las funciones resuelven la etiqueta con un `switch` sobre el enum cerrado,
+/// así que añadir una categoría rompe la compilación en lugar de la pantalla.
+/// Lo que el compilador no puede comprobar es que la clave de l10n de cada
+/// idioma tenga texto, y eso es lo que se afirma aquí.
 void main() {
-  test('toda categoría de lugar tiene etiqueta propia', () {
-    for (final category in PlaceCategory.values) {
-      expect(placeCategoryLabels[category], isNotNull,
-          reason: '$category se agregó al enum y le falta etiqueta');
-    }
-  });
+  for (final locale in const [Locale('es'), Locale('en')]) {
+    test('toda categoría tiene etiqueta en ${locale.languageCode}', () async {
+      final l10n = await AppLocalizations.delegate.load(locale);
 
-  test('toda categoría de itinerario tiene etiqueta propia', () {
-    for (final category in ItineraryCategory.values) {
-      expect(itineraryCategoryLabels[category], isNotNull,
-          reason: '$category se agregó al enum y le falta etiqueta');
-    }
-  });
+      for (final category in PlaceCategory.values) {
+        expect(placeCategoryLabel(l10n, category).trim(), isNotEmpty,
+            reason: 'categoría de lugar $category sin etiqueta');
+      }
+      for (final category in ItineraryCategory.values) {
+        expect(itineraryCategoryLabel(l10n, category).trim(), isNotEmpty,
+            reason: 'categoría de itinerario $category sin etiqueta');
+      }
+    });
+  }
 
-  test('ninguna etiqueta está vacía', () {
-    expect(placeCategoryLabels.values.every((v) => v.trim().isNotEmpty), isTrue);
+  test('las etiquetas cambian de idioma de verdad', () async {
+    final es = await AppLocalizations.delegate.load(const Locale('es'));
+    final en = await AppLocalizations.delegate.load(const Locale('en'));
+
+    expect(placeCategoryLabel(es, PlaceCategory.museum), 'Museos');
+    expect(placeCategoryLabel(en, PlaceCategory.museum), 'Museums');
+    expect(placeCategoryLabel(es, PlaceCategory.other), 'Otros');
+    expect(placeCategoryLabel(en, PlaceCategory.other), 'Other');
+
+    expect(itineraryCategoryLabel(es, ItineraryCategory.sightseeing), 'Visita');
     expect(
-        itineraryCategoryLabels.values.every((v) => v.trim().isNotEmpty), isTrue);
+        itineraryCategoryLabel(en, ItineraryCategory.sightseeing), 'Sightseeing');
+    expect(itineraryCategoryLabel(es, ItineraryCategory.other), 'Otro');
+    expect(itineraryCategoryLabel(en, ItineraryCategory.other), 'Other');
   });
 }

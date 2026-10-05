@@ -1,7 +1,6 @@
 {
   "@@locale": "es",
   "appName": "TravelReady!",
-
   "login": "Iniciar sesión",
   "register": "Crear cuenta",
   "logout": "Cerrar sesión",
@@ -15,13 +14,11 @@
   "hasAccount": "¿Ya tienes cuenta? ",
   "resetPassword": "Restablecer contraseña",
   "sendResetEmail": "Enviar email de recuperación",
-
   "home": "Inicio",
   "myTrips": "Mis viajes",
   "packingLists": "Mis maletas",
   "chats": "Mensajes",
   "profile": "Perfil",
-
   "newTrip": "Nuevo viaje",
   "destination": "Destino",
   "startDate": "Fecha de salida",
@@ -32,7 +29,6 @@
   "deleteTrip": "Eliminar viaje",
   "noTrips": "Sin viajes planificados",
   "days": "días",
-
   "newList": "Nueva maleta",
   "templates": "Plantillas",
   "addItem": "Añadir artículo",
@@ -43,7 +39,6 @@
   "itemPacked": "Preparado",
   "progress": "completado",
   "generateAI": "Generar con IA",
-
   "messages": "Mensajes",
   "newMessage": "Nuevo mensaje",
   "createGroup": "Crear grupo",
@@ -52,7 +47,6 @@
   "aiAssistant": "Asistente de viaje",
   "support": "Soporte técnico",
   "noConversations": "Sin conversaciones",
-
   "myProfile": "Mi perfil",
   "editProfile": "Editar perfil",
   "darkMode": "Modo oscuro",
@@ -66,34 +60,53 @@
   "goPremium": "Hazte Premium",
   "freePlan": "Plan Gratuito",
   "premiumPlan": "Plan Premium",
-
   "save": "Guardar",
   "cancel": "Cancelar",
   "delete": "Eliminar",
   "confirm": "Confirmar",
   "retry": "Reintentar",
   "loading": "Cargando...",
-
   "errorEmptyField": "Este campo es obligatorio.",
   "errorInvalidEmail": "Email no válido.",
   "errorWeakPassword": "La contraseña debe tener al menos 6 caracteres.",
   "errorPasswordMatch": "Las contraseñas no coinciden.",
   "errorGeneral": "Algo ha ido mal. Inténtalo de nuevo.",
-
   "weatherIn": "Clima en {city}",
-  "@weatherIn": { "placeholders": { "city": { "type": "String" } } },
-
+  "@weatherIn": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
   "tripsCount": "{count, plural, =0{Sin viajes} =1{1 viaje} other{{count} viajes}}",
-  "@tripsCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@tripsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "create": "Crear",
   "newPackingList": "Nueva maleta",
   "deletePackingList": "Eliminar maleta",
   "deleteTripTitle": "Eliminar viaje",
   "deleteTripConfirm": "¿Eliminar \"{name}\"? Esta acción no se puede deshacer.",
-  "@deleteTripConfirm": { "placeholders": { "name": { "type": "String" } } },
+  "@deleteTripConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "deleteListConfirm": "¿Eliminar \"{name}\"?",
-  "@deleteListConfirm": { "placeholders": { "name": { "type": "String" } } },
+  "@deleteListConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "clearFilters": "Limpiar filtros",
   "inProgress": "EN CURSO",
   "searchCity": "Consultar ciudad",
@@ -109,7 +122,6 @@
   "emptyList": "Lista vacía",
   "addItemsHint": "Añade artículos con el botón +",
   "activeSubscription": "Suscripción activa",
-
   "noResults": "Sin resultados",
   "tryAnotherFilter": "Prueba con otro filtro o búsqueda",
   "noTripsPlanned": "Sin viajes planificados",
@@ -126,24 +138,64 @@
   "categoryLabel": "Categoría",
   "quantityLabel": "Cantidad:",
   "itemsCount": "{packed}/{total} artículos",
-  "@itemsCount": { "placeholders": { "packed": { "type": "int" }, "total": { "type": "int" } } },
+  "@itemsCount": {
+    "placeholders": {
+      "packed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "itemsCountOf": "{packed} de {total} artículos",
-  "@itemsCountOf": { "placeholders": { "packed": { "type": "int" }, "total": { "type": "int" } } },
+  "@itemsCountOf": {
+    "placeholders": {
+      "packed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "progressPercent": "{percent}% completado",
-  "@progressPercent": { "placeholders": { "percent": { "type": "int" } } },
+  "@progressPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "templatesAvailable": "{count} disponibles",
-  "@templatesAvailable": { "placeholders": { "count": { "type": "int" } } },
+  "@templatesAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noListsYet": "Sin listas todavía",
   "createListHint": "Crea una nueva lista para organizar tu equipaje según el tipo de viaje",
   "recentTrips": "Viajes recientes",
   "seeAll": "Ver todos",
   "weatherNotAvailable": "Clima no disponible",
   "weatherStaleAge": "Datos sin actualizar · hace {minutes} min",
-  "@weatherStaleAge": { "placeholders": { "minutes": { "type": "int" } } },
-  "retry": "Reintentar",
-
+  "@weatherStaleAge": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "daysLeft": "Faltan {days} días",
-  "@daysLeft": { "placeholders": { "days": { "type": "int" } } },
+  "@daysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "luggagePrep": "Preparación de equipaje",
   "noTripsYet": "Aún no tienes viajes",
   "noTripsHint": "Crea tu primer viaje y organiza tu equipaje al instante",
@@ -155,13 +207,18 @@
   "saveChanges": "Guardar cambios",
   "profileUpdated": "Perfil actualizado",
   "comingSoon": "Próximamente",
-
   "greetingMorning": "Buenos días",
   "greetingAfternoon": "Buenas tardes",
   "greetingEvening": "Buenas noches",
   "tripActive": "Viaje activo",
   "tripUpcoming": "{count, plural, =0{Sin viajes próximos} =1{1 viaje próximo} other{{count} viajes próximos}}",
-  "@tripUpcoming": { "placeholders": { "count": { "type": "int" } } },
+  "@tripUpcoming": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tripReady": "¡Listo para viajar!",
   "statsUpcoming": "Próximos",
   "statsActive": "Activos",
@@ -171,7 +228,6 @@
   "assistantQuick": "Asistente",
   "todayTrip": "Hoy",
   "dayLeft": "Falta 1 día",
-
   "welcomeFirstTime": "¡Bienvenido a TravelReady! 🌟",
   "subtitleFirstTime": "La primera vez que organizás un viaje de verdad",
   "welcomeBack": "Bienvenido de nuevo",
@@ -184,18 +240,22 @@
   "hintEmail": "email@ejemplo.com",
   "hintPassword": "••••••",
   "hintConfirmPassword": "••••••",
-
   "resetPasswordTitle": "Recuperar contraseña",
   "forgotPasswordQuestion": "¿Olvidaste tu contraseña?",
   "forgotPasswordDesc": "Introduce tu email y te enviaremos un enlace para restablecerla.",
   "sendLink": "Enviar enlace",
   "emailSentTitle": "¡Email enviado!",
   "emailSentDesc": "Hemos enviado un enlace de recuperación a\n{email}",
-  "@emailSentDesc": { "placeholders": { "email": { "type": "String" } } },
+  "@emailSentDesc": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "backToLogin": "Volver al inicio de sesión",
   "requiredField": "Campo obligatorio.",
   "emailInvalid": "Email no válido.",
-
   "myTripsTitle": "Mis viajes",
   "searchTripHint": "Buscar viaje o destino...",
   "tripName": "Nombre del viaje",
@@ -207,9 +267,14 @@
   "transportLabel": "Transporte",
   "createTripLabel": "Crear viaje",
   "daysCount": "{count} días",
-  "@daysCount": { "placeholders": { "count": { "type": "int" } } },
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noTripsHintSub": "Crea tu primer viaje y organiza\ntu equipaje al instante",
-
   "messagesTitle": "Mensajes",
   "newChatTitle": "Nuevo chat",
   "noOtherUsers": "No hay otros usuarios registrados",
@@ -217,24 +282,55 @@
   "noPrivateChats": "No tienes chats privados aún\nToca + para iniciar uno",
   "noMessages": "Sin mensajes aún",
   "errorPrefix": "Error: {msg}",
-  "@errorPrefix": { "placeholders": { "msg": { "type": "String" } } },
+  "@errorPrefix": {
+    "placeholders": {
+      "msg": {
+        "type": "String"
+      }
+    }
+  },
   "signInRequired": "Inicia sesión",
   "noMessagesYet": "Sin mensajes aún",
-
   "essentialsTitle": "Artículos esenciales",
   "essentialsSubtitle": "Cosas que nunca deben faltar en ningún viaje",
   "useTemplate": "Usar esta plantilla",
   "addEssentials": "Añadir {count} esenciales",
-  "@addEssentials": { "placeholders": { "count": { "type": "int" } } },
+  "@addEssentials": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "essentialsAdded": "{count} esenciales añadidos a \"{name}\"",
-  "@essentialsAdded": { "placeholders": { "count": { "type": "int" }, "name": { "type": "String" } } },
+  "@essentialsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "creatingTemplate": "Creando \"{name}\"... ✓",
-  "@creatingTemplate": { "placeholders": { "name": { "type": "String" } } },
+  "@creatingTemplate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "creatingEssentialsList": "Creando lista de esenciales...",
   "retryLabel": "Reintentar",
   "templateItemsCount": "{count} artículos incluidos",
-  "@templateItemsCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@templateItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiWelcome": "¡Hola! 👋 Soy tu asistente de viaje.\n\nPuedo ayudarte con:\n• 🧳 Qué llevar según tu destino\n• 🌡️ Ropa según el clima\n• ✈️ Consejos para volar\n• 📋 Plantillas de equipaje\n\n¿Adónde vas? ¿Qué necesitas?",
   "aiReplyBeach": "☀️ **Playa / Verano:**\n\n👙 Bañador ×2 · ☀️ Crema FPS50+\n🕶️ Gafas UV · 👡 Chanclas · 🏖️ Toalla microfibra\n💧 Botella reutilizable · 👒 Sombrero\n\n💡 Líquidos en bolsa 100ml si vuelas.",
   "aiReplyMountain": "⛰️ **Montaña:**\n\n🥾 Botas impermeables · 🧥 Chubasquero\n🧣 Bufanda+gorro+guantes · 🧱 Ropa térmica\n🎒 Mochila 20-30L · 💊 Botiquín · 🔦 Linterna",
@@ -247,7 +343,6 @@
   "aiReplyHello": "¡Hola! 😊 ¿A dónde vas a viajar?\nDime el destino y te ayudo a preparar tu equipaje.",
   "aiReplyThanks": "¡De nada! 😊 ¡Buen viaje! ✈️🌍",
   "aiReplyFallback": "🤔 Puedo ayudarte con:\n\n• Destino (playa, montaña, ciudad, negocios)\n• Consejos para volar · Botiquín\n• Documentos · Cuánta ropa llevar\n\nSolo dime tu destino 🌍",
-
   "supportHowCanWeHelp": "¿Cómo podemos ayudarte?",
   "supportAvailability": "Estamos disponibles de Lunes a Viernes\nde 9:00 a 18:00 (CET)",
   "supportEmailTitle": "Email",
@@ -256,12 +351,10 @@
   "supportHelpCenterSubtitle": "Preguntas frecuentes y guías",
   "supportReportProblem": "Reportar un problema",
   "supportReportProblemSubtitle": "Cuéntanos qué ha fallado",
-
   "tripFilterAll": "🗓 Todos",
   "tripFilterUpcoming": "✈️ Próximos",
   "tripFilterActive": "🟢 En curso",
   "tripFilterPast": "📁 Pasados",
-
   "catClothing": "Ropa",
   "catElectronics": "Electrónica",
   "catDocuments": "Documentos",
@@ -271,7 +364,6 @@
   "catAccessories": "Accesorios",
   "catSports": "Deporte",
   "catOther": "Otros",
-
   "essentialPassport": "DNI / Pasaporte",
   "essentialBankCard": "Tarjeta bancaria",
   "essentialTravelInsurance": "Seguro de viaje",
@@ -286,14 +378,12 @@
   "essentialHeadphones": "Auriculares",
   "essentialWaterBottle": "Botella de agua",
   "essentialTravelSnacks": "Snacks para el viaje",
-
   "templateBeach": "Playa / Verano",
   "templateMountain": "Montaña / Senderismo",
   "templateCity": "City Break",
   "templateBusiness": "Negocios",
   "templateWeekend": "Fin de semana",
   "templateLongFlight": "Vuelo largo",
-
   "itemSwimsuit": "Bañador",
   "itemSunscreen": "Crema solar FPS 50",
   "itemSunglasses": "Gafas de sol",
@@ -323,5 +413,101 @@
   "itemSleepMask": "Antifaz",
   "itemEarplugs": "Tapones para oídos",
   "itemLiquidsBag100ml": "Bolsa líquidos 100ml",
-  "itemWarmClothing": "Ropa de abrigo"
+  "itemWarmClothing": "Ropa de abrigo",
+  "itineraryTitleWithTrip": "Itinerario · {trip}",
+  "@itineraryTitleWithTrip": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
+  "itineraryEmptyTitle": "Aún no hay planes",
+  "itineraryEmptyBody": "Añade tu primera visita, comida o actividad con día y hora.",
+  "itineraryAddPlan": "Añadir plan",
+  "itineraryDeletePlan": "Eliminar plan",
+  "itineraryNewPlan": "Nuevo plan",
+  "itineraryEditPlan": "Editar plan",
+  "itineraryFieldTitle": "Título",
+  "itineraryFieldTitleHint": "Museo, restaurante, actividad…",
+  "itineraryFieldNotes": "Notas",
+  "itineraryFieldNotesHint": "Opcional",
+  "itineraryStartAt": "Inicio · {time}",
+  "@itineraryStartAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "itineraryEndOptional": "Fin · opcional",
+  "itineraryAdd": "Añadir",
+  "itineraryCategorySightseeing": "Visita",
+  "itineraryCategoryFood": "Comida",
+  "itineraryCategoryLodging": "Alojamiento",
+  "itineraryCategoryActivity": "Actividad",
+  "itineraryCategoryOther": "Otro",
+  "discoveryTitle": "Descubrir",
+  "discoverySearchHint": "Buscar lugares, museos, restaurantes…",
+  "discoveryAllCategories": "Todo",
+  "discoveryDemoData": "Datos de ejemplo — sin proveedor configurado",
+  "discoveryProviderUnavailableTitle": "Proveedor no disponible",
+  "discoveryProviderUnavailableBody": "La búsqueda de lugares requiere configurar un proveedor (Maps/Places). Mientras tanto puedes añadir planes manualmente al itinerario.",
+  "discoverySearchErrorTitle": "Error al buscar",
+  "discoveryNoResultsTitle": "Sin resultados",
+  "discoveryExploreTitle": "Explora tu destino",
+  "discoveryNoResultsBody": "Prueba con otra búsqueda o categoría.",
+  "discoveryExploreBody": "Busca museos, restaurantes o rincones del destino.",
+  "discoveryHoursIndicative": "Horario (indicativo): {hours}",
+  "@discoveryHoursIndicative": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryPriceIndicative": "Precio orientativo: {price}",
+  "@discoveryPriceIndicative": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryOfficialSite": "Sitio web oficial",
+  "discoveryAddToItinerary": "Añadir al itinerario",
+  "discoveryAddedToItinerary": "Añadido al itinerario",
+  "discoveryAddPlaceWithName": "Añadir \"{name}\"",
+  "@discoveryAddPlaceWithName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryDayLabel": "Día",
+  "placeCategoryMonument": "Monumentos",
+  "placeCategoryMuseum": "Museos",
+  "placeCategoryFood": "Comida",
+  "placeCategoryNature": "Naturaleza",
+  "placeCategoryNightlife": "Ocio nocturno",
+  "placeCategoryShopping": "Compras",
+  "placeCategoryHotel": "Hoteles",
+  "itineraryEndAt": "Fin · {time}",
+  "@itineraryEndAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryTimeLabel": "Hora · {time}",
+  "@discoveryTimeLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "saving": "Guardando…"
 }

@@ -8,6 +8,7 @@ import 'package:travel_ready/domain/entities/itinerary/itinerary_item.dart';
 import 'package:travel_ready/domain/repositories/itinerary_repository.dart';
 import 'package:travel_ready/injection/injection.dart';
 import 'package:travel_ready/presentation/bloc/itinerary/itinerary_bloc.dart';
+import 'package:travel_ready/l10n/app_localizations.dart';
 import 'package:travel_ready/presentation/pages/itinerary/itinerary_page.dart';
 
 import '../../helpers/fake_data.dart';
@@ -19,7 +20,12 @@ class FakeItineraryItem extends Fake implements ItineraryItem {}
 void main() {
   late MockItineraryRepository repo;
 
-  Widget pump() => MaterialApp(home: ItineraryPage(trip: tTrip));
+  Widget pump() => MaterialApp(
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ItineraryPage(trip: tTrip),
+      );
 
   setUpAll(() async {
     registerFallbackValue(FakeItineraryItem());

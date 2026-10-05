@@ -12,6 +12,7 @@ import 'package:travel_ready/domain/entities/itinerary/itinerary_item.dart';
 import 'package:travel_ready/domain/repositories/itinerary_repository.dart';
 import 'package:travel_ready/injection/injection.dart';
 import 'package:travel_ready/presentation/bloc/itinerary/itinerary_bloc.dart';
+import 'package:travel_ready/l10n/app_localizations.dart';
 import 'package:travel_ready/presentation/pages/discovery/discovery_page.dart';
 
 import '../../helpers/fake_data.dart';
@@ -39,7 +40,11 @@ void main() {
   late MockItineraryRepository repo;
 
   Widget pump({required bool withTrip}) =>
-      MaterialApp(home: DiscoveryPage(trip: withTrip ? tTrip : null));
+      MaterialApp(
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: DiscoveryPage(trip: withTrip ? tTrip : null));
 
   setUpAll(() async {
     registerFallbackValue(FakeItineraryItem());

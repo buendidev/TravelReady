@@ -15,6 +15,8 @@ import '../../bloc/itinerary/itinerary_bloc.dart';
 import '../../widgets/common/tr_button.dart';
 import '../../widgets/common/tr_loading.dart';
 import '../../widgets/discovery/place_card.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../widgets/discovery/place_category_labels.dart';
 
 /// Descubrimiento visual de destinos — provider-neutral.
 ///
@@ -93,7 +95,7 @@ class _DiscoveryContentState extends State<_DiscoveryContent> {
   Widget build(BuildContext context) {
     final availability = _gateway.availability;
     return Scaffold(
-      appBar: AppBar(title: const Text('Descubrir')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).discoveryTitle)),
       body: SafeArea(
         child: Column(children: [
           // ── Búsqueda ─────────────────────────────────────────────
@@ -104,11 +106,11 @@ class _DiscoveryContentState extends State<_DiscoveryContent> {
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _runSearch(),
               decoration: InputDecoration(
-                hintText: 'Buscar lugares, museos, restaurantes…',
+                hintText: AppLocalizations.of(context).discoverySearchHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  tooltip: 'Buscar',
+                  tooltip: AppLocalizations.of(context).search,
                   onPressed: _runSearch,
                 ),
                 border: OutlineInputBorder(
@@ -129,7 +131,8 @@ class _DiscoveryContentState extends State<_DiscoveryContent> {
                 Padding(
                   padding: const EdgeInsets.only(right: AppSizes.sm),
                   child: ChoiceChip(
-                    label: const Text('Todo'),
+                    label: Text(
+                        AppLocalizations.of(context).discoveryAllCategories),
                     selected: _category == null,
                     onSelected: (_) {
                       setState(() => _category = null);
@@ -137,15 +140,15 @@ class _DiscoveryContentState extends State<_DiscoveryContent> {
                     },
                   ),
                 ),
-                for (final e in placeCategoryLabels.entries)
+                for (final c in PlaceCategory.values)
                   Padding(
                     padding: const EdgeInsets.only(right: AppSizes.sm),
                     child: ChoiceChip(
-                      label: Text(e.value),
-                      selected: _category == e.key,
+                      label: Text(placeCategoryLabel(
+                          AppLocalizations.of(context), c)),
+                      selected: _category == c,
                       onSelected: (sel) {
-                        setState(() =>
-                            _category = sel ? e.key : null);
+                        setState(() => _category = sel ? c : null);
                         _runSearch();
                       },
                     ),
@@ -168,7 +171,7 @@ class _DiscoveryContentState extends State<_DiscoveryContent> {
                 Expanded(
                   child: Text(
                     _gateway.attributionText ??
-                        'Datos de ejemplo — sin proveedor configurado',
+                        AppLocalizations.of(context).discoveryDemoData,
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                 ),
@@ -185,31 +188,31 @@ class _DiscoveryContentState extends State<_DiscoveryContent> {
 
   Widget _buildBody(PlacesAvailability availability) {
     if (availability == PlacesAvailability.unavailable) {
-      return const _Centered(
+      return _Centered(
         icon: Icons.cloud_off_rounded,
-        title: 'Proveedor no disponible',
-        message:
-            'La búsqueda de lugares requiere configurar un proveedor '
-            '(Maps/Places). Mientras tanto puedes añadir planes '
-            'manualmente al itinerario.',
+        title: AppLocalizations.of(context).discoveryProviderUnavailableTitle,
+        message: AppLocalizations.of(context).discoveryProviderUnavailableBody,
       );
     }
     if (_loading) return const TRLoading();
     if (_error != null) {
       return _Centered(
         icon: Icons.error_outline_rounded,
-        title: 'Error al buscar',
+        title: AppLocalizations.of(context).discoverySearchErrorTitle,
         message: _error!,
-        action: TRButton(label: 'Reintentar', onPressed: _runSearch),
+        action:
+            TRButton(label: AppLocalizations.of(context).retry, onPressed: _runSearch),
       );
     }
     if (_results.isEmpty) {
       return _Centered(
         icon: Icons.travel_explore_rounded,
-        title: _searched ? 'Sin resultados' : 'Explora tu destino',
+        title: _searched
+            ? AppLocalizations.of(context).discoveryNoResultsTitle
+            : AppLocalizations.of(context).discoveryExploreTitle,
         message: _searched
-            ? 'Prueba con otra búsqueda o categoría.'
-            : 'Busca museos, restaurantes o rincones del destino.',
+            ? AppLocalizations.of(context).discoveryNoResultsBody
+            : AppLocalizations.of(context).discoveryExploreBody,
       );
     }
     return ListView.builder(
@@ -322,10 +325,12 @@ class _PlaceDetailsSheet extends StatelessWidget {
             _row(Icons.place_rounded, place.address!),
           if (place.openingHoursText != null)
             _row(Icons.schedule_rounded,
-                'Horario (indicativo): ${place.openingHoursText!}'),
+                AppLocalizations.of(context)
+                    .discoveryHoursIndicative(place.openingHoursText!)),
           if (place.priceLevelLabel != null)
             _row(Icons.euro_rounded,
-                'Precio orientativo: ${place.priceLevelLabel!}'),
+                AppLocalizations.of(context)
+                    .discoveryPriceIndicative(place.priceLevelLabel!)),
           if (place.shortDescription != null) ...[
             const SizedBox(height: AppSizes.sm),
             Text(place.shortDescription!,
@@ -337,7 +342,8 @@ class _PlaceDetailsSheet extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                  label: const Text('Sitio web oficial'),
+                  label:
+                      Text(AppLocalizations.of(context).discoveryOfficialSite),
                   onPressed: () => launchUrl(
                     Uri.parse(place.websiteUri!),
                     mode: LaunchMode.externalApplication,
@@ -349,7 +355,7 @@ class _PlaceDetailsSheet extends StatelessWidget {
             if (onAddToItinerary != null)
               Expanded(
                 child: TRButton(
-                  label: 'Añadir al itinerario',
+                  label: AppLocalizations.of(context).discoveryAddToItinerary,
                   onPressed: onAddToItinerary!,
                 ),
               ),
@@ -426,7 +432,9 @@ class _AddToItinerarySheetState extends State<_AddToItinerarySheet> {
     if (state is ItineraryMutationSucceeded) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Añadido al itinerario')));
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context).discoveryAddedToItinerary)));
     } else if (state is ItineraryError) {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)
@@ -440,7 +448,7 @@ class _AddToItinerarySheetState extends State<_AddToItinerarySheet> {
       widget.trip.durationDays,
       (i) => widget.trip.startDate.add(Duration(days: i)),
     );
-    final dayFmt = DateFormat('EEE d',
+    final dayFmt = DateFormat.MMMEd(
         Localizations.localeOf(context).languageCode);
 
     return BlocListener<ItineraryBloc, ItineraryState>(
@@ -451,11 +459,14 @@ class _AddToItinerarySheetState extends State<_AddToItinerarySheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Añadir "${widget.place.name}"',
+            Text(
+                AppLocalizations.of(context)
+                    .discoveryAddPlaceWithName(widget.place.name),
               style: Theme.of(context).textTheme.titleMedium,
               maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: AppSizes.md),
-          Text('Día', style: Theme.of(context).textTheme.labelLarge),
+          Text(AppLocalizations.of(context).discoveryDayLabel,
+              style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: AppSizes.sm),
           SizedBox(
             height: 40,
@@ -478,14 +489,20 @@ class _AddToItinerarySheetState extends State<_AddToItinerarySheet> {
           OutlinedButton.icon(
             icon: const Icon(Icons.schedule_rounded, size: 18),
             label: Text(
-                'Hora · ${TimeOfDay(hour: _startMinutes ~/ 60, minute: _startMinutes % 60).format(context)}'),
+                AppLocalizations.of(context).discoveryTimeLabel(
+                    TimeOfDay(
+                            hour: _startMinutes ~/ 60,
+                            minute: _startMinutes % 60)
+                        .format(context))),
             onPressed: _pickTime,
           ),
           const SizedBox(height: AppSizes.lg),
             SizedBox(
               width: double.infinity,
               child: TRButton(
-                label: _saving ? 'Guardando…' : 'Añadir',
+                label: _saving
+                    ? AppLocalizations.of(context).saving
+                    : AppLocalizations.of(context).itineraryAdd,
                 onPressed: _saving ? null : _save,
               ),
             ),

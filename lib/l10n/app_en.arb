@@ -1,7 +1,6 @@
 {
   "@@locale": "en",
   "appName": "TravelReady!",
-
   "login": "Sign in",
   "register": "Create account",
   "logout": "Sign out",
@@ -15,13 +14,11 @@
   "hasAccount": "Already have an account? ",
   "resetPassword": "Reset password",
   "sendResetEmail": "Send recovery email",
-
   "home": "Home",
   "myTrips": "My trips",
   "packingLists": "My bags",
   "chats": "Messages",
   "profile": "Profile",
-
   "newTrip": "New trip",
   "destination": "Destination",
   "startDate": "Departure date",
@@ -32,7 +29,6 @@
   "deleteTrip": "Delete trip",
   "noTrips": "No trips planned",
   "days": "days",
-
   "newList": "New bag",
   "templates": "Templates",
   "addItem": "Add item",
@@ -43,7 +39,6 @@
   "itemPacked": "Packed",
   "progress": "completed",
   "generateAI": "Generate with AI",
-
   "messages": "Messages",
   "newMessage": "New message",
   "createGroup": "Create group",
@@ -52,7 +47,6 @@
   "aiAssistant": "Travel assistant",
   "support": "Technical support",
   "noConversations": "No conversations",
-
   "myProfile": "My profile",
   "editProfile": "Edit profile",
   "darkMode": "Dark mode",
@@ -66,34 +60,53 @@
   "goPremium": "Go Premium",
   "freePlan": "Free Plan",
   "premiumPlan": "Premium Plan",
-
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
   "confirm": "Confirm",
   "retry": "Retry",
   "loading": "Loading...",
-
   "errorEmptyField": "This field is required.",
   "errorInvalidEmail": "Invalid email address.",
   "errorWeakPassword": "Password must be at least 6 characters.",
   "errorPasswordMatch": "Passwords do not match.",
   "errorGeneral": "Something went wrong. Please try again.",
-
   "weatherIn": "Weather in {city}",
-  "@weatherIn": { "placeholders": { "city": { "type": "String" } } },
-
+  "@weatherIn": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
   "tripsCount": "{count, plural, =0{No trips} =1{1 trip} other{{count} trips}}",
-  "@tripsCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@tripsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "create": "Create",
   "newPackingList": "New bag",
   "deletePackingList": "Delete bag",
   "deleteTripTitle": "Delete trip",
   "deleteTripConfirm": "Delete \"{name}\"? This action cannot be undone.",
-  "@deleteTripConfirm": { "placeholders": { "name": { "type": "String" } } },
+  "@deleteTripConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "deleteListConfirm": "Delete \"{name}\"?",
-  "@deleteListConfirm": { "placeholders": { "name": { "type": "String" } } },
+  "@deleteListConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "clearFilters": "Clear filters",
   "inProgress": "IN PROGRESS",
   "searchCity": "Search city",
@@ -109,7 +122,6 @@
   "emptyList": "Empty list",
   "addItemsHint": "Add items with the + button",
   "activeSubscription": "Subscription active",
-
   "noResults": "No results",
   "tryAnotherFilter": "Try another filter or search",
   "noTripsPlanned": "No trips planned",
@@ -126,24 +138,64 @@
   "categoryLabel": "Category",
   "quantityLabel": "Quantity:",
   "itemsCount": "{packed}/{total} items",
-  "@itemsCount": { "placeholders": { "packed": { "type": "int" }, "total": { "type": "int" } } },
+  "@itemsCount": {
+    "placeholders": {
+      "packed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "itemsCountOf": "{packed} of {total} items",
-  "@itemsCountOf": { "placeholders": { "packed": { "type": "int" }, "total": { "type": "int" } } },
+  "@itemsCountOf": {
+    "placeholders": {
+      "packed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "progressPercent": "{percent}% completed",
-  "@progressPercent": { "placeholders": { "percent": { "type": "int" } } },
+  "@progressPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "templatesAvailable": "{count} available",
-  "@templatesAvailable": { "placeholders": { "count": { "type": "int" } } },
+  "@templatesAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noListsYet": "No lists yet",
   "createListHint": "Create a new list to organize your luggage according to the trip type",
   "recentTrips": "Recent trips",
   "seeAll": "See all",
   "weatherNotAvailable": "Weather not available",
   "weatherStaleAge": "Stale data · {minutes} min ago",
-  "@weatherStaleAge": { "placeholders": { "minutes": { "type": "int" } } },
-  "retry": "Retry",
-
+  "@weatherStaleAge": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "daysLeft": "{days} days left",
-  "@daysLeft": { "placeholders": { "days": { "type": "int" } } },
+  "@daysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "luggagePrep": "Luggage prep",
   "noTripsYet": "No trips yet",
   "noTripsHint": "Create your first trip and organize your luggage instantly",
@@ -155,13 +207,18 @@
   "saveChanges": "Save changes",
   "profileUpdated": "Profile updated",
   "comingSoon": "Coming soon",
-
   "greetingMorning": "Good morning",
   "greetingAfternoon": "Good afternoon",
   "greetingEvening": "Good evening",
   "tripActive": "Active trip",
   "tripUpcoming": "{count, plural, =0{No upcoming trips} =1{1 upcoming trip} other{{count} upcoming trips}}",
-  "@tripUpcoming": { "placeholders": { "count": { "type": "int" } } },
+  "@tripUpcoming": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tripReady": "Ready to travel!",
   "statsUpcoming": "Upcoming",
   "statsActive": "Active",
@@ -171,7 +228,6 @@
   "assistantQuick": "Assistant",
   "todayTrip": "Today",
   "dayLeft": "1 day left",
-
   "welcomeFirstTime": "Welcome to TravelReady! 🌟",
   "subtitleFirstTime": "Create your account and start planning your perfect trip",
   "welcomeBack": "Welcome back",
@@ -184,18 +240,22 @@
   "hintEmail": "email@example.com",
   "hintPassword": "••••••",
   "hintConfirmPassword": "••••••",
-
   "resetPasswordTitle": "Reset password",
   "forgotPasswordQuestion": "Forgot your password?",
   "forgotPasswordDesc": "Enter your email and we'll send you a reset link.",
   "sendLink": "Send link",
   "emailSentTitle": "Email sent!",
   "emailSentDesc": "We've sent a recovery link to\n{email}",
-  "@emailSentDesc": { "placeholders": { "email": { "type": "String" } } },
+  "@emailSentDesc": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "backToLogin": "Back to sign in",
   "requiredField": "Required field.",
   "emailInvalid": "Invalid email.",
-
   "myTripsTitle": "My trips",
   "searchTripHint": "Search trip or destination...",
   "tripName": "Trip name",
@@ -207,9 +267,14 @@
   "transportLabel": "Transport",
   "createTripLabel": "Create trip",
   "daysCount": "{count} days",
-  "@daysCount": { "placeholders": { "count": { "type": "int" } } },
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noTripsHintSub": "Create your first trip and organize\nyour luggage instantly",
-
   "messagesTitle": "Messages",
   "newChatTitle": "New chat",
   "noOtherUsers": "No other registered users",
@@ -217,24 +282,55 @@
   "noPrivateChats": "No private chats yet\nTap + to start one",
   "noMessages": "No messages yet",
   "errorPrefix": "Error: {msg}",
-  "@errorPrefix": { "placeholders": { "msg": { "type": "String" } } },
+  "@errorPrefix": {
+    "placeholders": {
+      "msg": {
+        "type": "String"
+      }
+    }
+  },
   "signInRequired": "Sign in",
   "noMessagesYet": "No messages yet",
-
   "essentialsTitle": "Essential items",
   "essentialsSubtitle": "Things you should never forget on any trip",
   "useTemplate": "Use this template",
   "addEssentials": "Add {count} essentials",
-  "@addEssentials": { "placeholders": { "count": { "type": "int" } } },
+  "@addEssentials": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "essentialsAdded": "{count} essentials added to \"{name}\"",
-  "@essentialsAdded": { "placeholders": { "count": { "type": "int" }, "name": { "type": "String" } } },
+  "@essentialsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "creatingTemplate": "Creating \"{name}\"... ✓",
-  "@creatingTemplate": { "placeholders": { "name": { "type": "String" } } },
+  "@creatingTemplate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "creatingEssentialsList": "Creating essentials list...",
   "retryLabel": "Retry",
   "templateItemsCount": "{count} items included",
-  "@templateItemsCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@templateItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiWelcome": "Hello! 👋 I'm your travel assistant.\n\nI can help you with:\n• 🧳 What to bring depending on your destination\n• 🌡️ Clothing according to the weather\n• ✈️ Flying tips\n• 📋 Luggage templates\n\nWhere are you going? What do you need?",
   "aiReplyBeach": "☀️ **Beach / Summer:**\n\n👙 Swimsuit ×2 · ☀️ Sunscreen FPS50+\n🕶️ UV Glasses · 👡 Flip-flops · 🏖️ Microfiber towel\n💧 Reusable bottle · 👒 Hat\n\n💡 Liquids in 100ml bag if flying.",
   "aiReplyMountain": "⛰️ **Mountain:**\n\n🥾 Waterproof boots · 🧥 Rain jacket\n🧣 Scarf+hat+gloves · 🧱 Thermal clothing\n🎒 20-30L backpack · 💊 First aid kit · 🔦 Flashlight",
@@ -247,7 +343,6 @@
   "aiReplyHello": "Hello! 😊 Where are you traveling to?\nTell me the destination and I'll help you pack.",
   "aiReplyThanks": "You're welcome! 😊 Have a great trip! ✈️🌍",
   "aiReplyFallback": "🤔 I can help you with:\n\n• Destination (beach, mountain, city, business)\n• Flying tips · First aid kit\n• Documents · How much clothing to bring\n\nJust tell me your destination 🌍",
-
   "supportHowCanWeHelp": "How can we help you?",
   "supportAvailability": "We're available Monday to Friday\nfrom 9:00 to 18:00 (CET)",
   "supportEmailTitle": "Email",
@@ -256,12 +351,10 @@
   "supportHelpCenterSubtitle": "FAQs and guides",
   "supportReportProblem": "Report a problem",
   "supportReportProblemSubtitle": "Tell us what went wrong",
-
   "tripFilterAll": "🗓 All",
   "tripFilterUpcoming": "✈️ Upcoming",
   "tripFilterActive": "🟢 Active",
   "tripFilterPast": "📁 Past",
-
   "catClothing": "Clothing",
   "catElectronics": "Electronics",
   "catDocuments": "Documents",
@@ -271,7 +364,6 @@
   "catAccessories": "Accessories",
   "catSports": "Sports",
   "catOther": "Other",
-
   "essentialPassport": "Passport / ID",
   "essentialBankCard": "Bank card",
   "essentialTravelInsurance": "Travel insurance",
@@ -286,14 +378,12 @@
   "essentialHeadphones": "Headphones",
   "essentialWaterBottle": "Water bottle",
   "essentialTravelSnacks": "Travel snacks",
-
   "templateBeach": "Beach / Summer",
   "templateMountain": "Mountain / Hiking",
   "templateCity": "City Break",
   "templateBusiness": "Business",
   "templateWeekend": "Weekend",
   "templateLongFlight": "Long flight",
-
   "itemSwimsuit": "Swimsuit",
   "itemSunscreen": "Sunscreen SPF 50",
   "itemSunglasses": "Sunglasses",
@@ -323,5 +413,101 @@
   "itemSleepMask": "Sleep mask",
   "itemEarplugs": "Earplugs",
   "itemLiquidsBag100ml": "100ml liquids bag",
-  "itemWarmClothing": "Warm clothing"
+  "itemWarmClothing": "Warm clothing",
+  "itineraryTitleWithTrip": "Itinerary · {trip}",
+  "@itineraryTitleWithTrip": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
+  "itineraryEmptyTitle": "No plans yet",
+  "itineraryEmptyBody": "Add your first visit, meal or activity with a day and time.",
+  "itineraryAddPlan": "Add plan",
+  "itineraryDeletePlan": "Delete plan",
+  "itineraryNewPlan": "New plan",
+  "itineraryEditPlan": "Edit plan",
+  "itineraryFieldTitle": "Title",
+  "itineraryFieldTitleHint": "Museum, restaurant, activity…",
+  "itineraryFieldNotes": "Notes",
+  "itineraryFieldNotesHint": "Optional",
+  "itineraryStartAt": "Start · {time}",
+  "@itineraryStartAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "itineraryEndOptional": "End · optional",
+  "itineraryAdd": "Add",
+  "itineraryCategorySightseeing": "Sightseeing",
+  "itineraryCategoryFood": "Food",
+  "itineraryCategoryLodging": "Lodging",
+  "itineraryCategoryActivity": "Activity",
+  "itineraryCategoryOther": "Other",
+  "discoveryTitle": "Discover",
+  "discoverySearchHint": "Search places, museums, restaurants…",
+  "discoveryAllCategories": "All",
+  "discoveryDemoData": "Sample data — no provider configured",
+  "discoveryProviderUnavailableTitle": "Provider unavailable",
+  "discoveryProviderUnavailableBody": "Searching for places needs a provider (Maps/Places). Meanwhile you can add plans to the itinerary by hand.",
+  "discoverySearchErrorTitle": "Search failed",
+  "discoveryNoResultsTitle": "No results",
+  "discoveryExploreTitle": "Explore your destination",
+  "discoveryNoResultsBody": "Try another search or category.",
+  "discoveryExploreBody": "Search for museums, restaurants or corners of your destination.",
+  "discoveryHoursIndicative": "Hours (indicative): {hours}",
+  "@discoveryHoursIndicative": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryPriceIndicative": "Indicative price: {price}",
+  "@discoveryPriceIndicative": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryOfficialSite": "Official website",
+  "discoveryAddToItinerary": "Add to itinerary",
+  "discoveryAddedToItinerary": "Added to itinerary",
+  "discoveryAddPlaceWithName": "Add \"{name}\"",
+  "@discoveryAddPlaceWithName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryDayLabel": "Day",
+  "placeCategoryMonument": "Monuments",
+  "placeCategoryMuseum": "Museums",
+  "placeCategoryFood": "Food",
+  "placeCategoryNature": "Nature",
+  "placeCategoryNightlife": "Nightlife",
+  "placeCategoryShopping": "Shopping",
+  "placeCategoryHotel": "Hotels",
+  "itineraryEndAt": "End · {time}",
+  "@itineraryEndAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryTimeLabel": "Time · {time}",
+  "@discoveryTimeLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "saving": "Saving…"
 }

@@ -919,4 +919,163 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get itemWarmClothing => 'Ropa de abrigo';
+
+  @override
+  String itineraryTitleWithTrip(String trip) {
+    return 'Itinerario · $trip';
+  }
+
+  @override
+  String get itineraryEmptyTitle => 'Aún no hay planes';
+
+  @override
+  String get itineraryEmptyBody =>
+      'Añade tu primera visita, comida o actividad con día y hora.';
+
+  @override
+  String get itineraryAddPlan => 'Añadir plan';
+
+  @override
+  String get itineraryDeletePlan => 'Eliminar plan';
+
+  @override
+  String get itineraryNewPlan => 'Nuevo plan';
+
+  @override
+  String get itineraryEditPlan => 'Editar plan';
+
+  @override
+  String get itineraryFieldTitle => 'Título';
+
+  @override
+  String get itineraryFieldTitleHint => 'Museo, restaurante, actividad…';
+
+  @override
+  String get itineraryFieldNotes => 'Notas';
+
+  @override
+  String get itineraryFieldNotesHint => 'Opcional';
+
+  @override
+  String itineraryStartAt(String time) {
+    return 'Inicio · $time';
+  }
+
+  @override
+  String get itineraryEndOptional => 'Fin · opcional';
+
+  @override
+  String get itineraryAdd => 'Añadir';
+
+  @override
+  String get itineraryCategorySightseeing => 'Visita';
+
+  @override
+  String get itineraryCategoryFood => 'Comida';
+
+  @override
+  String get itineraryCategoryLodging => 'Alojamiento';
+
+  @override
+  String get itineraryCategoryActivity => 'Actividad';
+
+  @override
+  String get itineraryCategoryOther => 'Otro';
+
+  @override
+  String get discoveryTitle => 'Descubrir';
+
+  @override
+  String get discoverySearchHint => 'Buscar lugares, museos, restaurantes…';
+
+  @override
+  String get discoveryAllCategories => 'Todo';
+
+  @override
+  String get discoveryDemoData =>
+      'Datos de ejemplo — sin proveedor configurado';
+
+  @override
+  String get discoveryProviderUnavailableTitle => 'Proveedor no disponible';
+
+  @override
+  String get discoveryProviderUnavailableBody =>
+      'La búsqueda de lugares requiere configurar un proveedor (Maps/Places). Mientras tanto puedes añadir planes manualmente al itinerario.';
+
+  @override
+  String get discoverySearchErrorTitle => 'Error al buscar';
+
+  @override
+  String get discoveryNoResultsTitle => 'Sin resultados';
+
+  @override
+  String get discoveryExploreTitle => 'Explora tu destino';
+
+  @override
+  String get discoveryNoResultsBody => 'Prueba con otra búsqueda o categoría.';
+
+  @override
+  String get discoveryExploreBody =>
+      'Busca museos, restaurantes o rincones del destino.';
+
+  @override
+  String discoveryHoursIndicative(String hours) {
+    return 'Horario (indicativo): $hours';
+  }
+
+  @override
+  String discoveryPriceIndicative(String price) {
+    return 'Precio orientativo: $price';
+  }
+
+  @override
+  String get discoveryOfficialSite => 'Sitio web oficial';
+
+  @override
+  String get discoveryAddToItinerary => 'Añadir al itinerario';
+
+  @override
+  String get discoveryAddedToItinerary => 'Añadido al itinerario';
+
+  @override
+  String discoveryAddPlaceWithName(String name) {
+    return 'Añadir \"$name\"';
+  }
+
+  @override
+  String get discoveryDayLabel => 'Día';
+
+  @override
+  String get placeCategoryMonument => 'Monumentos';
+
+  @override
+  String get placeCategoryMuseum => 'Museos';
+
+  @override
+  String get placeCategoryFood => 'Comida';
+
+  @override
+  String get placeCategoryNature => 'Naturaleza';
+
+  @override
+  String get placeCategoryNightlife => 'Ocio nocturno';
+
+  @override
+  String get placeCategoryShopping => 'Compras';
+
+  @override
+  String get placeCategoryHotel => 'Hoteles';
+
+  @override
+  String itineraryEndAt(String time) {
+    return 'Fin · $time';
+  }
+
+  @override
+  String discoveryTimeLabel(String time) {
+    return 'Hora · $time';
+  }
+
+  @override
+  String get saving => 'Guardando…';
 }

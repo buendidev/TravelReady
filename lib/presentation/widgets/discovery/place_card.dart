@@ -4,6 +4,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/services/places/place_category.dart';
 import '../../../core/services/places/place_result.dart';
+import '../../../l10n/app_localizations.dart';
+import 'place_category_labels.dart';
 
 /// Tarjeta de lugar para el grid/lista de descubrimiento.
 /// Imagen con fallback: sin `photoReference` útil se muestra un
@@ -74,7 +76,7 @@ class PlaceCard extends StatelessWidget {
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Row(children: [
-                    Text(placeCategoryLabel(place.category),
+                    Text(placeCategoryLabel(AppLocalizations.of(context), place.category),
                         style: Theme.of(context).textTheme.labelSmall
                             ?.copyWith(color: AppColors.primary)),
                     if (place.priceLevelLabel != null) ...[

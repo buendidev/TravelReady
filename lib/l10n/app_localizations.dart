@@ -1771,6 +1771,288 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ropa de abrigo'**
   String get itemWarmClothing;
+
+  /// No description provided for @itineraryTitleWithTrip.
+  ///
+  /// In es, this message translates to:
+  /// **'Itinerario · {trip}'**
+  String itineraryTitleWithTrip(String trip);
+
+  /// No description provided for @itineraryEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay planes'**
+  String get itineraryEmptyTitle;
+
+  /// No description provided for @itineraryEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Añade tu primera visita, comida o actividad con día y hora.'**
+  String get itineraryEmptyBody;
+
+  /// No description provided for @itineraryAddPlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir plan'**
+  String get itineraryAddPlan;
+
+  /// No description provided for @itineraryDeletePlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar plan'**
+  String get itineraryDeletePlan;
+
+  /// No description provided for @itineraryNewPlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo plan'**
+  String get itineraryNewPlan;
+
+  /// No description provided for @itineraryEditPlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar plan'**
+  String get itineraryEditPlan;
+
+  /// No description provided for @itineraryFieldTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Título'**
+  String get itineraryFieldTitle;
+
+  /// No description provided for @itineraryFieldTitleHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Museo, restaurante, actividad…'**
+  String get itineraryFieldTitleHint;
+
+  /// No description provided for @itineraryFieldNotes.
+  ///
+  /// In es, this message translates to:
+  /// **'Notas'**
+  String get itineraryFieldNotes;
+
+  /// No description provided for @itineraryFieldNotesHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Opcional'**
+  String get itineraryFieldNotesHint;
+
+  /// No description provided for @itineraryStartAt.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicio · {time}'**
+  String itineraryStartAt(String time);
+
+  /// No description provided for @itineraryEndOptional.
+  ///
+  /// In es, this message translates to:
+  /// **'Fin · opcional'**
+  String get itineraryEndOptional;
+
+  /// No description provided for @itineraryAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir'**
+  String get itineraryAdd;
+
+  /// No description provided for @itineraryCategorySightseeing.
+  ///
+  /// In es, this message translates to:
+  /// **'Visita'**
+  String get itineraryCategorySightseeing;
+
+  /// No description provided for @itineraryCategoryFood.
+  ///
+  /// In es, this message translates to:
+  /// **'Comida'**
+  String get itineraryCategoryFood;
+
+  /// No description provided for @itineraryCategoryLodging.
+  ///
+  /// In es, this message translates to:
+  /// **'Alojamiento'**
+  String get itineraryCategoryLodging;
+
+  /// No description provided for @itineraryCategoryActivity.
+  ///
+  /// In es, this message translates to:
+  /// **'Actividad'**
+  String get itineraryCategoryActivity;
+
+  /// No description provided for @itineraryCategoryOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Otro'**
+  String get itineraryCategoryOther;
+
+  /// No description provided for @discoveryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Descubrir'**
+  String get discoveryTitle;
+
+  /// No description provided for @discoverySearchHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar lugares, museos, restaurantes…'**
+  String get discoverySearchHint;
+
+  /// No description provided for @discoveryAllCategories.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo'**
+  String get discoveryAllCategories;
+
+  /// No description provided for @discoveryDemoData.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos de ejemplo — sin proveedor configurado'**
+  String get discoveryDemoData;
+
+  /// No description provided for @discoveryProviderUnavailableTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Proveedor no disponible'**
+  String get discoveryProviderUnavailableTitle;
+
+  /// No description provided for @discoveryProviderUnavailableBody.
+  ///
+  /// In es, this message translates to:
+  /// **'La búsqueda de lugares requiere configurar un proveedor (Maps/Places). Mientras tanto puedes añadir planes manualmente al itinerario.'**
+  String get discoveryProviderUnavailableBody;
+
+  /// No description provided for @discoverySearchErrorTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al buscar'**
+  String get discoverySearchErrorTitle;
+
+  /// No description provided for @discoveryNoResultsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin resultados'**
+  String get discoveryNoResultsTitle;
+
+  /// No description provided for @discoveryExploreTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Explora tu destino'**
+  String get discoveryExploreTitle;
+
+  /// No description provided for @discoveryNoResultsBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba con otra búsqueda o categoría.'**
+  String get discoveryNoResultsBody;
+
+  /// No description provided for @discoveryExploreBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Busca museos, restaurantes o rincones del destino.'**
+  String get discoveryExploreBody;
+
+  /// No description provided for @discoveryHoursIndicative.
+  ///
+  /// In es, this message translates to:
+  /// **'Horario (indicativo): {hours}'**
+  String discoveryHoursIndicative(String hours);
+
+  /// No description provided for @discoveryPriceIndicative.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio orientativo: {price}'**
+  String discoveryPriceIndicative(String price);
+
+  /// No description provided for @discoveryOfficialSite.
+  ///
+  /// In es, this message translates to:
+  /// **'Sitio web oficial'**
+  String get discoveryOfficialSite;
+
+  /// No description provided for @discoveryAddToItinerary.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir al itinerario'**
+  String get discoveryAddToItinerary;
+
+  /// No description provided for @discoveryAddedToItinerary.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadido al itinerario'**
+  String get discoveryAddedToItinerary;
+
+  /// No description provided for @discoveryAddPlaceWithName.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir \"{name}\"'**
+  String discoveryAddPlaceWithName(String name);
+
+  /// No description provided for @discoveryDayLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Día'**
+  String get discoveryDayLabel;
+
+  /// No description provided for @placeCategoryMonument.
+  ///
+  /// In es, this message translates to:
+  /// **'Monumentos'**
+  String get placeCategoryMonument;
+
+  /// No description provided for @placeCategoryMuseum.
+  ///
+  /// In es, this message translates to:
+  /// **'Museos'**
+  String get placeCategoryMuseum;
+
+  /// No description provided for @placeCategoryFood.
+  ///
+  /// In es, this message translates to:
+  /// **'Comida'**
+  String get placeCategoryFood;
+
+  /// No description provided for @placeCategoryNature.
+  ///
+  /// In es, this message translates to:
+  /// **'Naturaleza'**
+  String get placeCategoryNature;
+
+  /// No description provided for @placeCategoryNightlife.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocio nocturno'**
+  String get placeCategoryNightlife;
+
+  /// No description provided for @placeCategoryShopping.
+  ///
+  /// In es, this message translates to:
+  /// **'Compras'**
+  String get placeCategoryShopping;
+
+  /// No description provided for @placeCategoryHotel.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoteles'**
+  String get placeCategoryHotel;
+
+  /// No description provided for @itineraryEndAt.
+  ///
+  /// In es, this message translates to:
+  /// **'Fin · {time}'**
+  String itineraryEndAt(String time);
+
+  /// No description provided for @discoveryTimeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora · {time}'**
+  String discoveryTimeLabel(String time);
+
+  /// No description provided for @saving.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardando…'**
+  String get saving;
 }
 
 class _AppLocalizationsDelegate
