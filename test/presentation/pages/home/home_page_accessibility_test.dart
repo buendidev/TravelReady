@@ -9,6 +9,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:travel_ready/data/models/trip_model.dart';
 import 'package:travel_ready/domain/entities/trip.dart';
 import 'package:travel_ready/domain/entities/user.dart';
 import 'package:travel_ready/domain/repositories/trips_repository.dart';
@@ -251,6 +252,39 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('TRIP_DETAIL:active-trip'), findsOneWidget);
+  });
+
+  testWidgets('TripModel upcoming trips select the earliest and open its detail',
+      (tester) async {
+    final now = DateTime.now();
+    final laterTrip = TripModel(
+      id: 'later-trip',
+      userId: _user.id,
+      name: 'Later trip',
+      destination: 'Paris',
+      startDate: now.add(const Duration(days: 4)),
+      endDate: now.add(const Duration(days: 6)),
+      createdAt: now,
+    );
+    final earlierTrip = TripModel(
+      id: 'earlier-trip',
+      userId: _user.id,
+      name: 'Earlier trip',
+      destination: 'Rome',
+      startDate: now.add(const Duration(days: 2)),
+      endDate: now.add(const Duration(days: 4)),
+      createdAt: now,
+    );
+
+    await pumpHome(tester, trips: [laterTrip, earlierTrip]);
+
+    expect(find.text('Earlier trip'), findsWidgets);
+
+    await tester.tap(
+        find.widgetWithText(ElevatedButton, 'Preparación de equipaje'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('TRIP_DETAIL:earlier-trip'), findsOneWidget);
   });
 
   testWidgets('profile control exposes button role and profile label',

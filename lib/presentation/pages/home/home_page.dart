@@ -74,7 +74,9 @@ class _HomeContent extends StatelessWidget {
           // Solo reconstruye cuando cambia la lista de viajes
           buildWhen: (p, c) => p != c,
           builder: (context, tripsState) {
-            final trips    = tripsState is TripsReady ? tripsState.trips : <Trip>[];
+            final trips = tripsState is TripsReady
+                ? List<Trip>.from(tripsState.trips)
+                : <Trip>[];
             final upcoming = trips.where((t) => t.startDate.isAfter(DateTime.now())).toList();
             final active   = trips.where((t) =>
                 t.startDate.isBefore(DateTime.now()) &&
