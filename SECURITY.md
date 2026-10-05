@@ -1,118 +1,61 @@
-# SECURITY.md — TravelReady! 🔐
-Implementado según CLAUDE.md. Estado actual + roadmap.
+# Security status and release gates
 
----
+## Read this first
 
-## ✅ Implementado ahora
+TravelReady currently uses Firebase Authentication and Firestore for users and chats. Trips and packing data are stored locally with ordinary `sqflite` SQLite; they are **not** Firestore collections and are **not encrypted at rest**.
 
-### 1. Rate Limiting (CLAUDE.md §1)
-`lib/core/utils/rate_limiter.dart`
-- Auth (login/registro/reset): **5 intentos / 15 min** por email hashed
-- Bloqueo con mensaje: "Espera X minutos"
-- Reset automático en login exitoso
-- Sin estado server-side en esta fase (client-side guard + Firebase server-side nativo)
+### Status legend
 
-### 2. Secretos y Variables de Entorno (CLAUDE.md §2)
-- API keys en `.env` → en `.gitignore` ✅
-- `EnvValidator.validate()` en `main()` → warning en dev, error en prod
-- `firebase_options.dart` en `.gitignore` ✅
-- `google-services.json` / `GoogleService-Info.plist` en `.gitignore` ✅
+- **Verified in repository** — supported by version-controlled client code or files.
+- **Proposed** — a design or next step; not implemented or proven.
+- **External/unverified** — a provider-console, deployed, device, or release setting that this repository cannot prove.
 
-### 3. Validación de Inputs (CLAUDE.md §3)
-`lib/core/utils/input_sanitizer.dart`
-- `sanitize()` elimina `<>"\x00`
-- Validadores: email regex, password mín 6, nombre 2-60 chars, trip 0-80 chars
-- `InputSanitizer` usado en: `AuthBloc`, `PackingBloc`, `TripsBloc`
-- Firebase SDK usa queries parametrizadas → sin riesgo de inyección NoSQL
+Use the [client-visible configuration guide](docs/production/client-configuration.md) for extractable Flutter values, the [threat model](docs/production/threat-model.md) for risks and required tests, and the [owner-action register](docs/production/owner-action-register.md) for actions that only the project owner may perform.
 
-### 4. Autenticación Segura (CLAUDE.md §5)
-- Firebase Auth gestiona tokens JWT con refresh automático
-- Sesión persistida en `SharedPreferences` cifrado por Firebase SDK
-- Google Sign-In con OAuth2 estándar
-- Contraseñas hasheadas por Firebase (bcrypt interno) → nunca llegan al cliente
-- Logout limpia tanto Firebase Auth como Google Sign-In
+## Current repository evidence
 
-### 5. Logging de Seguridad (CLAUDE.md §6)
-`lib/core/utils/security_log.dart`
-- `authFailed(emailHash, reason)` — hash del email, sin PII
-- `rateLimitExceeded(key, attempts)`
-- `inputRejected(field, reason)`
-- `sessionEvent(event, uid_prefix)` — solo 6 chars del UID
-- En producción: sustituir `print` por Firebase Crashlytics / Cloud Logging
+### Verified in repository
 
-### 6. Reglas de Firestore
-`firestore.rules`
-- Usuario solo lee/escribe su propio doc (`userId == request.auth.uid`)
-- Validación de esquema en create (campos requeridos, tipos)
-- Subcolecciones protegidas con `get()` al padre
-- No se permite borrar usuarios desde cliente
+- Firebase Auth and Firestore-backed user/chat client code exist.
+- Chat-list queries filter `memberIds` with `arrayContains` and order by `updatedAt` descending. Chat documents use `createdAt`, `updatedAt`, and `unreadBy`; message documents use `createdAt` and `isRead`.
+- Trip and packing persistence uses `sqflite` SQLite. It has no at-rest encryption in the current implementation.
+- `.env.example` defines `OPENWEATHER_API_KEY`, `GOOGLE_MAPS_API_KEY`, `REVENUECAT_API_KEY`, and `REVENUECAT_API_KEY_IOS`.
 
----
+### External/unverified — do not infer completion
 
-## 📋 Pendiente (prioridad para producción)
+- No version-controlled `firebase.json`, Firestore rules, Firestore index configuration, or emulator suite exists.
+- Deployed Firestore rules and indexes, Firebase project region, Authentication provider enablement, Firebase App Check, and provider key restrictions are unverified external state.
+- Client-controlled plan writes and directory reads are known security gaps. Firestore rules must not be authored or deployed until schema/authority behaviour and emulator tests define and prove the required access model.
 
-### Alta prioridad
-- [ ] **HTTPS / TLS** — Flutter usa HTTPS por defecto. Verificar en Android: `network_security_config.xml` sin `cleartext`
-- [ ] **Certificate Pinning** — Añadir `dio_certificate_pincer` para peticiones a APIs externas (OpenWeather, Google Maps)
-- [ ] **Firebase App Check** — Activar en Firebase Console para verificar que las peticiones vienen de la app real (evita scraping)
-- [ ] **Ofuscación Android** — Activar ProGuard/R8 en `build.gradle` para producción
-- [ ] **Rate limiting server-side** — Crear Cloud Functions con `firebase-functions-rate-limiter` para endpoints críticos
+## Configuration boundary
 
-### Media prioridad
-- [ ] **Crashlytics logging** — Reemplazar `print` en `SecurityLog` por `FirebaseCrashlytics.instance.log()`
-- [ ] **Sensitive data in memory** — Limpiar passwords de memoria tras uso (`_passCtrl.clear()` ya implementado)
-- [ ] **Deeplink validation** — Validar esquema de deeplinks en `AndroidManifest.xml`
-- [ ] **Android Keystore** — Guardar tokens sensibles en Android Keystore via `flutter_secure_storage`
-- [ ] **Biometric auth** — `local_auth` para re-autenticar antes de operaciones sensibles
+Flutter bundles `.env` into the client artifact. Every value in it is extractable and therefore must be treated as client configuration, not a backend secret. Use only provider-restricted client keys, with package/bundle, signing, API, origin, quota, and environment restrictions where the provider supports them. Do not put service accounts, private keys, database credentials, webhook secrets, or administrator credentials in `.env`, `.env.example`, assets, or client code.
 
-### Baja prioridad (post-TravelReady)
-- [ ] **GDPR Compliance** — Política de privacidad + consentimiento explícito
-- [ ] **Data encryption at rest** — Cifrar datos de Hive con `hive_flutter` AES key
-- [ ] **Audit log en Firestore** — Colección `audit_logs` con timestamps de acciones
-- [ ] **2FA** — Firebase Auth soporta TOTP como segundo factor
-- [ ] **Penetration testing** — OWASP Mobile Top 10 checklist
+See [client-visible configuration](docs/production/client-configuration.md) for the supported names, local validation, and scan limits. Provider restriction and rotation are **External/unverified** owner actions.
 
----
+## Release gates
 
-## Firestore Security Rules — explicación
+All items remain unchecked until evidence is captured. This checklist is a release decision aid, not evidence that a setting exists.
 
-```javascript
-// Regla clave: userId == auth.uid en TODOS los accesos
-allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+### Repository and client gates
 
-// Validación de esquema en create (evita datos malformados)
-allow create: if isAuthenticated() && isValidTrip();
+- [ ] Record the focused lint/static-analysis result; do not claim zero lints without its output.
+- [ ] Confirm `.env` is ignored and `.env.example` contains only the four documented client-visible keys.
+- [ ] Run and retain the result of `dart run tool/release_config_validator.dart .`.
+- [ ] Review the shipped artifact for extractable configuration and confirm no backend secret is bundled.
+- [ ] Decide and test protection for SQLite data at rest, backups, logout, deletion, and account switching; current SQLite is unencrypted.
+- [ ] Resolve client plan writes and directory-read exposure with a defined authority model and tests.
 
-// Subcolecciones: verifican que el padre pertenece al usuario
-allow read, write: if get(/trips/$(tripId)).data.userId == request.auth.uid;
-```
+### Firebase and external operator gates
 
----
+- [ ] Define Firestore schema and authority behaviour, then write version-controlled rules and indexes.
+- [ ] Add and run Firebase Emulator authorization/query tests for anonymous, owner/member, other user, former member, privileged-field, and directory cases.
+- [ ] Capture and compare deployed Firestore rules/indexes with the tested version; deployment is currently unverified.
+- [ ] Verify Firebase project region, enabled Auth providers, billing/quota controls, and App Check in the owner-controlled consoles.
+- [ ] Apply and evidence provider restrictions and rotation procedures for every client-visible key.
+- [ ] Verify Android/iOS release hardening, including any chosen code-obfuscation setting; ProGuard/R8 is not asserted here.
+- [ ] Obtain owner release approval and record accepted residual risks.
 
-## Variables de entorno requeridas
+## Proposed operator sequence
 
-```env
-# .env (nunca subir al repo)
-OPENWEATHER_API_KEY=     # https://openweathermap.org/api
-GOOGLE_MAPS_API_KEY=     # https://console.cloud.google.com
-
-# .env.example (sí subir al repo, sin valores)
-OPENWEATHER_API_KEY=
-GOOGLE_MAPS_API_KEY=
-```
-
----
-
-## Checklist antes de release
-
-```
-[ ] flutter_lints sin warnings
-[ ] firebase_options.dart en .gitignore
-[ ] google-services.json en .gitignore
-[ ] .env en .gitignore
-[ ] Firestore rules desplegadas: firebase deploy --only firestore:rules
-[ ] Firebase App Check activado
-[ ] ProGuard activado en android/app/build.gradle
-[ ] debugShowCheckedModeBanner: false ✅ (ya implementado)
-[ ] No hay print() en código de producción (solo en SecurityLog con assert)
-```
+After the schema and authority model are approved, an operator may create Firebase CLI/emulator configuration and use the relevant Firebase commands in an owner-controlled environment. Do not run deployment commands merely because they appear in documentation: first version-control and test the rules/indexes, then capture deployment evidence. The owner-only prerequisites are tracked in the [owner-action register](docs/production/owner-action-register.md).
