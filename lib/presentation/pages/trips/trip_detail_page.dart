@@ -85,6 +85,7 @@ class _ContentState extends State<_Content> {
               const SliverFillRemaining(child: TRLoading())
             else if (state is PackingError)
               SliverFillRemaining(
+                hasScrollBody: false,
                 child: Center(child: Padding(
                   padding: const EdgeInsets.all(AppSizes.xl),
                   child: _Empty(
@@ -94,6 +95,7 @@ class _ContentState extends State<_Content> {
               )
             else if (state is PackingListsReady && state.lists.isEmpty)
               SliverFillRemaining(
+                hasScrollBody: false,
                 child: Center(child: Padding(
                   padding: const EdgeInsets.all(AppSizes.xl),
                   child: _Empty(
