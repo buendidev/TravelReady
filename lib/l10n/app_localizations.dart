@@ -704,6 +704,42 @@ abstract class AppLocalizations {
   /// **'Listas de equipaje'**
   String get packingListsForTrip;
 
+  /// No description provided for @tripPlanning.
+  ///
+  /// In es, this message translates to:
+  /// **'Planifica tu viaje'**
+  String get tripPlanning;
+
+  /// No description provided for @tripPlanningDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Organiza cada día y descubre lugares para visitar'**
+  String get tripPlanningDescription;
+
+  /// No description provided for @itinerary.
+  ///
+  /// In es, this message translates to:
+  /// **'Itinerario'**
+  String get itinerary;
+
+  /// No description provided for @itineraryDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Organiza tu plan día a día'**
+  String get itineraryDescription;
+
+  /// No description provided for @discoverDestinations.
+  ///
+  /// In es, this message translates to:
+  /// **'Descubrir destinos'**
+  String get discoverDestinations;
+
+  /// No description provided for @discoverDestinationsDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuentra lugares para visitar'**
+  String get discoverDestinationsDescription;
+
   /// No description provided for @categoryLabel.
   ///
   /// In es, this message translates to:

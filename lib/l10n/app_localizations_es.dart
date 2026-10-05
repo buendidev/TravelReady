@@ -328,6 +328,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get packingListsForTrip => 'Listas de equipaje';
 
   @override
+  String get tripPlanning => 'Planifica tu viaje';
+
+  @override
+  String get tripPlanningDescription =>
+      'Organiza cada día y descubre lugares para visitar';
+
+  @override
+  String get itinerary => 'Itinerario';
+
+  @override
+  String get itineraryDescription => 'Organiza tu plan día a día';
+
+  @override
+  String get discoverDestinations => 'Descubrir destinos';
+
+  @override
+  String get discoverDestinationsDescription =>
+      'Encuentra lugares para visitar';
+
+  @override
   String get categoryLabel => 'Categoría';
 
   @override

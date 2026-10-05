@@ -327,6 +327,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packingListsForTrip => 'Packing lists';
 
   @override
+  String get tripPlanning => 'Plan your trip';
+
+  @override
+  String get tripPlanningDescription =>
+      'Organize each day and discover places to visit';
+
+  @override
+  String get itinerary => 'Itinerary';
+
+  @override
+  String get itineraryDescription => 'Organize your day-by-day plan';
+
+  @override
+  String get discoverDestinations => 'Discover destinations';
+
+  @override
+  String get discoverDestinationsDescription => 'Find places to visit';
+
+  @override
   String get categoryLabel => 'Category';
 
   @override

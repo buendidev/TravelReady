@@ -59,6 +59,20 @@ void main() {
         GoRoute(
           path: '/trips/:id',
           builder: (_, __) => TripDetailPage(trip: _trip),
+          routes: [
+            GoRoute(
+              path: 'itinerary',
+              builder: (_, state) => Text(
+                'itinerary:${identical(state.extra, _trip)}',
+              ),
+            ),
+            GoRoute(
+              path: 'discovery',
+              builder: (_, state) => Text(
+                'discovery:${identical(state.extra, _trip)}',
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -82,4 +96,36 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('shows accessible itinerary and discovery planning actions',
+      (tester) async {
+    await pumpDetail(tester);
+
+    expect(find.text('Planifica tu viaje'), findsOneWidget);
+    expect(find.byWidgetPredicate((widget) =>
+        widget is Semantics && widget.properties.label == 'Itinerario'),
+        findsOneWidget);
+    expect(find.byWidgetPredicate((widget) =>
+        widget is Semantics && widget.properties.label == 'Descubrir destinos'),
+        findsOneWidget);
+  });
+
+  testWidgets('itinerary action pushes its nested route with the current trip',
+      (tester) async {
+    await pumpDetail(tester);
+
+    await tester.tap(find.text('Itinerario'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('itinerary:true'), findsOneWidget);
+  });
+
+  testWidgets('discovery action pushes its nested route with the current trip',
+      (tester) async {
+    await pumpDetail(tester);
+
+    await tester.tap(find.text('Descubrir destinos'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('discovery:true'), findsOneWidget);
+  });
 }

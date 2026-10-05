@@ -11,7 +11,9 @@ import '../../presentation/pages/chats/chat_detail_page.dart';
 import '../../presentation/pages/chats/chats_page.dart';
 import '../../presentation/pages/chats/create_group_page.dart';
 import '../../presentation/pages/chats/users_page.dart';
+import '../../presentation/pages/discovery/discovery_page.dart';
 import '../../presentation/pages/home/home_page.dart';
+import '../../presentation/pages/itinerary/itinerary_page.dart';
 import '../../presentation/pages/packing/packing_detail_page.dart';
 import '../../presentation/pages/packing/packing_lists_page.dart';
 import '../../presentation/pages/premium/premium_page.dart';
@@ -37,6 +39,8 @@ abstract final class AppRoutes {
 
   static String packingDetailPath(String listId) => '/packing-lists/$listId';
   static String tripDetailPath(String tripId)    => '/trips/$tripId';
+  static String itineraryPath(String tripId)     => '/trips/$tripId/itinerary';
+  static String discoveryPath(String tripId)     => '/trips/$tripId/discovery';
 
   static const _protected = [home, packingLists, trips, chats, profile, premium];
   static const _authOnly  = [login, register, resetPassword];
@@ -140,6 +144,32 @@ GoRouter buildAppRouter(AuthBloc authBloc) {
                     }
                     return TripDetailPage(trip: trip);
                   },
+                  routes: [
+                    GoRoute(
+                      path: 'itinerary',
+                      builder: (_, s) {
+                        final trip = s.extra as Trip?;
+                        if (trip == null) {
+                          return const Scaffold(
+                              body: Center(
+                                  child: Text('Viaje no encontrado')));
+                        }
+                        return ItineraryPage(trip: trip);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'discovery',
+                      builder: (_, s) {
+                        final trip = s.extra as Trip?;
+                        if (trip == null) {
+                          return const Scaffold(
+                              body: Center(
+                                  child: Text('Viaje no encontrado')));
+                        }
+                        return DiscoveryPage(trip: trip);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),

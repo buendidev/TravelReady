@@ -69,6 +69,15 @@ class _ContentState extends State<_Content> {
               ),
             ),
 
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.screenPaddingH),
+                child: _TripPlanningSection(trip: widget.trip),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+
             // Título sección
             SliverToBoxAdapter(
               child: Padding(
@@ -255,6 +264,103 @@ class _TripCard extends StatelessWidget {
     TransportType.ship  => '🚢 ',
     TransportType.other => '🚀 ',
   };
+}
+
+class _TripPlanningSection extends StatelessWidget {
+  final Trip trip;
+  const _TripPlanningSection({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.md),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(l10n.tripPlanning,
+            style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 4),
+        Text(l10n.tripPlanningDescription,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondaryLight)),
+        const SizedBox(height: AppSizes.md),
+        _PlanningAction(
+          label: l10n.itinerary,
+          description: l10n.itineraryDescription,
+          icon: Icons.calendar_month_rounded,
+          onTap: () => context.push(AppRoutes.itineraryPath(trip.id),
+              extra: trip),
+        ),
+        const SizedBox(height: AppSizes.sm),
+        _PlanningAction(
+          label: l10n.discoverDestinations,
+          description: l10n.discoverDestinationsDescription,
+          icon: Icons.explore_rounded,
+          onTap: () => context.push(AppRoutes.discoveryPath(trip.id),
+              extra: trip),
+        ),
+      ]),
+    );
+  }
+}
+
+class _PlanningAction extends StatelessWidget {
+  final String label;
+  final String description;
+  final IconData icon;
+  final VoidCallback onTap;
+  const _PlanningAction({
+    required this.label,
+    required this.description,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(AppSizes.radiusDefault),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSizes.radiusDefault),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSizes.md),
+            child: Row(children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppColors.primary),
+              ),
+              const SizedBox(width: AppSizes.md),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(description,
+                      style: Theme.of(context).textTheme.bodySmall),
+                ],
+              )),
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.primary),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ListCard extends StatelessWidget {
