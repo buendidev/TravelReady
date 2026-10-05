@@ -21,7 +21,6 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
-      buildWhen: (prev, curr) => prev.runtimeType != curr.runtimeType,
       builder: (context, authState) {
         final user   = authState is AuthAuthenticated ? authState.user : null;
         final userId = user?.id ?? '';
@@ -57,18 +56,16 @@ class _HomeContent extends StatelessWidget {
     return l10n.greetingEvening;
   }
 
-  String _initials(String name) {
-    final p = name.trim().split(' ');
-    return p.length >= 2
-        ? '${p[0][0]}${p[1][0]}'.toUpperCase()
-        : name.isNotEmpty ? name[0].toUpperCase() : 'U';
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n      = AppLocalizations.of(context);
     final isDark    = Theme.of(context).brightness == Brightness.dark;
-    final firstName = user?.name.split(' ').first ?? 'viajero';
+    final name = user?.name.trim() ?? '';
+    final nameTokens = name.isEmpty ? <String>[] : name.split(RegExp(r'\s+'));
+    final firstName = nameTokens.isEmpty ? 'viajero' : nameTokens.first;
+    final initials = nameTokens.isEmpty
+        ? 'U'
+        : nameTokens.take(2).map((token) => token[0]).join().toUpperCase();
     final isPremium = user?.isPremium ?? false;
 
     return Scaffold(
@@ -130,7 +127,7 @@ class _HomeContent extends StatelessWidget {
                               : CircleAvatar(
                                   radius: 22,
                                   backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                                  child: Text(_initials(user?.name ?? 'U'),
+                                  child: Text(initials,
                                       style: const TextStyle(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.w600,

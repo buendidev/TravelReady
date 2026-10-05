@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -66,6 +68,7 @@ void main() {
   Future<void> pumpHome(
     WidgetTester tester, {
     List<Trip> trips = const [],
+    double textScale = 1,
   }) async {
     when(() => repo.watchTrips(any()))
         .thenAnswer((_) => Stream.value(Right(trips)));
@@ -95,6 +98,12 @@ void main() {
     await tester.pumpWidget(
       MaterialApp.router(
         routerConfig: router,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: child!,
+        ),
         locale: const Locale('es'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -102,6 +111,112 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  Finder greetingFor(String firstName) => find.byWidgetPredicate(
+        (widget) => widget is Text &&
+            (widget.data?.endsWith(', $firstName! 👋') ?? false),
+      );
+
+  const nameCases = [
+    (label: 'repeated spaces', name: 'Ana  Pérez', first: 'Ana', initials: 'AP'),
+    (label: 'leading and trailing spaces', name: '  Ana Pérez  ', first: 'Ana', initials: 'AP'),
+    (label: 'single token', name: 'Ana', first: 'Ana', initials: 'A'),
+    (label: 'padded single token', name: '  Ana  ', first: 'Ana', initials: 'A'),
+    (label: 'empty', name: '', first: 'viajero', initials: 'U'),
+    (label: 'spaces only', name: '   ', first: 'viajero', initials: 'U'),
+    (label: 'whitespace only', name: '\t\n ', first: 'viajero', initials: 'U'),
+    (label: 'tabs and newlines', name: '\tAna\tPérez\nLópez\n', first: 'Ana', initials: 'AP'),
+    (label: 'first two of three tokens', name: 'Ana Pérez López', first: 'Ana', initials: 'AP'),
+  ];
+
+  for (final nameCase in nameCases) {
+    testWidgets('profile name handles ${nameCase.label}', (tester) async {
+      when(() => authBloc.state).thenReturn(
+        AuthAuthenticated(user: _user.copyWith(name: nameCase.name)),
+      );
+
+      await pumpHome(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(greetingFor(nameCase.first), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(CircleAvatar),
+          matching: find.text(nameCase.initials),
+        ),
+        findsOneWidget,
+      );
+    });
+  }
+
+  testWidgets('mounted Home refreshes same-ID name and plan emissions',
+      (tester) async {
+    final states = StreamController<AuthState>();
+    addTearDown(states.close);
+    whenListen(authBloc, states.stream,
+        initialState: AuthAuthenticated(user: _user));
+    await pumpHome(tester);
+    final mountedHome = tester.element(find.byType(HomePage));
+    final premiumOffer = find.byIcon(Icons.workspace_premium_rounded);
+    expect(greetingFor('Test'), findsOneWidget);
+    expect(find.text('TU'), findsOneWidget);
+    expect(premiumOffer, findsOneWidget);
+
+    final renamed = _user.copyWith(name: 'Lucía Gómez');
+    states.add(AuthAuthenticated(user: renamed));
+    await tester.pumpAndSettle();
+
+    expect(tester.element(find.byType(HomePage)), same(mountedHome));
+    expect(greetingFor('Lucía'), findsOneWidget);
+    expect(find.text('LG'), findsOneWidget);
+    expect(greetingFor('Test'), findsNothing);
+    expect(find.text('TU'), findsNothing);
+    expect(premiumOffer, findsOneWidget);
+
+    states.add(AuthAuthenticated(
+        user: renamed.copyWith(plan: UserPlan.premium)));
+    await tester.pumpAndSettle();
+
+    expect(tester.element(find.byType(HomePage)), same(mountedHome));
+    expect(greetingFor('Lucía'), findsOneWidget);
+    expect(find.text('LG'), findsOneWidget);
+    expect(premiumOffer, findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('long-name header at 320px and 2x keeps profile usable',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    when(() => authBloc.state).thenReturn(AuthAuthenticated(
+      user: _user.copyWith(name: 'MaximilianoAlejandro Montenegro'),
+    ));
+
+    await pumpHome(tester, textScale: 2);
+
+    expect(tester.takeException(), isNull);
+    expect(greetingFor('MaximilianoAlejandro'), findsOneWidget);
+    final avatar = find.byType(CircleAvatar);
+    final initials = find.descendant(of: avatar, matching: find.text('MM'));
+    final avatarRect = tester.getRect(avatar);
+    final initialsRect = tester.getRect(initials);
+    final viewport = Offset.zero & const Size(320, 800);
+    expect(viewport.contains(avatarRect.topLeft), isTrue);
+    expect(viewport.contains(avatarRect.bottomRight), isTrue);
+    expect(avatarRect.contains(initialsRect.topLeft), isTrue);
+    expect(avatarRect.contains(initialsRect.bottomRight), isTrue);
+    expect(tester.getSemantics(avatar), matchesSemantics(
+      label: 'Perfil', isButton: true, hasTapAction: true,
+    ));
+
+    await tester.tap(avatar);
+    await tester.pumpAndSettle();
+
+    expect(find.text('PROFILE_PAGE'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('contextual action prioritizes active trip and opens its detail',
       (tester) async {
