@@ -5,6 +5,8 @@ import 'package:travel_ready/core/errors/failures.dart';
 import 'package:travel_ready/data/datasources/local/trips_local_datasource.dart';
 import 'package:travel_ready/data/repositories/trips_repository_impl.dart';
 
+import '../../helpers/packing_list_fixture.dart';
+
 void main() {
   late DatabaseHelper database;
   late TripsLocalDataSource dataSource;
@@ -28,17 +30,27 @@ void main() {
     await database.deleteDatabase();
   });
 
-  test('looks up a persisted packing list by ID regardless of its trip ID', () async {
+  test('looks up a persisted packing list by ID regardless of its trip ID',
+      () async {
+    await insertPackingListFixture(
+      database: database,
+      dataSource: dataSource,
+    );
+
     final found = await repository.getListById('list-001');
     final missing = await repository.getListById('unknown-list');
 
     expect(found.isRight(), isTrue);
     expect(found.getOrElse((_) => throw StateError('Expected packing list')).id,
         'list-001');
-    expect(found.getOrElse((_) => throw StateError('Expected packing list')).tripId,
+    expect(
+        found
+            .getOrElse((_) => throw StateError('Expected packing list'))
+            .tripId,
         'trip-001');
     expect(missing.isLeft(), isTrue);
-    expect(missing.swap().getOrElse((_) => throw StateError('Expected failure')),
+    expect(
+        missing.swap().getOrElse((_) => throw StateError('Expected failure')),
         isA<ServerFailure>());
   });
 }

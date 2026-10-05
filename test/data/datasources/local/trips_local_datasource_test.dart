@@ -6,6 +6,8 @@ import 'package:travel_ready/core/database/database_helper.dart';
 import 'package:travel_ready/core/errors/failures.dart';
 import 'package:travel_ready/data/datasources/local/trips_local_datasource.dart';
 
+import '../../../helpers/packing_list_fixture.dart';
+
 void main() {
   late DatabaseHelper database;
   late TripsLocalDataSource dataSource;
@@ -28,6 +30,11 @@ void main() {
   });
 
   test('looks up a packing list by ID without requiring its trip ID', () async {
+    await insertPackingListFixture(
+      database: database,
+      dataSource: dataSource,
+    );
+
     final list = await dataSource.getPackingListById('list-001');
 
     expect(list.id, 'list-001');
@@ -36,11 +43,18 @@ void main() {
         throwsA(isA<ServerException>()));
   });
 
-  test('toggling an item emits its trip packing lists with the updated item', () async {
+  test('toggling an item emits its trip packing lists with the updated item',
+      () async {
+    await insertPackingListFixture(
+      database: database,
+      dataSource: dataSource,
+      includeItem: true,
+    );
     final snapshots = StreamIterator(dataSource.watchPackingLists('trip-001'));
     addTearDown(snapshots.cancel);
 
-    expect(await snapshots.moveNext().timeout(const Duration(seconds: 1)), isTrue);
+    expect(
+        await snapshots.moveNext().timeout(const Duration(seconds: 1)), isTrue);
     final initialItem = snapshots.current
         .firstWhere((list) => list.id == 'list-001')
         .items
@@ -49,7 +63,8 @@ void main() {
 
     await dataSource.toggleItemPacked('item-004', true);
 
-    expect(await snapshots.moveNext().timeout(const Duration(seconds: 1)), isTrue);
+    expect(
+        await snapshots.moveNext().timeout(const Duration(seconds: 1)), isTrue);
     final updatedItem = snapshots.current
         .firstWhere((list) => list.id == 'list-001')
         .items

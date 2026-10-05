@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
-  
+
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
 
@@ -46,6 +46,11 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
+    await createSchema(db, version);
+  }
+
+  /// Creates the current schema for a new database without inserting data.
+  static Future<void> createSchema(Database db, int version) async {
     // 1. Tabla de usuarios
     await db.execute('''
       CREATE TABLE $tableUsers (
@@ -245,66 +250,6 @@ class DatabaseHelper {
     ''');
 
     await _createWeatherCacheTable(db);
-
-    // Insertar datos de prueba
-    await _insertTestData(db);
-  }
-
-  Future<void> _insertTestData(Database db) async {
-    // Usuario de prueba (password: 'test123')
-    // bcrypt hash: $2a$10$N9qo8uLOickgx2ZMRZoMy.Mqr39O6fP.WQzYB0mZz1P5qJGjEYViC
-    await db.execute('''
-      INSERT INTO $tableUsers (id, name, email, password_hash, plan, created_at) 
-      VALUES ('usr-001', 'Pablo Buendicho', 'pablo@test.com', 
-              '\$2a\$10\$N9qo8uLOickgx2ZMRZoMy.Mqr39O6fP.WQzYB0mZz1P5qJGjEYViC', 
-              'premium', '2025-01-15 10:00:00')
-    ''');
-
-    await db.execute('''
-      INSERT INTO $tableUsers (id, name, email, password_hash, plan, created_at) 
-      VALUES ('usr-002', 'Usuario Free', 'free@test.com', 
-              '\$2a\$10\$N9qo8uLOickgx2ZMRZoMy.Mqr39O6fP.WQzYB0mZz1P5qJGjEYViC', 
-              'free', '2025-01-20 14:30:00')
-    ''');
-
-    // Viajes de prueba
-    await db.execute('''
-      INSERT INTO $tableTrips (id, user_id, name, destination, start_date, end_date, 
-                               trip_type, progress, notes)
-      VALUES ('trip-001', 'usr-001', 'Verano en Ibiza', 'Ibiza, España',
-              '2025-07-15', '2025-07-22', 'beach', 75, 'Reservar ferry con antelación')
-    ''');
-
-    await db.execute('''
-      INSERT INTO $tableTrips (id, user_id, name, destination, start_date, end_date,
-                               trip_type, progress, notes)
-      VALUES ('trip-002', 'usr-001', 'Escapada a París', 'París, Francia',
-              '2025-09-10', '2025-09-14', 'city', 30, 'Comprar entradas Torre Eiffel')
-    ''');
-
-    // Transportes
-    await db.execute('''
-      INSERT INTO $tableTripTransport (trip_id, transport_type) VALUES
-      ('trip-001', 'plane'), ('trip-001', 'car'),
-      ('trip-002', 'plane'), ('trip-002', 'train')
-    ''');
-
-    // Listas
-    await db.execute('''
-      INSERT INTO $tablePackingLists (id, trip_id, user_id, name) VALUES
-      ('list-001', 'trip-001', 'usr-001', 'Maleta Principal'),
-      ('list-002', 'trip-001', 'usr-001', 'Mochila de mano')
-    ''');
-
-    // Items
-    await db.execute('''
-      INSERT INTO $tablePackingItems (id, list_id, trip_id, user_id, name, category, 
-                                      is_packed, quantity, order_index) VALUES
-      ('item-001', 'list-001', 'trip-001', 'usr-001', 'Bañador', 'clothing', 1, 2, 1),
-      ('item-002', 'list-001', 'trip-001', 'usr-001', 'Protector solar', 'hygiene', 1, 1, 2),
-      ('item-003', 'list-001', 'trip-001', 'usr-001', 'Gafas de sol', 'accessories', 1, 1, 3),
-      ('item-004', 'list-001', 'trip-001', 'usr-001', 'Cargador móvil', 'electronics', 0, 1, 4)
-    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -313,7 +258,8 @@ class DatabaseHelper {
 
   /// Additive migration: sqflite runs onUpgrade in a transaction and advances
   /// user_version only after it succeeds. Existing tables and rows are untouched.
-  static Future<void> upgradeSchema(Database db, int oldVersion, int newVersion) async {
+  static Future<void> upgradeSchema(
+      Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2 && newVersion >= 2) {
       await _createWeatherCacheTable(db);
     }
@@ -380,7 +326,8 @@ class DatabaseHelper {
 
   Future<int> insert(String table, Map<String, dynamic> values) async {
     final db = await database;
-    return await db.insert(table, values, conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(table, values,
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<int> update(
@@ -411,7 +358,8 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> rawQuery(String sql, [List<Object?>? arguments]) async {
+  Future<List<Map<String, dynamic>>> rawQuery(String sql,
+      [List<Object?>? arguments]) async {
     final db = await database;
     return await db.rawQuery(sql, arguments);
   }
