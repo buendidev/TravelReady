@@ -36,3 +36,10 @@ Independent verification completed using --no-pub --no-test-assets: four affecte
 Safety preflight and structural review confirmed only owned temporary/in-memory databases, mocked services and in-memory environment configuration. Default database not accessed. Six fixture regressions exercise factory restoration, independent data, callback/disposer failures and cleanup. Initialization failure remains structurally reviewed, not injected; nested ownership unsupported; underlying I/O cleanup failures can still prevent successful removal despite guaranteed attempts.
 
 Functional verification complete. Native approval and work-unit commits remain pending due to mixed pre-existing candidate scope and absent commit authorization. Continue bounded Home stability/UX exploration; do not claim billing or release readiness.
+
+## Commit record
+- Work-unit commit: `e0f1463 test(db): isolate SQLite fixtures with owned temp databases` on `agent/windsurf-discovery-itinerary`.
+- Authorized by the user in a later session ("protect discovery: commit by work unit"). Earlier sessions had withheld commit authorization while model quota was nearly exhausted; that hold was lifted for this worktree and branch only. Push, PR and merge remain unauthorized.
+- Content preservation: every path committed here was hashed with `git hash-object` before the commit sequence and re-read with `git rev-parse HEAD:<path>` after it. All 55 pre-existing paths matched exactly, so the committed bytes are the bytes that were independently verified below.
+- Re-verified on the committed tree in this session: full `flutter test --no-pub --no-test-assets` before and after the commit sequence, 231 tests passed both times; `flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings` exited 0 with 116 infos, zero warnings and zero errors, the same count as the recorded baseline.
+- Not verified in this session: no independent verifier was re-run, and initialization-failure cleanup remains structurally reviewed rather than fault-injected.

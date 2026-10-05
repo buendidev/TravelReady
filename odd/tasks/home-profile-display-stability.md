@@ -35,3 +35,11 @@ Post-writer ASSESS returned unassessable because untracked declaration is requir
 Independent verifier completed focused tests (15 passed), full safe suite (231 passed), analyzer (116 infos, zero warnings/errors, no HPD-local diagnostics) and scoped diff check, all exit 0. Before/after git status inventory identical. Name/plan updates, nine name cases, 320px/2x probe and preserved trip/accessibility behavior verified. No correctness blockers found. No native review approval or device/browser visual approval. No commits authorized.
 
 Stop here per user request to conserve remaining quota. Website improvements and further product work deferred; do not launch additional tasks.
+
+## Commit record
+- Work-unit commit: `b41305c fix(home): normalize profile names and refresh on emitted updates` on `agent/windsurf-discovery-itinerary`.
+- Authorized by the user in a later session ("protect discovery: commit by work unit"). Earlier sessions had withheld commit authorization while model quota was nearly exhausted; that hold was lifted for this worktree and branch only. Push, PR and merge remain unauthorized.
+- Content preservation: every path committed here was hashed with `git hash-object` before the commit sequence and re-read with `git rev-parse HEAD:<path>` after it. All 55 pre-existing paths matched exactly, so the committed bytes are the bytes that were independently verified below.
+- The commit contains only the HPD hunks of `home_page.dart` and only the HPD cases of the Home test file; the trip-normalization change was split into `e819f29` so neither task hides inside the other.
+- Focused check on the isolated commit content: `flutter test --no-pub --no-test-assets test/presentation/pages/home/home_page_accessibility_test.dart` exited 0 with 14 passing tests in the HPD-only intermediate state, then 15 passing with the runtime-stability regression restored.
+- Not verified in this session: no device or browser visual approval, and the 320px/2x probe remains widget geometry only.

@@ -34,3 +34,10 @@ Full suite NOT run: trips_local_datasource_test.dart and trips_repository_impl_t
 Follow-up DBI-2 resolved database isolation blocker: independent full `flutter test --no-pub --no-test-assets` exited 0, 220 passed without exclusions; all 12 subscription tests passed. Analyzer exited 0 with 116 infos, zero warnings/errors and no candidate-local diagnostics. No clean baseline run. Tracked whitespace checks passed; untracked no-index checks had no whitespace errors (exit 1 for nonidentical files, LF-to-CRLF warnings). Prior full-suite hold above is historical, now resolved.
 
 SPS-3 remains open only for native-review isolation; no review approval or commit claimed. Functional correction is independently verified. Next product slice: scoped Home stability and UX exploration, preserving existing changes.
+
+## Commit record
+- Work-unit commit: `6c852bc fix(premium): stop substituting a different subscription package` on `agent/windsurf-discovery-itinerary`.
+- Authorized by the user in a later session ("protect discovery: commit by work unit"). Earlier sessions had withheld commit authorization while model quota was nearly exhausted; that hold was lifted for this worktree and branch only. Push, PR and merge remain unauthorized.
+- Content preservation: every path committed here was hashed with `git hash-object` before the commit sequence and re-read with `git rev-parse HEAD:<path>` after it. All 55 pre-existing paths matched exactly, so the committed bytes are the bytes that were independently verified below.
+- The commit is the isolated candidate SPS-3 was waiting for: pre-existing router, itinerary, Home and localization changes are no longer mixed into this unit.
+- Not verified in this session: no native review was started and no real RevenueCat offering or purchase was exercised.

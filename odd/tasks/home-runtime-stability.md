@@ -28,3 +28,10 @@ The upcoming-trip reduction receives a runtime `List<TripModel>` but the callbac
 - GREEN: focused test and full `flutter test` passed after normalization.
 - `flutter analyze` reported 117 pre-existing info-level issues and exited 1; none are in the allowed Home files.
 - Manual device smoke remains pending because device operations are out of scope: authenticate with stored `TripModel` records containing two future trips, open Home, confirm the earliest upcoming trip is shown, tap its preparation action, and confirm its detail route opens without a Flutter error.
+
+## Commit record
+- Work-unit commit: `e819f29 fix(home): stop the authenticated Home crash on untyped trip lists` on `agent/windsurf-discovery-itinerary`.
+- Authorized by the user in a later session ("protect discovery: commit by work unit"). Earlier sessions had withheld commit authorization while model quota was nearly exhausted; that hold was lifted for this worktree and branch only. Push, PR and merge remain unauthorized.
+- Content preservation: every path committed here was hashed with `git hash-object` before the commit sequence and re-read with `git rev-parse HEAD:<path>` after it. All 55 pre-existing paths matched exactly, so the committed bytes are the bytes that were independently verified below.
+- Focused check: `flutter test --no-pub --no-test-assets test/presentation/pages/home/home_page_accessibility_test.dart` exited 0 with 15 passing tests after this change.
+- Evidence reconciliation: this document contains both a completed device smoke for the original crash and a later line asking for a two-`TripModel` device smoke. The second scenario was **not** executed in this session, and no device or APK operation was performed here.
