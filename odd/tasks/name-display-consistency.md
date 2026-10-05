@@ -60,9 +60,22 @@ Widget harness created for `ProfilePage`, which had no test at all: it needs a m
 - `flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings` -> exit 0, **116 infos**, zero warnings, zero errors; the only new diagnostic this unit introduced was a dangling library doc comment, which was fixed, so the count returned to its baseline. The `curly_braces_in_flow_control_structures` info at `profile_page.dart:140` is pre-existing and just shifted by the deleted method.
 - `ProfilePage` had no test file at all before this unit; the new widget test is the first coverage of that page.
 
-## Not verified here
-- No device or browser render; the assertions are widget-level.
-- The five chats-UI initial sites still use `name.isNotEmpty ? name[0].toUpperCase() : 'U'` and remain unfixed by design (they mis-render whitespace but do not throw).
+## Follow-up work unit: chats UI
+Delivered as a second commit on the same branch.
 
-## Next step
-Follow-up work unit: replace the five chats-UI initial sites with `nameInitials` so no ad-hoc name indexing remains in `lib/`, and add the missing widget coverage for those avatars.
+- `_ChatTile` in `chats_page.dart` declared its chat as `dynamic` and then read `chat.name as String`, which disables static checking for a value that is always a `ChatSummary`. It is now typed `ChatSummary` and the redundant casts are gone.
+- Four call sites used `name.isNotEmpty ? name[0].toUpperCase() : 'U'` (`chats_page.dart`, `chat_detail_page.dart`, `create_group_page.dart`, `users_page.dart`) and now use `nameInitials`.
+- `create_group_page.dart` also cast a nullable selected-user name straight to `String` for both the chip avatar and its label; both are null-safe now.
+- `grep -rnE "name\[0\]|chatName\[0\]" lib/` returns nothing: no ad-hoc character indexing on user names remains in `lib/`.
+- The chats page had no test before. A new widget test covers six cases: repeated spaces, padding, whitespace only, tabs and newlines, an empty name, and a group chat that must show its icon instead of initials.
+- RED before the change: 2 passed, 3 failed (`'Ana  Pérez'` rendered `A`, `'  Ana  '` rendered a space, `'	Ana	Pérez
+'` rendered a tab).
+
+### Evidence
+- `flutter test --no-pub --no-test-assets test/presentation/pages/chats/chats_page_test.dart` -> RED exit 1 (2 passed, 3 failed), then GREEN exit 0 (6 passed).
+- `flutter test --no-pub --no-test-assets` -> exit 0, **270 passed**.
+- `flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings` -> exit 0, 116 infos, zero warnings, zero errors: the count returned to its baseline after the previous unit and did not move here.
+
+## Not verified here
+- No device or browser render; every assertion is widget-level.
+- The group-name path in `chats_page.dart` and the AI/support tiles are rendered by the same page test only indirectly.

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/name_display.dart';
 import '../../../core/router/app_router.dart';
 import '../../../domain/repositories/chats_repository.dart';
 import '../../../domain/usecases/chats/create_group_chat_usecase.dart';
@@ -160,14 +161,13 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         avatar: CircleAvatar(
                           backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                           child: Text(
-                            (user['name'] as String).isNotEmpty
-                                ? (user['name'] as String)[0].toUpperCase()
-                                : '?',
+                            nameInitials(user['name'] as String? ?? '',
+                                fallback: '?'),
                             style: const TextStyle(
                                 fontSize: 11, color: AppColors.primary),
                           ),
                         ),
-                        label: Text(user['name'] as String,
+                        label: Text(user['name'] as String? ?? 'Usuario',
                             style: const TextStyle(fontSize: 12)),
                         deleteIcon: const Icon(Icons.close, size: 16),
                         onDeleted: () =>
@@ -214,7 +214,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                 backgroundColor:
                                     AppColors.primary.withValues(alpha: 0.15),
                                 child: Text(
-                                  name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                                  nameInitials(name),
                                   style: const TextStyle(color: AppColors.primary),
                                 ),
                               ),

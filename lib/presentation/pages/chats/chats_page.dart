@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/name_display.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
@@ -253,7 +254,7 @@ class _SectionHeader extends StatelessWidget {
 // ── Tile de chat (privado o grupo) ──────────────────────────────────────────
 
 class _ChatTile extends StatelessWidget {
-  final dynamic chat;
+  final ChatSummary chat;
   final bool isGroup;
   final VoidCallback onTap;
   final String Function(DateTime) formatTime;
@@ -265,8 +266,8 @@ class _ChatTile extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final name = chat.name as String;
-    final unreadCount = chat.unreadCount as int? ?? 0;
+    final name = chat.name;
+    final unreadCount = chat.unreadCount;
     final hasUnread = unreadCount > 0;
 
     return ListTile(
@@ -280,7 +281,7 @@ class _ChatTile extends StatelessWidget {
             ? Icon(Icons.group_rounded,
                 color: const Color(0xFF7C4DFF), size: 20)
             : Text(
-                name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                nameInitials(name),
                 style: TextStyle(color: AppColors.primary),
               ),
       ),

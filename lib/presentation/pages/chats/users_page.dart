@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/name_display.dart';
 import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../domain/repositories/chats_repository.dart';
@@ -307,7 +308,7 @@ class _UsersPageState extends State<UsersPage> {
           leading: CircleAvatar(
             backgroundColor: AppColors.primary.withValues(alpha: 0.15),
             child: Text(
-              name.isNotEmpty ? name[0].toUpperCase() : 'U',
+              nameInitials(name),
               style: TextStyle(color: AppColors.primary),
             ),
           ),

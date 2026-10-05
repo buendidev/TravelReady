@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/name_display.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/services/chat_notification_manager.dart';
 import '../../../injection/injection.dart';
@@ -98,7 +99,7 @@ class _PrivateChat extends StatelessWidget {
             radius: 18,
             backgroundColor: AppColors.primary.withValues(alpha: 0.15),
             child: Text(
-              chatName.isNotEmpty ? chatName[0].toUpperCase() : 'U',
+              nameInitials(chatName),
               style: TextStyle(color: AppColors.primary, fontSize: 14)),
           ),
           const SizedBox(width: AppSizes.sm),
