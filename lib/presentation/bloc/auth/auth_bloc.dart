@@ -9,6 +9,7 @@ import '../../../domain/usecases/auth/sign_up_usecase.dart';
 import '../../../domain/usecases/auth/sign_out_usecase.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../core/utils/app_log.dart';
+import '../../../data/datasources/local/session_snapshot_store.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -19,17 +20,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignOutUseCase _signOut;
   final AuthRepository _repo;
   StreamSubscription<User?>? _authSub;
+  Timer? _startupTimer;
   bool _signingUp = false;  // true mientras el stream está pausado en signup
+  final SessionSnapshotStore _sessions;
+  final Duration _startupGrace;
 
   AuthBloc({
     required SignInUseCase signInUseCase,
     required SignUpUseCase signUpUseCase,
     required SignOutUseCase signOutUseCase,
     required AuthRepository authRepository,
+    SessionSnapshotStore? sessionStore,
+    Duration startupGrace = const Duration(seconds: 30),
   })  : _signIn  = signInUseCase,
         _signUp  = signUpUseCase,
         _signOut = signOutUseCase,
         _repo    = authRepository,
+        _sessions = sessionStore ?? SessionSnapshotStore(),
+        _startupGrace = startupGrace,
         super(const AuthInitial()) {
     on<AuthStarted>(_onStarted);
     on<_AuthUserChanged>(_onUserChanged);
@@ -45,28 +53,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AppLog.debug('[AuthBloc] _onStarted iniciado');
     emit(const AuthLoading());
     await _authSub?.cancel();
-    _authSub = _repo.authStateChanges
-        .timeout(
-          const Duration(seconds: 30),
-          onTimeout: (sink) {
-            AppLog.debug('[AuthBloc] Timeout en authStateChanges');
-            // Solo cerrar sesión por timeout si actualmente NO estamos autenticados
-            if (state is! AuthAuthenticated) sink.add(null);
-          },
-        )
-        .listen(
-          (user) {
-            AppLog.debug('[AuthBloc] authStateChanges emit: uid=${user?.id}');
-            add(_AuthUserChanged(user));
-          },
-          onError: (err) {
-            // Error transitorio de red: si ya estamos autenticados, ignorar
-            AppLog.debug('[AuthBloc] Error en authStateChanges: $err');
-            if (state is! AuthAuthenticated) {
-              add(const _AuthUserChanged(null));
-            }
-          },
-        );
+    _startupTimer?.cancel();
+
+    _authSub = _repo.authStateChanges.listen(
+      (user) {
+        // Firebase respondió: la instantánea se refresca (o se borra si ya no
+        // hay sesión) y deja de hacer falta el respaldo.
+        _startupTimer?.cancel();
+        user != null
+            ? unawaited(_sessions.save(user))
+            : unawaited(_sessions.clear());
+        add(_AuthUserChanged(user));
+      },
+      onError: (err) {
+        AppLog.debug('[AuthBloc] Error en authStateChanges: $err');
+        if (state is! AuthAuthenticated) unawaited(_startOffline());
+      },
+    );
+
+    // Sin conexión, el stream de Firebase puede no emitir nunca: se espera un
+    // margen y, si no llegó nada, se arranca con la sesión guardada. El stream
+    // sigue escuchando, así que en cuanto responda sustituye esa sesión por la
+    // verificada, y si responde que ya no hay sesión, se cierra igual.
+    _startupTimer = Timer(_startupGrace, () {
+      if (state is! AuthAuthenticated) unawaited(_startOffline());
+    });
+  }
+
+  /// Arranca con la última sesión que Firebase confirmó.
+  ///
+  /// Es lo que permite llegar a los viajes y las maletas, que están en el
+  /// dispositivo, cuando no hay red. Sin sesión guardada se emite igual que
+  /// antes: no autenticado.
+  Future<void> _startOffline() async {
+    final guardada = await _sessions.read();
+    if (guardada == null) {
+      add(const _AuthUserChanged(null));
+      return;
+    }
+    AppLog.debug('[AuthBloc] Firebase no respondió: sesión guardada restaurada');
+    add(_AuthUserChanged(guardada));
   }
 
   void _onUserChanged(_AuthUserChanged e, Emitter<AuthState> emit) {
@@ -191,6 +217,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Future<void> close() {
+    _startupTimer?.cancel();
     _authSub?.cancel();
     return super.close();
   }
