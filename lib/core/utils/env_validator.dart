@@ -1,3 +1,5 @@
+import 'app_log.dart';
+
 /// Validador de variables de entorno al arrancar.
 /// Si falta una var requerida, la app NO inicia en producción.
 abstract final class EnvValidator {
@@ -22,8 +24,8 @@ abstract final class EnvValidator {
       // En desarrollo: warning, no crash (las keys se añaden progresivamente)
       assert(() {
         // ignore: avoid_print
-        print('[ENV] ⚠️  Variables no configuradas: ${missing.join(', ')}');
-        print('[ENV]    Añádelas en .env antes de producción.');
+        AppLog.debug('[ENV] ⚠️  Variables no configuradas: ${missing.join(', ')}');
+        AppLog.debug('[ENV]    Añádelas en .env antes de producción.');
         return true;
       }());
     }

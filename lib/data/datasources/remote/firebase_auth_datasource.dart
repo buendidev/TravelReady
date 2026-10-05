@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/errors/failures.dart';
 import '../../../domain/entities/user.dart';
 import '../../models/user_model.dart';
+import '../../../core/utils/app_log.dart';
 
 /// DataSource de autenticación usando Firebase Auth.
 /// Reemplaza la implementación SQLite local.
@@ -24,16 +25,16 @@ class FirebaseAuthDataSource {
   // ── Stream de estado de autenticación ────────────────────────────────────
 
   Stream<UserModel?> get authStateChanges {
-    print('[FirebaseAuthDataSource] authStateChanges stream iniciado');
+    AppLog.debug('[FirebaseAuthDataSource] authStateChanges stream iniciado');
     return _auth.authStateChanges().asyncMap((fbUser) async {
-      print('[FirebaseAuthDataSource] authStateChanges: fbUser=${fbUser?.email}');
+      AppLog.debug('[FirebaseAuthDataSource] authStateChanges: uid=${fbUser?.uid}');
       if (fbUser == null) return null;
       try {
         return await _getOrCreateUserDoc(fbUser);
       } catch (e) {
         // Firestore falló pero el usuario SÍ está autenticado en Firebase Auth.
         // Devolvemos un modelo mínimo para no cerrar la sesión.
-        print('[FirebaseAuthDataSource] Firestore error en authStateChanges, usando fallback: $e');
+        AppLog.debug('[FirebaseAuthDataSource] Firestore error en authStateChanges, usando fallback: $e');
         final fallbackName = (fbUser.displayName?.trim().isNotEmpty == true)
             ? fbUser.displayName!
             : (fbUser.email ?? '').split('@').first.replaceAll('.', ' ');
@@ -67,7 +68,7 @@ class FirebaseAuthDataSource {
     try {
       return await _getOrCreateUserDoc(cred.user!);
     } catch (e) {
-      print('[FirebaseAuthDataSource] Firestore error en signIn, usando fallback: $e');
+      AppLog.debug('[FirebaseAuthDataSource] Firestore error en signIn, usando fallback: $e');
       final fbUser = cred.user!;
       return UserModel(
         id:        fbUser.uid,
@@ -111,7 +112,7 @@ class FirebaseAuthDataSource {
     try {
       await _db.collection('users').doc(cred.user!.uid).set(docData);
     } catch (e) {
-      print('[FirebaseAuthDataSource] Firestore set falló en signUp, reintentando: $e');
+      AppLog.debug('[FirebaseAuthDataSource] Firestore set falló en signUp, reintentando: $e');
       try {
         await Future.delayed(const Duration(seconds: 2));
         await _db.collection('users').doc(cred.user!.uid).set(docData);
@@ -119,7 +120,7 @@ class FirebaseAuthDataSource {
         // El doc no se guardó pero el usuario YA existe en Auth.
         // Lo registramos para diagnóstico pero NO lanzamos excepción —
         // _getOrCreateUserDoc lo creará en el próximo authStateChanges.
-        print('[FirebaseAuthDataSource] Firestore retry falló: $e2');
+        AppLog.debug('[FirebaseAuthDataSource] Firestore retry falló: $e2');
       }
     }
 
@@ -135,33 +136,33 @@ class FirebaseAuthDataSource {
   // ── Google Sign-In ───────────────────────────────────────────────────────
 
   Future<UserModel> signInWithGoogle() async {
-    print('[FirebaseAuthDataSource] signInWithGoogle iniciado');
+    AppLog.debug('[FirebaseAuthDataSource] signInWithGoogle iniciado');
     try {
-      print('[FirebaseAuthDataSource] Llamando _google.signIn()');
+      AppLog.debug('[FirebaseAuthDataSource] Llamando _google.signIn()');
       final gUser = await _google.signIn();
       if (gUser == null) {
-        print('[FirebaseAuthDataSource] Google Sign-In cancelado por usuario');
+        AppLog.debug('[FirebaseAuthDataSource] Google Sign-In cancelado por usuario');
         throw const AuthException('Inicio de sesión cancelado.');
       }
-      print('[FirebaseAuthDataSource] Google user: ${gUser.email}');
+      AppLog.debug('[FirebaseAuthDataSource] Google user: uid=${gUser.id}');
 
-      print('[FirebaseAuthDataSource] Obteniendo autenticación de Google');
+      AppLog.debug('[FirebaseAuthDataSource] Obteniendo autenticación de Google');
       final gAuth = await gUser.authentication;
-      print('[FirebaseAuthDataSource] Google auth: accessToken=${gAuth.accessToken != null}, idToken=${gAuth.idToken != null}');
+      AppLog.debug('[FirebaseAuthDataSource] Google auth: accessToken=${gAuth.accessToken != null}, idToken=${gAuth.idToken != null}');
       
       final credential = fb.GoogleAuthProvider.credential(
         accessToken: gAuth.accessToken,
         idToken:     gAuth.idToken,
       );
 
-      print('[FirebaseAuthDataSource] Sign-in con credential en Firebase');
+      AppLog.debug('[FirebaseAuthDataSource] Sign-in con credential en Firebase');
       final cred = await _auth.signInWithCredential(credential);
-      print('[FirebaseAuthDataSource] Firebase user: ${cred.user?.email}');
+      AppLog.debug('[FirebaseAuthDataSource] Firebase user: uid=${cred.user?.uid}');
 
       try {
         return await _getOrCreateUserDoc(cred.user!);
       } catch (firestoreErr) {
-        print('[FirebaseAuthDataSource] Firestore falló, usando fallback de Firebase Auth: $firestoreErr');
+        AppLog.debug('[FirebaseAuthDataSource] Firestore falló, usando fallback de Firebase Auth: $firestoreErr');
         final fbUser = cred.user!;
         return UserModel(
           id: fbUser.uid,
@@ -173,12 +174,12 @@ class FirebaseAuthDataSource {
         );
       }
     } on fb.FirebaseAuthException catch (e) {
-      print('[FirebaseAuthDataSource] FirebaseAuthException: ${e.code} - ${e.message}');
+      AppLog.debug('[FirebaseAuthDataSource] FirebaseAuthException: ${e.code} - ${e.message}');
       throw AuthException(_mapFirebaseError(e.code));
     } on AuthException {
       rethrow;
     } catch (e) {
-      print('[FirebaseAuthDataSource] Error general en Google Sign-In: $e');
+      AppLog.debug('[FirebaseAuthDataSource] Error general en Google Sign-In: $e');
       throw AuthException('Error con Google: ${e.toString()}');
     }
   }
@@ -259,7 +260,7 @@ class FirebaseAuthDataSource {
     if ((email == null || email.isEmpty) && fbEmail.isNotEmpty) repairs['email'] = fbEmail;
     await docRef.set(repairs, SetOptions(merge: true));
     if (repairs.length > 1) {
-      print('[FirebaseAuthDataSource] Doc reparado para ${fbUser.uid}: $repairs');
+      AppLog.debug('[FirebaseAuthDataSource] Doc reparado para ${fbUser.uid}: $repairs');
     }
 
     return UserModel(

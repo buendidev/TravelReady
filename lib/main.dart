@@ -18,6 +18,7 @@ import 'presentation/bloc/auth/auth_bloc.dart';
 import 'presentation/bloc/language/language_cubit.dart';
 import 'presentation/bloc/theme/theme_cubit.dart';
 import 'presentation/bloc/trips/trips_bloc.dart';
+import 'core/utils/app_log.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,11 +35,11 @@ Future<void> main() async {
   await initializeDateFormatting('es', null);
   await initializeDateFormatting('en', null);
 
-  print('[main] Inicializando Firebase...');
+  AppLog.debug('[main] Inicializando Firebase...');
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  print('[main] Firebase inicializado correctamente');
+  AppLog.debug('[main] Firebase inicializado correctamente');
 
   await setupDependencies();
   await initDatabase();

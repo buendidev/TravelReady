@@ -1,4 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/app_log.dart';
 
 /// Valida al arrancar que todas las variables de entorno existen.
 /// Si falta alguna crítica, lanza excepción antes de runApp().
@@ -38,7 +39,7 @@ abstract final class EnvValidator {
       final val = dotenv.env[key];
       if (val == null || val.isEmpty || val.contains('tu_api_key')) {
         // ignore: avoid_print
-        print('[ENV] Aviso: $key no configurada — funcionalidad limitada.');
+        AppLog.debug('[ENV] Aviso: $key no configurada — funcionalidad limitada.');
       }
     }
   }

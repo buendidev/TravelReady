@@ -13,6 +13,7 @@ import '../../../domain/usecases/chats/create_private_chat_usecase.dart';
 import '../../../domain/usecases/chats/find_user_by_email_usecase.dart';
 import '../../../injection/injection.dart';
 import '../../bloc/auth/auth_bloc.dart';
+import '../../../core/utils/app_log.dart';
 
 /// Regex para email completo (tiene @ y dominio con punto).
 final _emailRegex = RegExp(r'^[\w.+-]+@[\w-]+\.[a-z]{2,}$', caseSensitive: false);
@@ -72,7 +73,7 @@ class _UsersPageState extends State<UsersPage> {
     _usersSub = _repo.watchUsersExcept(auth.user.id).listen(
       (users) {
         if (!mounted) return;
-        print('[UsersPage] Stream recibió ${users.length} usuarios de Firestore');
+        AppLog.debug('[UsersPage] Stream recibió ${users.length} usuarios de Firestore');
         setState(() {
           _allUsers    = users;
           _loading     = false;
@@ -81,7 +82,7 @@ class _UsersPageState extends State<UsersPage> {
         });
       },
       onError: (e) {
-        print('[UsersPage] Error en stream de usuarios: $e');
+        AppLog.debug('[UsersPage] Error en stream de usuarios: $e');
         if (!mounted) return;
         setState(() {
           _loading     = false;

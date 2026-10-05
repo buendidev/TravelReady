@@ -8,6 +8,7 @@ import '../../../domain/usecases/auth/sign_in_usecase.dart';
 import '../../../domain/usecases/auth/sign_up_usecase.dart';
 import '../../../domain/usecases/auth/sign_out_usecase.dart';
 import '../../../domain/repositories/auth_repository.dart';
+import '../../../core/utils/app_log.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -41,26 +42,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   /// Inicia la escucha del stream de auth sin bloquear el handler.
   Future<void> _onStarted(
       AuthStarted e, Emitter<AuthState> emit) async {
-    print('[AuthBloc] _onStarted iniciado');
+    AppLog.debug('[AuthBloc] _onStarted iniciado');
     emit(const AuthLoading());
     await _authSub?.cancel();
     _authSub = _repo.authStateChanges
         .timeout(
           const Duration(seconds: 30),
           onTimeout: (sink) {
-            print('[AuthBloc] Timeout en authStateChanges');
+            AppLog.debug('[AuthBloc] Timeout en authStateChanges');
             // Solo cerrar sesión por timeout si actualmente NO estamos autenticados
             if (state is! AuthAuthenticated) sink.add(null);
           },
         )
         .listen(
           (user) {
-            print('[AuthBloc] authStateChanges emit: user=${user?.email}');
+            AppLog.debug('[AuthBloc] authStateChanges emit: uid=${user?.id}');
             add(_AuthUserChanged(user));
           },
           onError: (err) {
             // Error transitorio de red: si ya estamos autenticados, ignorar
-            print('[AuthBloc] Error en authStateChanges: $err');
+            AppLog.debug('[AuthBloc] Error en authStateChanges: $err');
             if (state is! AuthAuthenticated) {
               add(const _AuthUserChanged(null));
             }
@@ -70,7 +71,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   void _onUserChanged(_AuthUserChanged e, Emitter<AuthState> emit) {
     final user = e.user;
-    print('[AuthBloc] _onUserChanged: user=${user?.email}, state=$state, signingUp=$_signingUp');
+    AppLog.debug('[AuthBloc] _onUserChanged: uid=${user?.id}, state=$state, signingUp=$_signingUp');
 
     // El stream fue pausado durante signup → ignorar eventos buffereados
     if (_signingUp) return;
@@ -92,7 +93,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (_signingUp) {
       _signingUp = false;
       _authSub?.resume();
-      print('[AuthBloc] Stream reanudado en signIn');
+      AppLog.debug('[AuthBloc] Stream reanudado en signIn');
     }
     try {
       final result = await _signIn(
@@ -102,7 +103,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         (u) => emit(AuthAuthenticated(user: u)),
       );
     } catch (e, stack) {
-      print('[AuthBloc] Error crítico en _onSignIn: $e\n$stack');
+      AppLog.debug('[AuthBloc] Error crítico en _onSignIn: $e\n$stack');
       emit(AuthError(message: 'Error de conexión. Intenta de nuevo.'));
     }
   }
@@ -116,7 +117,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       // Activar flag para ignorar eventos del stream durante signup
       _signingUp = true;
-      print('[AuthBloc] Flag _signingUp activado');
+      AppLog.debug('[AuthBloc] Flag _signingUp activado');
 
       final result = await _signUp(SignUpParams(
         name:     e.name.trim(),
@@ -131,13 +132,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         (_) async {
           try {
             await _signOut();
-            print('[AuthBloc] signOut OK');
+            AppLog.debug('[AuthBloc] signOut OK');
           } catch (signOutErr) {
-            print('[AuthBloc] signOut error (ignorado): $signOutErr');
+            AppLog.debug('[AuthBloc] signOut error (ignorado): $signOutErr');
           }
 
           emit(AuthRegistered(email: e.email.trim().toLowerCase()));
-          print('[AuthBloc] AuthRegistered emitido');
+          AppLog.debug('[AuthBloc] AuthRegistered emitido');
           // Flag sigue activo — se desactiva en _onSignIn/_onGoogle
         },
       );
@@ -150,28 +151,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   /// Login con Google.
   Future<void> _onGoogle(
       AuthGoogleSignInRequested e, Emitter<AuthState> emit) async {
-    print('[AuthBloc] _onGoogle iniciado');
+    AppLog.debug('[AuthBloc] _onGoogle iniciado');
     emit(const AuthLoading());
     // Si el stream estaba pausado por un signup previo, reanudarlo
     if (_signingUp) {
       _signingUp = false;
       _authSub?.resume();
-      print('[AuthBloc] Stream reanudado en Google signIn');
+      AppLog.debug('[AuthBloc] Stream reanudado en Google signIn');
     }
     try {
       final result = await _repo.signInWithGoogle();
       result.fold(
         (f) {
-          print('[AuthBloc] Google Sign-In error: ${f.message}');
+          AppLog.debug('[AuthBloc] Google Sign-In error: ${f.message}');
           emit(AuthError(message: f.message));
         },
         (u) {
-          print('[AuthBloc] Google Sign-In success: ${u.email}');
+          AppLog.debug('[AuthBloc] Google Sign-In success: uid=${u.id}');
           emit(AuthAuthenticated(user: u));
         },
       );
     } catch (e, stack) {
-      print('[AuthBloc] Error crítico en _onGoogle: $e\n$stack');
+      AppLog.debug('[AuthBloc] Error crítico en _onGoogle: $e\n$stack');
       emit(AuthError(message: 'Error con Google. Intenta de nuevo.'));
     }
   }

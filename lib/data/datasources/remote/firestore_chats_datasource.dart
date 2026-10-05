@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../domain/entities/chat.dart';
 import '../../models/chat_model.dart';
+import '../../../core/utils/app_log.dart';
 
 /// DataSource de chats en tiempo real usando Firestore.
 ///
@@ -254,7 +255,7 @@ class FirestoreChatsDataSource {
 
       return users;
     } catch (e) {
-      print('[FirestoreChatsDataSource] Error en getUsersExcept: $e');
+      AppLog.debug('[FirestoreChatsDataSource] Error en getUsersExcept: $e');
       return [];
     }
   }

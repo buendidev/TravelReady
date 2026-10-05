@@ -5,6 +5,7 @@ import '../../../core/services/revenuecat_service.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../injection/injection.dart';
+import '../../../core/utils/app_log.dart';
 
 part 'premium_event.dart';
 part 'premium_state.dart';
@@ -171,7 +172,7 @@ class PremiumBloc extends Bloc<PremiumEvent, PremiumState> {
     } catch (e) {
       // Log pero no fallar la compra si esto falla
       // ignore: avoid_print
-      print('Error actualizando plan en Firestore: $e');
+      AppLog.debug('Error actualizando plan en Firestore: $e');
     }
   }
 }
