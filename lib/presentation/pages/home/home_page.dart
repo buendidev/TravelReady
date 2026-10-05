@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/app_env.dart';
+import '../../../core/utils/name_display.dart';
 import '../../../data/models/weather_model.dart';
 import '../../../domain/entities/trip.dart';
 import '../../../domain/entities/user.dart';
@@ -60,12 +61,10 @@ class _HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n      = AppLocalizations.of(context);
     final isDark    = Theme.of(context).brightness == Brightness.dark;
-    final name = user?.name.trim() ?? '';
-    final nameTokens = name.isEmpty ? <String>[] : name.split(RegExp(r'\s+'));
-    final firstName = nameTokens.isEmpty ? 'viajero' : nameTokens.first;
-    final initials = nameTokens.isEmpty
-        ? 'U'
-        : nameTokens.take(2).map((token) => token[0]).join().toUpperCase();
+    final name = user?.name ?? '';
+    final nameParts = nameTokens(name);
+    final firstName = nameParts.isEmpty ? 'viajero' : nameParts.first;
+    final initials = nameInitials(name);
     final isPremium = user?.isPremium ?? false;
 
     return Scaffold(

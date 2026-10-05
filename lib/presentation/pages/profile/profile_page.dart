@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/name_display.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/repositories/auth_repository.dart';
@@ -49,13 +50,6 @@ class _ProfileContent extends StatelessWidget {
   final User? user;
   const _ProfileContent({this.user});
 
-  String _initials(String name) {
-    final parts = name.trim().split(' ');
-    return parts.length >= 2
-        ? '${parts[0][0]}${parts[1][0]}'.toUpperCase()
-        : name.isNotEmpty ? name[0].toUpperCase() : 'U';
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -87,7 +81,7 @@ class _ProfileContent extends StatelessWidget {
                         : CircleAvatar(
                             radius: 44,
                             backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                            child: Text(_initials(user?.name ?? 'U'),
+                            child: Text(nameInitials(user?.name ?? ''),
                                 style: Theme.of(context)
                                     .textTheme
                                     .headlineMedium
