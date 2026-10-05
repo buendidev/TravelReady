@@ -74,7 +74,7 @@ class PlaceCard extends StatelessWidget {
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Row(children: [
-                    Text(placeCategoryLabels[place.category]!,
+                    Text(placeCategoryLabel(place.category),
                         style: Theme.of(context).textTheme.labelSmall
                             ?.copyWith(color: AppColors.primary)),
                     if (place.priceLevelLabel != null) ...[

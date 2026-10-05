@@ -41,18 +41,26 @@ class ItineraryPage extends StatelessWidget {
   }
 }
 
+/// Etiquetas en español de las categorías de itinerario.
+///
+/// Los ficheros l10n quedan fuera de la superficie autorizada del feature, así
+/// que el texto vive aquí, igual que en `placeCategoryLabels`.
+const Map<ItineraryCategory, String> itineraryCategoryLabels = {
+  ItineraryCategory.sightseeing: 'Visita',
+  ItineraryCategory.food: 'Comida',
+  ItineraryCategory.transport: 'Transporte',
+  ItineraryCategory.lodging: 'Alojamiento',
+  ItineraryCategory.activity: 'Actividad',
+  ItineraryCategory.other: 'Otro',
+};
+
+/// Etiqueta visible de [category], con respaldo si el mapa no la cubre.
+String itineraryCategoryLabel(ItineraryCategory category) =>
+    itineraryCategoryLabels[category] ?? 'Otro';
+
 class _Content extends StatelessWidget {
   final Trip trip;
   const _Content({required this.trip});
-
-  static const _categoryLabels = {
-    ItineraryCategory.sightseeing: 'Visita',
-    ItineraryCategory.food: 'Comida',
-    ItineraryCategory.transport: 'Transporte',
-    ItineraryCategory.lodging: 'Alojamiento',
-    ItineraryCategory.activity: 'Actividad',
-    ItineraryCategory.other: 'Otro',
-  };
 
   String _fmtMinutes(BuildContext context, int minutes) =>
       TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60).format(context);
@@ -175,7 +183,7 @@ class _Content extends StatelessWidget {
                               item: dayItems[i],
                               fmt: _fmtMinutes,
                               categoryLabel:
-                                  _categoryLabels[dayItems[i].category]!,
+                                  itineraryCategoryLabel(dayItems[i].category),
                               onTap: () =>
                                   _showEditor(context, item: dayItems[i]),
                               onDelete: () =>
@@ -211,7 +219,7 @@ class _Content extends StatelessWidget {
         child: _ItemEditorSheet(
           trip: trip,
           item: item,
-          categoryLabels: _categoryLabels,
+          categoryLabels: itineraryCategoryLabels,
         ),
       ),
     );
