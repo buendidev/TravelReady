@@ -85,19 +85,23 @@ class RevenueCatService {
   /// Obtiene el paquete mensual si existe.
   static Future<Package?> getMonthlyPackage() async {
     final packages = await getOfferings();
-    return packages.firstWhere(
-      (p) => p.storeProduct.identifier.contains('monthly'),
-      orElse: () => packages.first,
-    );
+    for (final package in packages) {
+      if (package.storeProduct.identifier.contains('monthly')) {
+        return package;
+      }
+    }
+    return null;
   }
 
   /// Obtiene el paquete anual si existe.
   static Future<Package?> getYearlyPackage() async {
     final packages = await getOfferings();
-    return packages.firstWhere(
-      (p) => p.storeProduct.identifier.contains('yearly'),
-      orElse: () => packages.first,
-    );
+    for (final package in packages) {
+      if (package.storeProduct.identifier.contains('yearly')) {
+        return package;
+      }
+    }
+    return null;
   }
 
 }
