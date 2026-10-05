@@ -82,23 +82,32 @@ class WeatherCacheDataSource {
     final rows = await db.query(DatabaseHelper.tableWeatherCache,
         where: 'location_key = ?', whereArgs: [key], limit: 1);
     if (rows.isEmpty) return null;
-    final row = rows.single;
-    final json = jsonDecode(row['weather_json'] as String) as Map<String, dynamic>;
-    return CachedWeather(
-      WeatherModel(
-        city: json['city'] as String,
-        country: json['country'] as String,
-        tempCelsius: (json['tempCelsius'] as num).toDouble(),
-        feelsLike: (json['feelsLike'] as num).toDouble(),
-        tempMin: (json['tempMin'] as num).toDouble(),
-        tempMax: (json['tempMax'] as num).toDouble(),
-        description: json['description'] as String,
-        iconCode: json['iconCode'] as String,
-        humidity: json['humidity'] as int,
-        windSpeed: (json['windSpeed'] as num).toDouble(),
-        visibility: json['visibility'] as int,
-      ),
-      DateTime.parse(row['retrieved_at'] as String),
-    );
+
+    // Una fila dañada, escrita a medias o guardada por una versión anterior no
+    // debe tumbar la lectura del clima: se trata como caché vacía, y quien
+    // consulta pide el dato de nuevo y sobrescribe la fila.
+    try {
+      final row = rows.single;
+      final json =
+          jsonDecode(row['weather_json'] as String) as Map<String, dynamic>;
+      return CachedWeather(
+        WeatherModel(
+          city: json['city'] as String,
+          country: json['country'] as String,
+          tempCelsius: (json['tempCelsius'] as num).toDouble(),
+          feelsLike: (json['feelsLike'] as num).toDouble(),
+          tempMin: (json['tempMin'] as num).toDouble(),
+          tempMax: (json['tempMax'] as num).toDouble(),
+          description: json['description'] as String,
+          iconCode: json['iconCode'] as String,
+          humidity: json['humidity'] as int,
+          windSpeed: (json['windSpeed'] as num).toDouble(),
+          visibility: json['visibility'] as int,
+        ),
+        DateTime.parse(row['retrieved_at'] as String),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 }

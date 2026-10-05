@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sqflite/sqflite.dart';
@@ -82,6 +84,26 @@ void main() {
     expect(() => cache.getByCoords(91, 0), throwsArgumentError);
     verifyNever(() => db.query(DatabaseHelper.tableWeatherCache,
         where: 'location_key = ?', whereArgs: any(named: 'whereArgs'), limit: 1));
+  });
+
+  test('a corrupt cached row is a miss instead of a crash', () async {
+    rows['city:madrid'] = {
+      'location_key': 'city:madrid',
+      'weather_json': '{not json at all',
+      'retrieved_at': fetchedAt.toIso8601String(),
+    };
+
+    expect(await cache.getByCity('Madrid'), isNull);
+  });
+
+  test('a cached row missing fields is a miss instead of a crash', () async {
+    rows['city:madrid'] = {
+      'location_key': 'city:madrid',
+      'weather_json': jsonEncode({'city': 'Madrid'}),
+      'retrieved_at': fetchedAt.toIso8601String(),
+    };
+
+    expect(await cache.getByCity('Madrid'), isNull);
   });
 
   test('upsert replaces only the matching city and unknown city stays absent', () async {
