@@ -1,31 +1,22 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:travel_ready/core/database/database_helper.dart';
 import 'package:travel_ready/core/errors/failures.dart';
 import 'package:travel_ready/data/datasources/local/trips_local_datasource.dart';
 import 'package:travel_ready/data/repositories/trips_repository_impl.dart';
+
+import '../../support/database_isolation.dart';
 
 void main() {
   late DatabaseHelper database;
   late TripsLocalDataSource dataSource;
   late PackingRepositoryImpl repository;
 
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
-
   setUp(() async {
-    database = DatabaseHelper();
-    await database.deleteDatabase();
+    final fixture = await DatabaseIsolation.create();
+    database = fixture.database;
     dataSource = TripsLocalDataSource(database: database);
+    fixture.addCleanup(dataSource.dispose);
     repository = PackingRepositoryImpl(local: dataSource);
-  });
-
-  tearDown(() async {
-    dataSource.dispose();
-    await database.close();
-    await database.deleteDatabase();
   });
 
   test('looks up a persisted packing list by ID regardless of its trip ID', () async {

@@ -1,12 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:travel_ready/core/database/database_helper.dart';
 import 'package:travel_ready/data/datasources/local/weather_cache_datasource.dart';
 import 'package:travel_ready/data/models/weather_model.dart';
+
+import '../../support/database_isolation.dart';
 
 class MockDatabase extends Mock implements Database {}
 
@@ -40,15 +39,10 @@ void main() {
   });
 
   test('real v1 file upgrades to v2 preserving trip and packing rows, then reopens cached weather', () async {
-    sqfliteFfiInit();
-    // Keep test-generated files inside the authorized build directory.
-    final directory = Directory('build/woc1_sqlite_${DateTime.now().microsecondsSinceEpoch}');
-    await directory.create(recursive: true);
-    final path = '${directory.path}/travelready.db';
-    final factory = databaseFactoryFfi;
+    final fixture = await DatabaseIsolation.create();
 
     // Reproduce the relevant v1 table definitions; no weather table exists yet.
-    final v1 = await factory.openDatabase(path,
+    final v1 = await fixture.openDatabase(
         options: OpenDatabaseOptions(version: 1, onCreate: (db, _) async {
       await db.execute('''CREATE TABLE ${DatabaseHelper.tableTrips} (
         id VARCHAR(36) PRIMARY KEY, user_id VARCHAR(36) NOT NULL,
@@ -71,7 +65,7 @@ void main() {
     });
     await v1.close();
 
-    Future<Database> openV2() => factory.openDatabase(path,
+    Future<Database> openV2() => fixture.openDatabase(
         options: OpenDatabaseOptions(version: 2,
             onUpgrade: DatabaseHelper.upgradeSchema));
     final upgraded = await openV2();
