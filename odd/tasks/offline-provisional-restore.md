@@ -30,10 +30,10 @@ visible.
 the router and the UI are context, not targets.
 
 ## Tasks
-- [ ] OFF-1: A provisional restore at a short, injectable deadline, keeping the listener subscribed.
-- [ ] OFF-2: A verified emission replaces the provisional state; a null emission still signs out and clears the snapshot.
-- [ ] OFF-3: Nothing is restored when the verified answer arrives first.
-- [ ] OFF-4: Tests for each behaviour above, with the RED observed before the change.
+- [x] OFF-1: A provisional restore at a short, injectable deadline, keeping the listener subscribed.
+- [x] OFF-2: A verified emission replaces the provisional state; a null emission still signs out and clears the snapshot.
+- [x] OFF-3: Nothing is restored when the verified answer arrives first.
+- [x] OFF-4: Tests for each behaviour above, with the RED observed before the change.
 
 ## Acceptance
 With no emission and the provisional deadline elapsed, the state is authenticated
@@ -48,6 +48,48 @@ The provisional window is a deliberate trade, not a free win: it can show data
 belonging to a session Firebase is about to revoke. It does not weaken the
 verified path, which still wins whenever it answers.
 
+## Evidence (`758e61d`)
+
+`AuthBloc` gained `Duration provisionalGrace = const Duration(seconds: 5)`,
+injectable like `startupGrace`, and a `_provisionalTimer` that calls
+`_restoreProvisional()`: it reads the snapshot once, emits nothing when there is
+none, and **re-checks the state after the await** so a verified answer that
+arrives mid-read is never overwritten. Both timers are cancelled in the stream
+listener and in `close()`.
+
+- **Test-first, with the RED observed twice**: first a compile failure
+(`No named parameter with the name 'provisionalGrace'`), then, with the parameter
+added but inert, the key test failed with `AuthLoading` instead of
+`AuthAuthenticated` while the two guard tests passed throughout.
+- `flutter test --no-pub test/presentation/bloc/auth_offline_session_test.dart`: 12
+passing. `flutter test --no-pub`: **437 passing**, up from 432. `flutter analyze`:
+exit 0 with the baseline 75 infos.
+- **Measured on the device**, airplane mode, force-stopped app: **13.9 s** and
+**11.9 s** to Home in two runs, against at least 18 s (and at most 40) for the
+previous build, whose lower bound the new numbers already beat. With network:
+**9.0 s**.
+- The log shows `[AuthBloc] Sesión guardada restaurada (provisional)` once per
+offline start and **not at all** in the run with network, so the provisional path
+is confirmed to run when it should and to stay out of the way when Firebase
+answers first.
+- The remaining ~12 s offline is five seconds of deliberate grace plus the cold
+start of a debug build; a release measurement needs a keystore.
+
+## Acceptance met
+
+The stored session is shown at the provisional deadline without waiting for the
+outer grace; a verified user replaces it; a verified null signs out and clears the
+snapshot; an answer that arrives first means no provisional state is ever shown.
+The snapshot store, the router and the UI are untouched, and no dependency was
+added.
+
+## Limits
+The provisional window is a deliberate trade: it can present data belonging to a
+session Firebase is about to revoke, and a network-bound action taken inside it
+can fail with an auth error once the verified answer lands. It does not weaken the
+verified path, which still wins whenever it answers.
+
 ## Next step
-Re-measure on the device: force-stop, airplane mode, and time how long it takes to
-reach Home. The claim to beat is roughly 40 seconds.
+Nothing here is outstanding. A release-build measurement, and the same check on a
+low-end device, remain out of reach until the owner provides a signing
+configuration.

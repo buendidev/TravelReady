@@ -113,16 +113,38 @@ mechanism that fits it is gone.
 | Rotation | Landscape and back to portrait with zero overflow entries; auto-rotation restored afterwards |
 | Flutter errors | **Zero** `E/flutter` entries for the whole session |
 
-### Finding: the offline cold start takes about 40 seconds
+### Finding, now fixed: the offline cold start no longer waits out the grace
 
-With no network, a force-stopped app waits out the full startup grace (30 s)
-before restoring the stored session, so the reader stares at the splash for
-roughly forty seconds to reach data that is already on the phone. The restore
-works and the session is later re-verified against Firebase, so the delay does
-not protect anything the snapshot restore does not already cover. A shorter
-provisional restore that keeps listening would show the user their data in a few
-seconds, at the cost of briefly showing a session that Firebase may then revoke.
-That trade is a product decision, not a bug fix.
+Measured in airplane mode with a force-stopped app, the build recorded above sat
+on the splash for **at least 18 seconds and at most 40** before reaching Home,
+because `AuthBloc._onStarted` waited out the whole 30 s startup grace before
+restoring the stored session. It now restores that session at a five-second
+provisional deadline while Firebase keeps verifying in the background. Measured
+on the same phone, with the build that carries the change:
+
+| Situation | Time to Home |
+| --- | --- |
+| Airplane mode, run 1 | **13.9 s** |
+| Airplane mode, run 2 | **11.9 s** |
+| With network | **9.0 s** |
+
+The improvement does not need the old build rebuilt to be believed: the new
+numbers fall below the **18 s at which the old one was still on the splash**.
+
+Two things corroborate that the intended path ran and not something else:
+
+- The app's log contains `[AuthBloc] Sesión guardada restaurada (provisional)`
+once per offline start, and **does not contain it at all in the run with
+network** — Firebase answered inside the five-second window, so nothing
+provisional was ever shown. That is the behaviour the widget test asserts, now
+confirmed end to end.
+- The remaining ~12 s is about five seconds of deliberate grace plus the cold
+start of a **debug** build. A release measurement has to wait for a keystore.
+
+What the change costs, so it is not forgotten: for up to five seconds the app can
+present data under an identity Firebase has since revoked, and a network-bound
+action taken in that window can fail with an auth error once the verified answer
+lands.
 
 ### Still not covered on a device
 
