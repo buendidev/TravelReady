@@ -1,9 +1,9 @@
-# AWS_NOTES.md — TravelReady! · Uso de AWS Academy
-# Pablo Buendicho Ortín · TravelReady · Abril 2026
+# AWS_NOTES.md — TravelReady! · Uso de AWS
+# Pablo Buendicho Ortín · Abril 2026
 
 ---
 
-## Usos recomendados para el TravelReady (coste $0 con Free Tier)
+## Usos recomendados (coste $0 con Free Tier)
 
 ### 1. API proxy de clima con caché — EC2 t2.micro
 
@@ -29,9 +29,9 @@ static const _base = 'https://api.tudominio.com';
 
 ---
 
-### 2. Hosting documentación TravelReady — S3 + CloudFront
+### 2. Hosting de documentación — S3 + CloudFront
 
-**Por qué**: Presentar el TravelReady con una web profesional y un enlace limpio.
+**Por qué**: Publicar la web del producto con un enlace limpio y profesional.
 
 ```bash
 # Crear bucket S3
@@ -133,5 +133,5 @@ aws cloudformation describe-stacks --query 'Stacks[*]'
 ## No recomendado: reemplazar Firebase con AWS
 
 - DynamoDB + Amplify requeriría reescribir toda la capa de datos
-- Para el TravelReady, Firebase es más conocido por los evaluadores
-- La complejidad añadida no aporta valor en el contexto independiente
+- Firebase ya cubre las necesidades actuales del producto
+- La complejidad añadida de la migración no aporta valor frente a su coste

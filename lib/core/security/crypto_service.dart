@@ -5,10 +5,11 @@ import 'package:crypto/crypto.dart';
 
 /// Servicio de criptografía para manejo seguro de contraseñas y datos.
 /// 
-/// NOTA: En producción usar bcrypt nativo. Aquí usamos una implementación
-/// segura con salt + SHA256 + pepper para el TravelReady.
+/// NOTA: esta implementación (salt + SHA256 + pepper) no sustituye a un
+/// esquema nativo de hashing de contraseñas (bcrypt/argon2), que es la
+/// opción correcta para un entorno de producción.
 class CryptoService {
-  static const String _pepper = 'TravelReady!2025SecureKey';
+  static const String _pepper = 'TravelReady!SecurePepper2026';
   static const int _saltLength = 32;
   static const int _iterations = 10000;
 

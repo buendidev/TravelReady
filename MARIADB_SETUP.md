@@ -1,7 +1,7 @@
 # MARIADB_SETUP.md — TravelReady! · Base de datos relacional
-# Pablo Buendicho Ortín · TravelReady · Abril 2026
+# Pablo Buendicho Ortín · Abril 2026
 # Contexto: esto describe la BD MariaDB necesaria si se creara un backend propio
-# en EC2 (AWS Academy) en lugar de usar Firestore. Útil para la memoria del TravelReady.
+# en EC2 en lugar de usar Firestore. Es documentación de diseño del producto.
 
 ---
 
@@ -149,7 +149,7 @@ CREATE TABLE account_events (
 
 Esta BD contiene todos los datos de la app por cliente. Si el SaaS es multi-tenant,
 se puede usar una BD por tenant o una BD compartida con `tenant_id` en cada tabla.
-Para el TravelReady, recomiendo BD compartida (más sencillo).
+Con el alcance actual del producto, se recomienda BD compartida (más sencillo).
 
 ```sql
 -- ======================================================================
@@ -431,12 +431,12 @@ sudo mysql -u root -p
 | Real-time | ✅ streams nativos | ❌ polling o websockets |
 | Offline | ✅ nativo | ❌ manual |
 | Escalabilidad | ✅ automática | Manual (replica, sharding) |
-| Coste TravelReady | Gratis (Spark) | $0 en EC2 free tier |
+| Coste actual | Gratis (Spark) | $0 en EC2 free tier |
 | Consultas complejas | Limitadas | Full SQL |
-| Para el TravelReady | **RECOMENDADO** | Solo si se justifica el backend |
+| Para TravelReady | **RECOMENDADO** | Solo si se justifica el backend |
 
-**Recomendación para el TravelReady**: usar Firestore para la app y describir la estructura
-MariaDB en la memoria como "diseño de BD relacional alternativo".
+**Recomendación**: usar Firestore para la app y conservar este documento
+como diseño de BD relacional alternativo para un futuro backend propio.
 
 ---
 
@@ -486,4 +486,4 @@ final response = await _dio.get('/trips',
 
 ---
 
-*Generado: Abril 2026 | TravelReady! TravelReady — Pablo Buendicho Ortín*
+*Generado: Abril 2026 | TravelReady — Pablo Buendicho Ortín*

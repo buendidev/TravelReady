@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/name_display.dart';
 import '../../../l10n/app_localizations.dart';
@@ -227,7 +228,7 @@ class _ProfileContent extends StatelessWidget {
                 ),
 
                 const SizedBox(height: AppSizes.xl),
-                Text('TravelReady! v1.0 · TravelReady 2026',
+                Text(AppStrings.appVersion,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: AppColors.textSecondaryLight)),
                 const SizedBox(height: AppSizes.md),

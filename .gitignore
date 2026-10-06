@@ -88,8 +88,7 @@ task_tavelReady
 # Directorios temporales de asistentes de IA
 stitch_travel_ready_login_screen/
 
-# ── Documentación personal del TravelReady ───────────────────────────────────────
-# Archivos PDF del TravelReady (subir solo la versión final en docs/)
+# ── Documentos y PDFs ────────────────────────────────────────────────────────
 *.pdf
 !docs/*.md
 
@@ -106,7 +105,6 @@ __pycache__/
 !DATABASE_GUIDE.md
 !DB_SETUP.md
 !MARIADB_SETUP.md
-!TravelReady_DOCUMENTATION.md
 !l10n.yaml
 !analysis_options.yaml
 

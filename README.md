@@ -1,8 +1,7 @@
 # TravelReady! 🧳✈️
 
 **Aplicación móvil de planificación de viajes**  
-TravelReady — desarrollo de producto  
-Autor: **Pablo Buendicho Ortín** · Curso 2025–2026
+© 2026 TravelReady · Pablo Buendicho Ortín
 
 ---
 
@@ -131,5 +130,5 @@ Cambiar idioma en: Perfil → Idioma
 
 ## 📋 Licencia
 
-Proyecto independiente — TravelReady 2025–2026.  
-© Pablo Buendicho Ortín. Todos los derechos reservados.
+© 2026 TravelReady · Pablo Buendicho Ortín.  
+Todos los derechos reservados.

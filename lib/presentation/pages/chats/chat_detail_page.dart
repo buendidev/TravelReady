@@ -3,9 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/name_display.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/services/chat_notification_manager.dart';
+import '../../../core/utils/name_display.dart';
 import '../../../injection/injection.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../bloc/chat_detail/chat_detail_bloc.dart';
@@ -427,7 +428,7 @@ class _SupportPage extends StatelessWidget {
           ),
 
           const SizedBox(height: AppSizes.xxxl),
-          Text('TravelReady! v1.0 · TravelReady',
+          Text(AppStrings.appVersion,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: AppColors.textSecondaryLight)),
         ]),

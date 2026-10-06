@@ -3,6 +3,7 @@
 abstract final class AppStrings {
   // ── General ──────────────────────────────────────────────────────────
   static const String appName    = 'TravelReady!';
+  static const String appVersion = 'TravelReady 1.0';
   static const String appTagline = 'Tu viaje, perfectamente preparado.';
 
   // ── Autenticación ─────────────────────────────────────────────────────
