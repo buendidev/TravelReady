@@ -43,17 +43,52 @@ Or just open `website/index.html` in a browser.
 
 ## Structural check
 
-Run this after touching the page. It needs no dependencies and exits
+Run this after touching the site. It needs no dependencies and exits
 non-zero on failure:
 
 ```powershell
 python tool/check_landing.py
 ```
 
-It verifies what can break without a browser: duplicate ids, anchors that
-point nowhere, classes used in the markup with no rule in the stylesheet,
-unbalanced braces, leaked external resources, and stray `<script>` or
-`<img>` tags. It also reports unused CSS rules as a warning.
+It checks the whole static site — every top-level `*.html` file in the
+target directory (default `website`) — not just one page.
+
+**Per page** it fails on what can break without a browser: duplicate
+`id`s, unclosed or unexpectedly closed tags, any `<script>` element (the
+site is JavaScript-free), any `<img>` element (the mockups are CSS), any
+resource URL that starts with `http://`, `https://` or protocol-relative
+`//` in `href` or `src`, HTML classes with no rule in `styles.css`, and
+broken links:
+
+- `#fragment` must match an `id` in the same page;
+- `page.html` and `./page.html` must point at a file in the directory;
+- `page.html#fragment` must point at an existing file **and** an `id`
+  inside that page.
+
+Missing files and dangling fragments are reported separately, naming the
+offending page. CSS rules that no page uses are reported as an `aviso:`
+warning, not a failure.
+
+**Site-wide checks** activate only when the directory contains more than
+one page; with a single page the checker prints one `aviso:` and skips
+them, so today's setup stays green. When active, all of the following
+are failures: a page without exactly one non-empty `<title>`, one
+`<meta name="description">` with content, one `<meta name="viewport">`,
+one absolute `<link rel="canonical">` whose path is that page's own
+URL on the origin, or the `og:title`, `og:description` and `og:type`
+meta properties; two pages sharing a title or a description; canonicals
+with different scheme+host origins, or a canonical pointing at another
+page's URL;
+missing or unparseable `sitemap.xml`, or a sitemap whose `<loc>` set
+does not exactly match the canonical page URLs (`index.html` as the
+origin root, every other page as `name.html`) in either direction;
+missing `robots.txt` or a `Sitemap:` line in it that does not point at
+the sitemap on the canonical origin; and header (`<nav>`) or footer
+navigation whose ordered list of links differs between pages.
+
+**Weight budget:** every HTML page is capped at 40 KiB and `styles.css`
+at 40 KiB (hard failure); exceeding 28 KiB per page or 32 KiB for the
+stylesheet prints an `aviso:` warning before the hard limit is reached.
 
 ## Pending owner content (marked in the HTML)
 
