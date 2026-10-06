@@ -84,8 +84,10 @@ body {
 
 h1, h2, h3 { line-height: 1.15; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
 h1 { font-size: clamp(2.1rem, 5.2vw, 3.6rem); font-weight: 800; }
-h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 750; }
-h3 { font-size: 1.1rem; font-weight: 700; }
+h2, .section-head h1, .muted-block h1 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 750; }
+/* Los h3 que quedaron directos bajo el h1 de su sección pasan a h2 y
+   conservan el aspecto que tenía el h3; la portada aún usa h3 reales. */
+h3, .card h2, .steps h2, .status-col h2 { font-size: 1.1rem; font-weight: 700; }
 p  { margin: 0 0 1rem; }
 ul, ol { margin: 0; padding: 0; list-style: none; }
 
@@ -119,6 +121,21 @@ img, svg { max-width: 100%; }
 .muted { color: var(--ink-soft); }
 .accent { color: var(--brand); }
 
+/* ── Guía rápida del sitio (portada) ─────────────────────────────── */
+.page-links {
+  display: grid;
+  gap: 0.7rem;
+}
+.page-links li {
+  padding: 0.85rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink-soft);
+}
+.page-links a { font-weight: 700; }
+
 /* ── Cabecera ─────────────────────────────────────────────────────────── */
 .site-header {
   position: sticky;
@@ -129,7 +146,7 @@ img, svg { max-width: 100%; }
   border-bottom: 1px solid var(--border);
 }
 
-.nav {
+.site-nav {
   max-width: var(--max);
   margin: 0 auto;
   padding: 0.7rem var(--pad);
@@ -163,16 +180,40 @@ img, svg { max-width: 100%; }
   font-size: 1.05rem;
 }
 
+/* Divulgador del menú: <details open> en el marcado, así que los enlaces
+   se ven sin JavaScript en cualquier navegador; el summary solo tiene
+   trabajo en pantallas estrechas y se esconde a partir de 760px. */
+.nav-disclosure {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.nav-summary {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  list-style: none;
+}
+.nav-summary::-webkit-details-marker { display: none; }
+.nav-summary:hover {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+@media (min-width: 760px) {
+  .nav-summary { display: none; }
+}
+
 .nav-links {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.35rem;
-  margin-inline-start: 0.5rem;
-  flex: 1 1 auto;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  margin: 0;
 }
-.nav-links::-webkit-scrollbar { display: none; }
 .nav-links a {
   display: inline-block;
   padding: 0.4rem 0.7rem;
@@ -187,6 +228,16 @@ img, svg { max-width: 100%; }
 .nav-links a:hover {
   background: var(--brand-soft);
   color: var(--brand-strong);
+}
+
+/* Página activa, marcada en la cabecera y en el pie. */
+.nav-links a[aria-current="page"] {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+.footer-nav a[aria-current="page"] {
+  color: var(--brand-strong);
+  text-decoration: underline;
 }
 
 /* ── Botones ──────────────────────────────────────────────────────────── */
@@ -240,8 +291,7 @@ img, svg { max-width: 100%; }
   transform: none;
 }
 
-.btn-small { padding: 0.5rem 1rem; font-size: 0.92rem; }
-.btn-lg    { padding: 0.85rem 1.6rem; font-size: 1.02rem; }
+.btn-lg { padding: 0.85rem 1.6rem; font-size: 1.02rem; }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .hero {
@@ -525,7 +575,7 @@ img, svg { max-width: 100%; }
 }
 
 .section-head { margin-bottom: clamp(1.75rem, 4vw, 2.75rem); }
-.section-head h2 { margin-bottom: 0.5rem; }
+.section-head h1, .section-head h2 { margin-bottom: 0.5rem; }
 .section-lede {
   margin: 0;
   max-width: 58ch;
@@ -613,7 +663,7 @@ img, svg { max-width: 100%; }
   font-size: 0.95rem;
   box-shadow: var(--shadow-sm);
 }
-.steps h3 { margin-bottom: 0.3rem; }
+.steps h2 { margin-bottom: 0.3rem; }
 .steps p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; }
 
 /* ── Capturas ─────────────────────────────────────────────────────────── */
@@ -649,7 +699,7 @@ img, svg { max-width: 100%; }
   background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
-.status-col h3 {
+.status-col h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -723,7 +773,7 @@ img, svg { max-width: 100%; }
 .muted-block {
   background: var(--surface-sunken);
 }
-.muted-block h2 { margin-bottom: 1rem; }
+.muted-block h1 { margin-bottom: 1rem; }
 .muted-block p {
   max-width: 68ch;
   color: var(--ink-soft);
@@ -778,20 +828,16 @@ img, svg { max-width: 100%; }
   .lede { max-width: none; }
 }
 
-@media (max-width: 560px) {
-  /* En movil el encabezado no se queda pegado: con los enlaces envueltos en
-     dos o tres lineas, fijarlo se comeria media pantalla. */
+@media (max-width: 759px) {
+  /* Con el menú desplegado en filas, fijar la cabecera se comería media
+     pantalla: queda estática hasta que el summary desaparece (>= 760px). */
   .site-header { position: static; }
-  .nav { flex-wrap: wrap; row-gap: 0.35rem; }
-  .nav-links {
-    order: 3;
-    flex-basis: 100%;
-    flex-wrap: wrap;
-    overflow: visible;
-    row-gap: 0.15rem;
-    margin-inline-start: 0;
-  }
-  .nav .btn-small { margin-inline-start: auto; }
+  .nav-links { margin-top: 0.45rem; }
+}
+
+@media (max-width: 560px) {
+  .site-nav { flex-wrap: wrap; }
+  .nav-disclosure { flex-basis: 100%; }
   .btn-lg { width: 100%; }
   .hero-cta { flex-direction: column; align-items: stretch; }
   .steps li::before { display: none; }

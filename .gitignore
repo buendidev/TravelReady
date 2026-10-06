@@ -96,6 +96,7 @@ stitch_travel_ready_login_screen/
 # ── Archivos temporales y notas personales ───────────────────────────────
 *.txt
 !docs/*.txt
+!website/robots.txt
 !README.md
 !SECURITY.md
 !DATABASE_GUIDE.md

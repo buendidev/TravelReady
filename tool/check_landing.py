@@ -7,8 +7,8 @@ del directorio (ids repetidos, etiquetas mal cerradas, anclajes rotos
 —incluidos los cruces entre páginas—, clases del marcado sin regla en la
 hoja de estilos, recursos externos y presupuesto de peso) y, cuando hay
 más de una página, las comprobaciones de sitio completo: títulos,
-descripciones, viewport, canonical, Open Graph, sitemap.xml, robots.txt
-y coherencia de la navegación entre páginas.
+descripciones, viewport, canonical, Open Graph, sitemap.xml, robots.txt,
+coherencia de la navegación entre páginas y prosa repetida entre páginas.
 
 Uso:
     python tool/check_landing.py [directorio]   # por defecto: website
@@ -66,9 +66,16 @@ class PageParser(HTMLParser):
         self.metas: list[dict[str, str]] = []
         self.canonicals: list[str] = []
         self.navs: list[dict] = []  # {"classes": [...], "hrefs": [...]}
+        self.paragraphs: list[str] = []  # <p> fuera de header/footer/nav
+        self.headings: list[tuple[str, str]] = []  # (h1..h6, texto) en orden
         self._in_title = False
         self._title_parts: list[str] = []
         self._nav_depth = 0
+        self._p_parts: list[str] | None = None
+        self._p_excluded = False
+        self._prose_skip = 0  # header/footer/nav abiertos en este punto
+        self._h_tag: str | None = None
+        self._h_parts: list[str] = []
 
     def handle_starttag(self, tag: str, attrs) -> None:
         attributes: dict[str, str] = {}
@@ -102,12 +109,29 @@ class PageParser(HTMLParser):
             })
         elif self._nav_depth and self.navs and "href" in attributes:
             self.navs[-1]["hrefs"].append(attributes["href"])
+        if tag in ("header", "footer", "nav"):
+            self._prose_skip += 1
+        if tag == "p" and self._p_parts is None:
+            self._p_parts = []
+            self._p_excluded = self._prose_skip > 0
+        if tag in ("h1", "h2", "h3", "h4", "h5", "h6") and self._h_tag is None:
+            self._h_tag = tag
+            self._h_parts = []
         if tag not in VOID_TAGS:
             self.stack.append(tag)
 
     def handle_endtag(self, tag: str) -> None:
         if tag in VOID_TAGS:
             return  # tolera la sintaxis autocerrada <meta ... />
+        if tag in ("header", "footer", "nav") and self._prose_skip:
+            self._prose_skip -= 1
+        if tag == "p" and self._p_parts is not None:
+            if not self._p_excluded:
+                self.paragraphs.append("".join(self._p_parts))
+            self._p_parts = None
+        if self._h_tag and tag == self._h_tag:
+            self.headings.append((tag, "".join(self._h_parts)))
+            self._h_tag = None
         if tag == "title" and self._in_title:
             self.titles.append("".join(self._title_parts))
             self._in_title = False
@@ -124,6 +148,10 @@ class PageParser(HTMLParser):
     def handle_data(self, data: str) -> None:
         if self._in_title:
             self._title_parts.append(data)
+        if self._p_parts is not None:
+            self._p_parts.append(data)
+        if self._h_tag is not None:
+            self._h_parts.append(data)
 
     def header_hrefs(self) -> list[str]:
         return list(self.navs[0]["hrefs"]) if self.navs else []
@@ -451,7 +479,57 @@ def check_site_wide(directory: Path, names: list[str],
                     f"{ROBOTS_NAME}: la linea Sitemap no apunta al "
                     f"{SITEMAP_NAME} del origen canonical: {url!r}")
 
-    # ── Navegación coherente ──────────────────────────────────────────
+    # ── Encabezados ───────────────────────────────────────────
+    # Un h1 por página con texto propio, y niveles de encabezado sin
+    # saltos: sin estos controles, la jerarquía semántica que el SEO
+    # espera se rompe sin que nada más del sitio se entere.
+    h1_by_page: dict[str, str] = {}
+    for name in names:
+        h1s = [raw for tag, raw in parsers[name].headings if tag == "h1"]
+        if len(h1s) != 1:
+            problems.append(f"{name}: debe tener exactamente un <h1> "
+                            f"(encontrados {len(h1s)})")
+            continue
+        text = re.sub(r"\s+", " ", h1s[0]).strip()
+        if not text:
+            problems.append(f"{name}: el <h1> está vacío")
+            continue
+        h1_by_page[name] = text
+    by_h1: dict[str, list[str]] = {}
+    for name, text in h1_by_page.items():
+        by_h1.setdefault(re.sub(r"\s+", " ", text).lower(), []).append(name)
+    for norm, owners in sorted(by_h1.items()):
+        if len(owners) > 1:
+            problems.append(f"h1 duplicado {norm!r} en: {sorted(owners)}")
+    for name in names:
+        prev = 0
+        for tag, raw in parsers[name].headings:
+            level = int(tag[1])
+            if prev and level > prev + 1:
+                text = re.sub(r"\s+", " ", raw).strip()
+                problems.append(
+                    f"{name}: salto de nivel en los encabezados: de h{prev} "
+                    f"a h{level} (\"{text}\")")
+            prev = level
+
+    # ── Prosa repetida entre páginas ──────────────────────────────
+    # Guardia determinista del requisito editorial: ninguna página
+    # copia el contenido de otra. Se compara el texto normalizado de
+    # los <p> que no viven en header, footer o nav (el menú y el pie
+    # se repiten a propósito en todas las páginas).
+    prose: dict[str, set[str]] = {}
+    for name in names:
+        for raw in parsers[name].paragraphs:
+            norm = re.sub(r"\s+", " ", raw).strip().lower()
+            if len(norm) >= 120:
+                prose.setdefault(norm, set()).add(name)
+    for norm, owners in sorted(prose.items()):
+        if len(owners) > 1:
+            problems.append(
+                f"prosa repetida entre paginas {sorted(owners)}: "
+                f"\"{norm[:60]}\"")
+
+    # ── Navegación coherente ──────────────────────────────────────────────
     # La referencia es index.html cuando existe: es la pagina que
     # cualquiera lee como "la principal", y un aviso contra ella se
     # entiende sin pensarlo.

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estado de TravelReady: qué funciona y qué está pendiente</title>
+  <meta name="description"
+        content="TravelReady está en desarrollo activo: mira qué funciona ya (cuentas, maleta, itinerario y chat) y qué sigue pendiente (mapas reales, iOS, notificaciones).">
+  <meta property="og:title" content="Estado de TravelReady: qué funciona y qué está pendiente">
+  <meta property="og:description"
+        content="TravelReady está en desarrollo activo: mira qué funciona ya (cuentas, maleta, itinerario y chat) y qué sigue pendiente (mapas reales, iOS, notificaciones).">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#006571">
+  <meta name="color-scheme" content="light dark">
+  <link rel="canonical" href="https://travelready.example/estado.html">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Navegación principal">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">🧳</span>
+        <span class="brand-name">TravelReady</span>
+      </a>
+
+      <details class="nav-disclosure" open>
+        <summary class="nav-summary">Menú</summary>
+        <ul class="nav-links">
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="funciones.html">Funciones</a></li>
+          <li><a href="como-funciona.html">Cómo funciona</a></li>
+          <li><a href="estado.html" aria-current="page">Estado</a></li>
+          <li><a href="faq.html">Preguntas</a></li>
+          <li><a href="descargar.html">Descargar</a></li>
+          <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+      </details>
+    </nav>
+  </header>
+
+  <main id="contenido">
+
+    <!-- ── Estado del producto ──────────────────────────────────────── -->
+    <section class="section">
+      <header class="section-head">
+        <p class="eyebrow">Estado</p>
+        <h1>Qué está listo y qué falta</h1>
+        <p class="section-lede">
+          TravelReady está en desarrollo activo. Preferimos decirlo claro
+          antes de que descargues nada.
+        </p>
+      </header>
+
+      <div class="status-grid">
+        <div class="status-col">
+          <h2><span aria-hidden="true">✅</span> Ya funciona</h2>
+          <ul class="status-list">
+            <li>Registro e inicio de sesión, incluido con Google</li>
+            <li>Viajes con fechas, destino, transporte y progreso</li>
+            <li>Equipaje con plantillas, marcado y progreso</li>
+            <li>Itinerario por días, con orden y categorías</li>
+            <li>Descubrimiento de lugares (datos de ejemplo)</li>
+            <li>Chat privado y de grupo</li>
+            <li>Clima del destino con última lectura guardada</li>
+            <li>Idioma (español e inglés) y tema claro u oscuro</li>
+          </ul>
+        </div>
+
+        <div class="status-col">
+          <h2><span aria-hidden="true">🛠️</span> En preparación</h2>
+          <ul class="status-list">
+            <li>Mapas y lugares con proveedor real</li>
+            <li>Notificaciones y recordatorios</li>
+            <li>Versión para iOS</li>
+            <li>Sincronización de equipaje entre dispositivos</li>
+            <li>Planes de pago: todavía sin precios publicados</li>
+          </ul>
+        </div>
+
+        <div class="status-col">
+          <h2><span aria-hidden="true">⚠️</span> Límites que ya conocemos</h2>
+          <ul class="status-list">
+            <li>El descubrimiento de lugares enseña datos de ejemplo,
+                marcados como tales, hasta que el proveedor de mapas
+                real esté integrado</li>
+            <li>El clima y el descubrimiento necesitan internet; la
+                maleta y el itinerario se consultan sin conexión</li>
+            <li>No hay avisos ni recordatorios: si hay que mirar algo,
+                lo miras tú</li>
+            <li>La maleta no se sincroniza entre dispositivos todavía</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="muted">
+        La versión que se reparte es una beta de Android; cómo probarla
+        está en <a href="descargar.html">descargar</a>. Las dudas que más
+        se repiten, en <a href="faq.html">preguntas</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand">
+          <span class="brand-mark" aria-hidden="true">🧳</span> TravelReady
+        </p>
+        <p class="muted">TravelReady — Pablo Buendicho Ortín.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Navegación del pie">
+        <a href="index.html">Inicio</a>
+        <a href="funciones.html">Funciones</a>
+        <a href="como-funciona.html">Cómo funciona</a>
+        <a href="estado.html" aria-current="page">Estado</a>
+        <a href="faq.html">Preguntas</a>
+        <a href="descargar.html">Descargar</a>
+        <a href="contacto.html">Contacto</a>
+      </nav>
+    </div>
+
+    <p class="footer-legal">
+      © 2026 TravelReady · Aviso legal y política de privacidad pendientes
+      de publicación.
+    </p>
+  </footer>
+</body>
+</html>
