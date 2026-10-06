@@ -204,6 +204,9 @@ class _PackingContentState extends State<_PackingContent> {
     final bloc = context.read<PackingBloc>();
     final currentState = bloc.state;
     showModalBottomSheet<void>(
+      // Al navegador raíz: la barrera cubre toda la shell (barra inferior
+      // incluida) y el sheet no queda retenido en la rama al cambiar de tab.
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(

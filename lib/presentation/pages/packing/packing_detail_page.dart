@@ -38,6 +38,9 @@ class _DetailContent extends StatelessWidget {
   void _showTemplates(BuildContext context) {
     final bloc = context.read<PackingBloc>();
     showModalBottomSheet<void>(
+      // Al navegador raíz: la barrera cubre toda la shell (barra inferior
+      // incluida) y el sheet no queda retenido en la rama al cambiar de tab.
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -88,6 +91,9 @@ class _DetailContent extends StatelessWidget {
     final bloc = context.read<PackingBloc>(); // captura aquí, fuera del builder
 
     showModalBottomSheet<void>(
+      // Al navegador raíz: la barrera cubre toda la shell (barra inferior
+      // incluida) y el sheet no queda retenido en la rama al cambiar de tab.
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(

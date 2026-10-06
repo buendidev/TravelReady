@@ -213,6 +213,9 @@ class _TripsContentState extends State<_TripsContent> {
 
   void _showSheet(BuildContext context) {
     showModalBottomSheet<void>(
+      // Al navegador raíz: la barrera cubre toda la shell (barra inferior
+      // incluida) y el sheet no queda retenido en la rama al cambiar de tab.
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(

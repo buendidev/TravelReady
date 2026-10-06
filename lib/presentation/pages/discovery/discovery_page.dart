@@ -227,6 +227,9 @@ class _DiscoveryContentState extends State<_DiscoveryContent> {
 
   void _showDetails(PlaceResult place) {
     showModalBottomSheet<void>(
+      // Al navegador raíz: la barrera cubre toda la shell (barra inferior
+      // incluida) y el sheet no queda retenido en la rama al cambiar de tab.
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       builder: (_) => _PlaceDetailsSheet(
@@ -243,6 +246,9 @@ class _DiscoveryContentState extends State<_DiscoveryContent> {
     // Sin pop previo: la hoja se apila sobre la de detalles y al
     // guardar se vuelve a ella (evita carreras pop+push).
     showModalBottomSheet<void>(
+      // Al navegador raíz: la barrera cubre toda la shell (barra inferior
+      // incluida) y el sheet no queda retenido en la rama al cambiar de tab.
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       builder: (_) => BlocProvider.value(

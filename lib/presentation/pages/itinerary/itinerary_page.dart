@@ -222,6 +222,9 @@ class _Content extends StatelessWidget {
 
   void _showEditor(BuildContext context, {ItineraryItem? item}) {
     showModalBottomSheet<void>(
+      // Al navegador raíz: la barrera cubre toda la shell (barra inferior
+      // incluida) y el sheet no queda retenido en la rama al cambiar de tab.
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       builder: (sheetCtx) => BlocProvider.value(

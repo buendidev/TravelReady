@@ -270,6 +270,9 @@ class _ProfileContent extends StatelessWidget {
     final l10n     = AppLocalizations.of(context);
     final nameCtrl = TextEditingController(text: user?.name ?? '');
     showModalBottomSheet<void>(
+      // Al navegador raíz: la barrera cubre toda la shell (barra inferior
+      // incluida) y el sheet no queda retenido en la rama al cambiar de tab.
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
