@@ -180,9 +180,9 @@ img, svg { max-width: 100%; }
   font-size: 1.05rem;
 }
 
-/* Divulgador del menú: <details open> en el marcado, así que los enlaces
-   se ven sin JavaScript en cualquier navegador; el summary solo tiene
-   trabajo en pantallas estrechas y se esconde a partir de 760px. */
+/* Divulgador del menú: llega cerrado desde el marcado y el summary lo
+   abre de forma nativa, sin JavaScript, en pantallas estrechas; se
+   esconde a partir de 760px, donde la lista se fuerza visible. */
 .nav-disclosure {
   flex: 1 1 auto;
   min-width: 0;
@@ -206,6 +206,13 @@ img, svg { max-width: 100%; }
 
 @media (min-width: 760px) {
   .nav-summary { display: none; }
+
+  /* El details llega cerrado, así que a partir de 760px hay que forzar la
+     lista a la vista. Cada motor oculta el contenido cerrado a su manera:
+     Chromium 131+ con content-visibility en ::details-content, y el resto
+     con display:none en los hijos; se cubren ambas vías. */
+  .nav-disclosure::details-content { content-visibility: visible; }
+  .nav-disclosure .nav-links { display: flex; }
 }
 
 .nav-links {
