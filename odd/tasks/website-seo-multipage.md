@@ -78,7 +78,8 @@ the domain exists, and the checker proves the replacement is complete.
 
 ## Tasks
 - [x] WSP-1: Generalize the structural checker to a site with several pages.
-- [ ] WSP-2: Split the page per intent with unique metadata, canonical, sitemap and robots.
+- [x] WSP-2: Split the page per intent with unique metadata, canonical, sitemap and robots.
+- [x] WSP-2b: Repair the two defects review found in WSP-2 (the ignored `robots.txt`, the six pages without an `h1`) and gate them in the checker.
 - [ ] WSP-3: Add CSS-only motion and effects behind a reduced-motion guard.
 - [ ] WSP-4: Verify structurally and in a real browser engine, and measure page weight.
 - [ ] WSP-5: Document the origin placeholder as an owner action.
@@ -155,6 +156,41 @@ human expects.
 - Not fired: the `<script>`, `<img>`, external-resource, brace-balance and
 unclosed-tag paths, whose logic is unchanged from the previous checker and
 was already exercised before this unit.
+
+### WSP-2 — the split, plus WSP-2b (`930d7fe`)
+
+Seven pages, one intent each, a shared header and footer nav identical in order,
+`aria-current="page"` on the current one, unique title and description per page,
+Open Graph tags, one canonical per page on `https://travelready.example`, a
+`<details open>` disclosure for small screens, `sitemap.xml` with exactly the
+seven canonical URLs and no invented `lastmod`, and `robots.txt` with the
+`Sitemap:` line. The checker gained the repeated-prose guard and the three
+heading rules. Copy was moved rather than rewritten; `index.html` fell from
+441 to 237 lines as its sections moved out.
+
+- `python tool/check_landing.py`: exit 0, seven pages, cross-page gate active,
+**zero** `aviso:` lines. Per-page bytes and lines recorded in the commit.
+- Weight: seven pages 46.740 B plus `styles.css` 23.163 B = 68,3 KiB total; a
+cold load of `index.html` is 33.353 B and the stylesheet is the only other
+request. Nothing else is fetched: no font, image, icon or script.
+- Link matrix: every page links to all seven, in the same order in the header
+and in the footer.
+- The repeated-prose guard was shown to inspect **real** prose, not a synthetic
+fixture: copying a real paragraph from `funciones.html` into `estado.html` in a
+`build/` copy produced exit 1 naming both pages.
+- The three heading rules were each shown to fire by injection: a page with its
+`h1` removed, two pages sharing an `h1`, and an `h3` injected after the `h1`.
+- **No copy changed while the headings were renumbered**: the seven pages kept
+byte-identical sizes and line counts (`h1`, `h2` and `h3` are the same length),
+which is the independent check on the writer's word-level diff.
+- Three defects were found in review and fixed before the commit: `robots.txt`
+was ignored by `.gitignore` (`*.txt`), so CI would have failed on a fresh clone
+while every local run passed; six pages had no `h1` and `estado.html` skipped a
+heading level; and `contacto.html`'s promoted `h1` sat outside `.section-head`,
+so it would have rendered at the hero size instead of the `h2` size it had.
+- Copy spot-check of `estado.html` and `descargar.html`: no invented feature,
+date, version or price; the disabled APK placeholder and its `TODO(owner)`
+survive.
 
 ## Not verified here
 (to be recorded)

@@ -752,7 +752,10 @@ img, svg { max-width: 100%; }
   color: var(--brand);
   transition: transform 0.18s ease;
 }
-.faq details[open] summary::after { content: "−"; }
+.faq details[open] summary::after {
+  content: "−";
+  transform: translateY(-50%) rotate(180deg);
+}
 .faq details p {
   margin: 0;
   padding: 0 1.15rem 1.15rem;
@@ -843,6 +846,121 @@ img, svg { max-width: 100%; }
   .steps li::before { display: none; }
 }
 
+/* ── Selección de texto ───────────────────────────────────────────────── */
+::selection {
+  background: var(--brand);
+  color: var(--surface);
+}
+
+/* ── Micro-interacciones (hover siempre con equivalente focus-visible) ──
+   Solo propiedades de composición o pintura: nada que provoque reflow. */
+.card:focus-within {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--brand-line);
+}
+
+.btn-primary:focus-visible {
+  background: var(--brand-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-links a:focus-visible,
+.nav-summary:focus-visible {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.faq summary { transition: color 0.18s ease; }
+.faq summary:hover,
+.faq summary:focus-visible { color: var(--brand-strong); }
+
+/* Subrayado que se desliza bajo los enlaces del pie.
+   En motores sin transform la barra queda visible (solo decorativa). */
+.footer-nav a {
+  position: relative;
+  transition: color 0.18s ease;
+}
+.footer-nav a::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -0.2rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.2s ease;
+}
+.footer-nav a:hover::after,
+.footer-nav a:focus-visible::after { transform: scaleX(1); }
+.footer-nav a:hover { text-decoration: none; }
+
+/* ── Movimiento ─────────────────────────────────────────────────────────
+   Todo estado inicial oculto (opacity 0, translate) vive ÚNICAMENTE dentro
+   de @supports (animation-timeline: view()) Y de prefers-reduced-motion:
+   no-preference. Fuera de esa combinación la página se pinta ya en su
+   estado final y visible: sin soporte de scroll-driven animations, o con
+   movimiento reducido, no se oculta ni una palabra. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+
+    @keyframes tr-entrar {
+      from { opacity: 0; translate: 0 18px; }
+    }
+    @keyframes tr-revelar {
+      from { opacity: 0; translate: 0 26px; }
+    }
+    @keyframes tr-sombra {
+      to { box-shadow: var(--shadow-md); }
+    }
+
+    /* Entrada del hero al cargar, con escalonado corto de sus bloques.
+       `translate` no pisa el transform: rotate() del teléfono. */
+    .hero-text > *,
+    .hero-visual {
+      animation: tr-entrar 0.6s ease-out backwards;
+    }
+    .hero-text > :nth-child(2) { animation-delay: 0.08s; }
+    .hero-text > :nth-child(3) { animation-delay: 0.16s; }
+    .hero-text > :nth-child(4) { animation-delay: 0.24s; }
+    .hero-text > :nth-child(5) { animation-delay: 0.3s; }
+    .hero-visual { animation-delay: 0.22s; }
+
+    /* Aparición al hacer scroll. El rango termina en entry 50%: la
+       animación acaba cuando el elemento lleva la mitad dentro del
+       viewport, así que todo lo que al cargar ya se ve más de medio
+       entra en su estado final, y lo que asoma por el borde termina de
+       entrar con el primer mínimo scroll. Todos los selectores apuntan
+       a bloques más bajos que el viewport. */
+    .section-head,
+    .section > p,
+    .strip-item,
+    .card,
+    .steps li,
+    .screen,
+    .status-col,
+    .status-list,
+    .page-links li,
+    .faq details,
+    .cta-row {
+      animation: tr-revelar 0.7s ease-out both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 50%;
+    }
+
+    /* Sombra suave de la cabecera fija durante los primeros 6rem de
+       scroll. El tracking del progreso es del usuario, no un bucle. */
+    .site-header {
+      animation: tr-sombra linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 6rem;
+    }
+  }
+}
+
 /* ── Movimiento reducido ──────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -855,5 +973,30 @@ img, svg { max-width: 100%; }
     scroll-behavior: auto !important;
   }
   .btn:hover,
-  .card:hover { transform: none; }
+  .card:hover,
+  .card:focus-within { transform: none; }
+
+  /* Los efectos con timeline de scroll ignoran animation-duration, así
+     que se desactivan por nombre y se restaura su estado final. */
+  .site-header,
+  .hero-text > *,
+  .hero-visual,
+  .section-head,
+  .section > p,
+  .strip-item,
+  .card,
+  .steps li,
+  .screen,
+  .status-col,
+  .status-list,
+  .page-links li,
+  .faq details,
+  .cta-row {
+    animation: none !important;
+    opacity: 1;
+    translate: none;
+  }
+  .faq summary::after,
+  .faq details[open] summary::after { transform: translateY(-50%); }
+  .footer-nav a::after { display: none; }
 }

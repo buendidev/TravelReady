@@ -27,7 +27,9 @@ crawler files:
 - `contacto.html` — contact, privacy and legal placeholders.
 - `styles.css` — design tokens matching the app palette (`#006571`),
   light and dark schemes via `prefers-color-scheme`, responsive layout,
-  `:focus-visible` rings and a `prefers-reduced-motion` guard.
+  `:focus-visible` rings, CSS-only motion (hero entrance, scroll-driven
+  reveals, hover/focus micro-interactions) and a `prefers-reduced-motion`
+  guard.
 - `sitemap.xml` — the seven canonical URLs, no `lastmod` (there is no
   reliable date to put there).
 - `robots.txt` — `Allow: /` plus one `Sitemap:` line.
@@ -126,6 +128,37 @@ CSS rules that no page uses are reported as an `aviso:` warning, as is
 a page between 28 and 40 KiB (the stylesheet between 32 and 40 KiB);
 the hard caps are 40 KiB per page and for the stylesheet, which fail the
 run. `aviso:` lines never fail the run by themselves.
+
+## Motion (CSS only, no JavaScript)
+
+All motion lives in `styles.css` and animates only `transform`,
+`opacity` and paint-only properties — never anything that triggers
+layout. Three guarantees, enforced by where the CSS is written:
+
+1. **No content can be hidden by an unsupported engine.** Every zero or
+   offset start state (`opacity: 0`, `translate`) is declared only inside
+   `@media (prefers-reduced-motion: no-preference)` wrapping
+   `@supports (animation-timeline: view())`. An engine without
+   scroll-driven animations, or with motion reduced, parses none of it
+   and paints every element in its final, fully visible state.
+2. **Scroll reveals finish on screen.** The reveal
+   `animation-range` is `entry 0% entry 50%`, so the animation completes
+   once an element is half inside the viewport: anything more than half
+   visible when the page loads is already at its end state.
+3. **Reduced motion gets everything, static.** The
+   `prefers-reduced-motion: reduce` block disables every animation and
+   transition, and explicitly restores `opacity: 1` and
+   `translate: none` for every element the guarded block offsets —
+   scroll-driven animations ignore `animation-duration`, so they are
+   disabled by name, not by duration.
+
+Effects: a staggered hero entrance on load; reveals for section heads,
+cards, steps, strip items, status columns/lists, page links, FAQ items
+and CTA; card lift with a `:focus-within` equivalent; button press
+feedback with a `:focus-visible` equivalent; a sliding underline on
+footer nav links; a half-turn spin of the FAQ summary marker on open; a
+soft shadow on the sticky header during the first 6 rem of scroll; and
+brand-colored `::selection`.
 
 ## Pending owner content (marked in the HTML)
 
