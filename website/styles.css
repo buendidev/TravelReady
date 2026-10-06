@@ -181,8 +181,9 @@ img, svg { max-width: 100%; }
 }
 
 /* Divulgador del menú: llega cerrado desde el marcado y el summary lo
-   abre de forma nativa, sin JavaScript, en pantallas estrechas; se
-   esconde a partir de 760px, donde la lista se fuerza visible. */
+   abre de forma nativa, sin JavaScript ni CSS, en pantallas estrechas;
+   a partir de 760px no se renderiza: la lista llana de escritorio es la
+   que lleva la navegación. */
 .nav-disclosure {
   flex: 1 1 auto;
   min-width: 0;
@@ -205,14 +206,12 @@ img, svg { max-width: 100%; }
 }
 
 @media (min-width: 760px) {
-  .nav-summary { display: none; }
-
-  /* El details llega cerrado, así que a partir de 760px hay que forzar la
-     lista a la vista. Cada motor oculta el contenido cerrado a su manera:
-     Chromium 131+ con content-visibility en ::details-content, y el resto
-     con display:none en los hijos; se cubren ambas vías. */
-  .nav-disclosure::details-content { content-visibility: visible; }
-  .nav-disclosure .nav-links { display: flex; }
+  /* El disclosure no se renderiza (ni summary ni lista) y la lista llana
+     lleva la navegación inline. Sólo media query y display: ningún
+     selector específico de un motor. La doble clase gana a la regla base
+     display:none de .nav-links-desktop, viva donde viva en el fichero. */
+  .nav-disclosure { display: none; }
+  .nav-links.nav-links-desktop { display: flex; }
 }
 
 .nav-links {
@@ -221,6 +220,13 @@ img, svg { max-width: 100%; }
   gap: 0.35rem;
   margin: 0;
 }
+/* Lista llana de escritorio: oculta por debajo de 760px; display:none la
+   saca del árbol de accesibilidad y del orden de tabulación, de modo que
+   en pantallas estrechas el único menú es el disclosure nativo. Va detrás
+   de .nav-links para ganarle el display:flex con la misma especificidad;
+   a partir de 760px la gana la regla .nav-links.nav-links-desktop de la
+   media query. */
+.nav-links-desktop { display: none; }
 .nav-links a {
   display: inline-block;
   padding: 0.4rem 0.7rem;
@@ -842,10 +848,11 @@ img, svg { max-width: 100%; }
   /* Con el menú desplegado en filas, fijar la cabecera se comería media
      pantalla: queda estática hasta que el summary desaparece (>= 760px). */
   .site-header { position: static; }
-  /* La divulgación sólo ocupa fila propia cuando está ABIERTA: cerrada se
-     queda junto a la marca, que es lo que deja la cabecera en una fila. */
+  /* La divulgación ocupa fila propia sólo cuando está ABIERTA: cerrada
+     es sólo el summary, y abierta sus siete enlaces (nowrap, unos 600px
+     en conjunto) ya no caben junto a la marca, así que la propia línea
+     flex los envuelve a una fila completa. */
   .site-nav { flex-wrap: wrap; }
-  .nav-disclosure[open] { flex-basis: 100%; }
   .nav-links { margin-top: 0.45rem; }
 }
 

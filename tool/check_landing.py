@@ -65,7 +65,10 @@ class PageParser(HTMLParser):
         self.titles: list[str] = []
         self.metas: list[dict[str, str]] = []
         self.canonicals: list[str] = []
-        self.navs: list[dict] = []  # {"classes": [...], "hrefs": [...]}
+        self.navs: list[dict] = []  # {"classes": [...], "hrefs": [...],
+        #                            "current": [...], "lists": [...]}
+        # lists: cada <ul> del nav, con sus hrefs en orden y los hrefs que
+        # llevan aria-current="page".
         self.paragraphs: list[str] = []  # <p> fuera de header/footer/nav
         self.headings: list[tuple[str, str]] = []  # (h1..h6, texto) en orden
         self._in_title = False
@@ -106,9 +109,23 @@ class PageParser(HTMLParser):
             self.navs.append({
                 "classes": attributes.get("class", "").lower().split(),
                 "hrefs": [],
+                "current": [],
+                "lists": [],
             })
-        elif self._nav_depth and self.navs and "href" in attributes:
-            self.navs[-1]["hrefs"].append(attributes["href"])
+        elif self._nav_depth and self.navs:
+            if "href" in attributes:
+                nav = self.navs[-1]
+                nav["hrefs"].append(attributes["href"])
+                is_current = (attributes.get("aria-current", "")
+                              .strip().lower() == "page")
+                if is_current:
+                    nav["current"].append(attributes["href"])
+                if nav["lists"]:
+                    nav["lists"][-1]["hrefs"].append(attributes["href"])
+                    if is_current:
+                        nav["lists"][-1]["current"].append(attributes["href"])
+            if tag == "ul":
+                self.navs[-1]["lists"].append({"hrefs": [], "current": []})
         if tag in ("header", "footer", "nav"):
             self._prose_skip += 1
         if tag == "p" and self._p_parts is None:
@@ -174,6 +191,35 @@ def og_named(parser: PageParser, prop: str) -> list[str]:
             if m.get("property", "").strip().lower() == prop]
 
 
+def check_header_lists(name: str, parser: PageParser) -> list[str]:
+    """Listas de enlaces del nav de cabecera: todas identicas entre si.
+
+    La cabecera lleva varias listas con los mismos enlaces (la del
+    disclosure para pantallas estrechas y la llana para escritorio);
+    esta regla evita que se separen con el tiempo: mismo orden de hrefs
+    y aria-current="page" sobre el mismo enlace en cada una.
+    """
+    if not parser.navs:
+        return []
+    lists = parser.navs[0]["lists"]
+    if len(lists) < 2:
+        return []
+    problems: list[str] = []
+    first = lists[0]
+    for i, other in enumerate(lists[1:], start=2):
+        if other["hrefs"] != first["hrefs"]:
+            problems.append(
+                f"{name}: la lista de enlaces {i} de la cabecera no coincide "
+                f"con la primera: esperado {first['hrefs']}, "
+                f"encontrado {other['hrefs']}")
+        if other["current"] != first["current"]:
+            problems.append(
+                f"{name}: aria-current de la lista {i} de la cabecera no "
+                f"coincide con la primera: esperado {first['current']}, "
+                f"encontrado {other['current']}")
+    return problems
+
+
 def check_page(name: str, parser: PageParser, declared: set[str],
                parsers: dict[str, PageParser]) -> list[str]:
     """Comprobaciones que aplican a cada página por separado."""
@@ -205,6 +251,8 @@ def check_page(name: str, parser: PageParser, declared: set[str],
         problems.append(f"{name}: recursos externos: {external}")
 
     problems += check_links(name, parser, parsers)
+
+    problems += check_header_lists(name, parser)
 
     unstyled = sorted(parser.classes - declared)
     if unstyled:

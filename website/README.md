@@ -47,13 +47,26 @@ crawler files:
 | `contacto.html` | Contact, privacy and legal placeholders |
 
 Every page shares the same shell: a header `<nav class="site-nav">` with
-the brand and the seven page links (the current one carries
-`aria-current="page"`), and a footer `<nav class="footer-nav">` with the
-same links in the same order. On small screens the header links sit
-inside `<details class="nav-disclosure" open>` with a
-`<summary class="nav-summary">Menú</summary>`; because `open` is in the
-markup the links are visible without any JavaScript, and CSS only hides
-the summary from 760 px up.
+the brand and two link lists carrying the same seven page links in the
+same order (the current one carries `aria-current="page"` in both), and
+a footer `<nav class="footer-nav">` with the same links in the same
+order. The header lists are:
+
+- `<details class="nav-disclosure">` with a
+  `<summary class="nav-summary">Menú</summary>` — the small-screen menu.
+  It ships closed and `<details>` opens it natively, so it needs no CSS
+  at all to work.
+- `<ul class="nav-links nav-links-desktop">` — the wide-screen list,
+  hidden below 760 px with `display: none` (out of the accessibility
+  tree and out of the tab order) and shown inline above 760 px, where
+  the disclosure is not rendered at all.
+
+Which of the two is visible is decided by one media query and `display`
+alone: no `::details-content`, no `content-visibility`, no `[open]`
+selector on the navigation — nothing engine-specific left to get wrong.
+The two lists must not drift; `tool/check_landing.py` fails any page
+where the header link lists differ in hrefs, order or which link carries
+`aria-current="page"`.
 
 ## SEO
 
@@ -111,7 +124,9 @@ missing or unparseable `sitemap.xml`, or a sitemap whose `<loc>` set does
 not exactly match the canonical page URLs in either direction; missing
 `robots.txt` or a `Sitemap:` line in it that does not point at the
 sitemap on the canonical origin; header or footer navigation whose
-ordered link list differs between pages; **one `h1` per page** — exactly
+ordered link list differs between pages; a page whose header link lists
+differ from each other in hrefs or order, or whose `aria-current="page"`
+sits on a different link in each of them; **one `h1` per page** — exactly
 one `<h1>` element with non-empty text (the count found is reported when
 it is wrong); **unique `h1` across pages** — two pages sharing the same
 normalized `<h1>` text is a failure, naming the pages; and **no skipped
@@ -207,6 +222,13 @@ structurally. What is verified, with the numbers:
   disclosure takes a full row and all seven links become clickable,
   284.78 / 241.59 / 198.41 px at those widths, and a second tap collapses
   it again. At 1440 px: 60.97 px, one inline row, seven reachable links.
+  Re-verified after the two-list header replaced the forced-open
+  disclosure: at 375 px the collapsed header is 62 px with the desktop
+  list at `display: none` and unreachably by focus or click, the open
+  header is 242 px with the disclosure on its own row and the links
+  focusable and hit-testable; at 1440 px the header is 61 px with the
+  disclosure not rendered and the desktop list inline, focusable and
+  hit-testable. No horizontal overflow in any of those states.
 - **No horizontal overflow** — `scrollWidth == clientWidth` — on all
   seven pages at 320, 375, 414, 600 and 1440 px, in both menu states.
 - **Two HTTP requests per page**: the page itself and `styles.css`.
@@ -221,12 +243,14 @@ structurally. What is verified, with the numbers:
 
 Not verified, and not rounded up:
 
-- **Firefox and Safari.** The inline desktop navigation is revealed by
-  `content-visibility: visible` on `::details-content`, which is the rule
-  that does the work in Chromium; the companion `display` rule is inert
-  there. On an engine where the reveal fails, the fallback is a clickable
-  `Menú` in the header: usable, but visibly different from Chrome and
-  Edge.
+- **Firefox and Safari.** Still not rendered on this machine. What
+  changed is what they would have to get wrong: the desktop navigation
+  now rests on nothing newer than a media query and `display` — the
+  old reveal via `content-visibility` on `::details-content` is gone —
+  and the absence of any engine-specific selector in `styles.css` is
+  itself checked (`grep` in the verification record below). What an
+  untested engine could still do with a plain media query has no
+  evidence here either.
 - **A real touch device.** The taps came from synthesized pointer and
   mouse events: no finger, no long-press, no double-tap.
 - **Screen readers**, and the accessibility tree of the collapsed
