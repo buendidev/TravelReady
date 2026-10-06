@@ -168,6 +168,27 @@ brand-colored `::selection`.
 - **Contact channel** — `TODO(owner)` in `contacto.html`.
 - **Privacy policy and legal notice** — `TODO(owner)` in
   `contacto.html` and in the footer. Do not publish without them.
+- **The canonical origin** — every absolute URL on the site points at the
+  placeholder `https://travelready.example`, because no domain exists yet;
+  buying it is an owner action (see
+  `docs/production/owner-action-register.md`). The placeholder appears in
+  exactly three kinds of place: the `<link rel="canonical">` of each of
+  the seven pages, the seven `<loc>` entries in `sitemap.xml`, and the
+  `Sitemap:` line in `robots.txt`. When the real domain exists, replace it
+  in those three places and then prove the replacement is complete rather
+  than trusting it:
+
+  ```powershell
+  grep -rn "travelready.example" website/*.html website/sitemap.xml website/robots.txt
+  # must print nothing
+  python tool/check_landing.py
+  # must exit 0
+  ```
+
+  A half-finished replacement cannot slip through: the checker fails when a
+  page has no canonical, when two pages share a title or a description, when
+  a canonical points at another page's own path, or when the sitemap and the
+  canonicals disagree.
 
 ## Pending verification
 
