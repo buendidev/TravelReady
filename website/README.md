@@ -190,14 +190,47 @@ brand-colored `::selection`.
   a canonical points at another page's own path, or when the sitemap and the
   canonicals disagree.
 
-## Pending verification
+## Verification record
 
-- **A headless Chrome render was done for the old single-page site**
-  (see *Visual verification* below), but the **new seven-page layout has
-  not been rendered anywhere yet**: the split changed the header (a
-  `<details>` menu instead of a wrapping link strip), and no page of the
-  new set has been looked at in a browser engine, on a real touch
-  device, in Safari or in Firefox.
+The seven-page site has been rendered and measured in a real browser
+engine (headless Chromium on this machine), not only checked
+structurally. What is verified, with the numbers:
+
+- **Text is never invisible.** Every element holding its own visible text
+  was checked for `opacity: 0` behind the motion rules: **zero hits** on
+  all seven pages at 320 and 1440 px, at the top of the page and after
+  scrolling to the bottom, with reduced motion forced. With motion
+  allowed, nothing inside the initial viewport is hidden, and nothing is
+  left hidden after scrolling to the bottom, so no reveal strands a word.
+- **The header, measured.** Collapsed on phones: **62.44 px** at 320, 375
+  and 414 px, with the brand and the `Menú` pill on one row. Opened: the
+  disclosure takes a full row and all seven links become clickable,
+  284.78 / 241.59 / 198.41 px at those widths, and a second tap collapses
+  it again. At 1440 px: 60.97 px, one inline row, seven reachable links.
+- **No horizontal overflow** — `scrollWidth == clientWidth` — on all
+  seven pages at 320, 375, 414, 600 and 1440 px, in both menu states.
+- **Two HTTP requests per page**: the page itself and `styles.css`.
+  Nothing else is fetched; the only 404 a browser produces is its own
+  speculative `/favicon.ico`, which no page references.
+- **Keyboard**: with the menu collapsed, no tab stop reaches a nav link;
+  with it open, all seven do. At 1440 px the summary leaves the tab order
+  and the seven links are in it.
+- **Focus**: the `:focus-visible` ring is present and identical with and
+  without motion.
+- **Both colour schemes** were rendered and inspected.
+
+Not verified, and not rounded up:
+
+- **Firefox and Safari.** The inline desktop navigation is revealed by
+  `content-visibility: visible` on `::details-content`, which is the rule
+  that does the work in Chromium; the companion `display` rule is inert
+  there. On an engine where the reveal fails, the fallback is a clickable
+  `Menú` in the header: usable, but visibly different from Chrome and
+  Edge.
+- **A real touch device.** The taps came from synthesized pointer and
+  mouse events: no finger, no long-press, no double-tap.
+- **Screen readers**, and the accessibility tree of the collapsed
+  disclosure, were not inspected.
 - Nobody has confirmed the copy against the shipped app beyond the
   features already implemented in this repository.
 
@@ -209,34 +242,34 @@ data anywhere.
 
 ## Visual verification
 
-The **previous single-page site** was rendered and inspected in a real
-browser engine, not only checked structurally:
+How to render it again, and the three traps that make a naive attempt
+lie about it:
 
 ```powershell
 python -m http.server 8123 -d website
 & "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu `
   --hide-scrollbars --no-first-run --force-device-scale-factor=1 `
-  --user-data-dir=$env:TEMP\chrome-shot --virtual-time-budget=5000 `
+  --user-data-dir=$env:TEMP\chrome-shot `
   --window-size=1440,900 --screenshot=build\screenshots\hero-desktop.png `
   http://localhost:8123/
 ```
 
-What that verified, on the single-page site before the split:
-
-- **Desktop at 1440 px in both colour schemes.** The host OS selects the
-  dark scheme; the light one was rendered by temporarily disabling the
-  dark block and then restoring the file byte for byte.
-- **Mobile at 320, 375 and 414 CSS pixels with no horizontal overflow**:
-  `scrollWidth == clientWidth` in every case. This was measured inside a
-  full-width `<iframe>`, because Chrome headless on Windows refuses to
-  honour a window narrower than roughly 500 px and silently keeps a wider
-  layout viewport, which produces cropped screenshots that look like a
-  layout bug.
-- **The mobile menu wrapped onto two rows** instead of hiding links
-  behind a horizontal scroll strip. The split replaced that strip with
-  the `<details>` disclosure, so this result no longer describes the
-  current header.
-
-Still not verified: any page of the current seven-page site in a browser
-engine, a real touch device, Safari and Firefox, and the copy against a
-released build.
+- **Geometry does not prove that anything is painted.** A closed
+  `<details>` in Chromium keeps layout boxes for its content: with the
+  reveal rule disabled, all seven nav links still report 59-126 × 37.6 px
+  while painting nothing, absorbing no click and taking no focus. Test
+  reachability with `document.elementFromPoint(x, y)` and by calling
+  `focus()`, never by measuring a rectangle.
+- **`--virtual-time-budget` is not trustworthy here.** Under virtual time,
+  scroll-driven `view()` timelines are not re-sampled after a programmatic
+  scroll, so elements falsely read `opacity: 0`. Render in real time — a
+  scratch endpoint that delays the `load` event keeps frames flowing while
+  `--dump-dom` waits — and force the motion preference explicitly
+  (`--force-prefers-reduced-motion` against
+  `--blink-settings=prefersReducedMotion=false`), proving the arm you got
+  with `matchMedia`.
+- **A narrow `--window-size` is a trap on Windows.** Chrome silently keeps
+  a layout viewport of roughly 500 px or more, so a 320 px screenshot is a
+  crop of a wider layout that looks like a layout bug. Measure inside a
+  same-origin full-width `<iframe>`, or drive the browser over the DevTools
+  protocol with `Emulation.setDeviceMetricsOverride`.

@@ -80,9 +80,11 @@ the domain exists, and the checker proves the replacement is complete.
 - [x] WSP-1: Generalize the structural checker to a site with several pages.
 - [x] WSP-2: Split the page per intent with unique metadata, canonical, sitemap and robots.
 - [x] WSP-2b: Repair the two defects review found in WSP-2 (the ignored `robots.txt`, the six pages without an `h1`) and gate them in the checker.
-- [ ] WSP-3: Add CSS-only motion and effects behind a reduced-motion guard.
-- [ ] WSP-4: Verify structurally and in a real browser engine, and measure page weight.
-- [ ] WSP-5: Document the origin placeholder as an owner action.
+- [x] WSP-3: Add CSS-only motion and effects behind a reduced-motion guard.
+- [x] WSP-4: Verify structurally and in a real browser engine, and measure page weight.
+- [x] WSP-5: Document the origin placeholder as an owner action.
+- [x] WSP-6: Collapse the header menu on small screens (owner decision).
+- [x] WSP-7: Verify the collapsed header and the desktop reveal in a real engine, and repair the header height the first pass exposed.
 
 ## Acceptance
 Every page carries a unique `<title>` and meta description, a canonical
@@ -192,8 +194,77 @@ so it would have rendered at the hero size instead of the `h2` size it had.
 date, version or price; the disabled APK placeholder and its `TODO(owner)`
 survive.
 
+### WSP-3 — motion (`64aee7c`)
+
+Hero entrance with a short stagger, reveal on scroll through
+`animation-timeline: view()` with `animation-range: entry 0% entry 50%`, a header
+shadow over the first 6 rem of scroll, and hover/focus micro-interactions.
+`styles.css` 23.402 → 28.071 bytes, still under the 32 KiB warning.
+
+- Every hidden start state and every animation declaration sits inside
+`@media (prefers-reduced-motion: no-preference)` nested with
+`@supports (animation-timeline: view())`, proven by a brace-depth walk of the
+stylesheet: 13 such declarations inside the guard, zero outside, the only
+exception being the decorative footer underline resting at `scaleX(0)`.
+- No animation touches a layout property, and nothing loops.
+- The reduce block cannot lean on `animation-duration` — scroll-driven timelines
+ignore it — so it disables the animations by name and restores `opacity: 1` and
+`translate: none`.
+
+### WSP-4 — the first render verification (no commit; recorded here)
+
+- **Reduced motion: 0 text-bearing elements at `opacity: 0`** on all seven pages
+at 320 and 1440 px, at the top and after scrolling to the bottom.
+- With motion allowed: 0 hidden inside the initial viewport, 0 hidden after
+scrolling to the bottom.
+- 2 requests per page, both 200; no horizontal overflow; focus ring present;
+both schemes rendered and inspected.
+- The verifier corrected the method it was given: `--virtual-time-budget` never
+re-samples a scroll-driven timeline after a programmatic scroll, so it reported
+10 falsely stuck elements on `index` at 320 until the frames were forced.
+- The host OS has reduced motion on (`MinAnimate = 0`), so the "natural" arm was
+the reduced one and the motion arm had to be forced.
+
+### WSP-6 — collapsed menu (`6af4711`) and WSP-7 — its verification (`7934415`)
+
+The seven pages ship `<details class="nav-disclosure">` closed, so phones show
+the brand and a `Menú` summary; from 760 px up the links stay inline through
+`content-visibility: visible` on `::details-content` plus a companion `display`
+rule. The markup change is exactly the removed attribute: every page lost
+precisely five bytes.
+
+- The first verification found the collapsed header at **110.44 px**, not the
+~60 px the change promised: a `flex-basis: 100%` rule inside the old
+`max-width: 560px` block pushed the summary onto its own row at 320, 375 and
+414 px. After the fix it is **62.44 px**, and the old value was reproduced
+exactly by re-injecting the removed rule, which pins the cause.
+- **Geometry is not proof of paint.** With the reveal rule disabled, all seven
+desktop links still report 59-126 × 37.6 px while painting nothing and being
+unreachable; only `elementFromPoint` and `focus()` caught it. The reveal rests
+entirely on `content-visibility: visible`; the companion `display` rule is
+inert, because the base `.nav-links` rule already sets flex.
+- Keyboard: 0 tab stops reach a nav link while collapsed, 7 of 7 when open.
+- Opened states: 284.78 / 241.59 / 198.41 px at 320 / 375 / 414; 600 px, inside
+the block whose rules moved, shows no overflow in either state.
+- **Chromium-only evidence.** Firefox and Safari were not testable here, and on
+an engine where the reveal fails the desktop header falls back to a clickable
+`Menú`.
+
 ## Not verified here
-(to be recorded)
+
+- Firefox and Safari: the desktop reveal, and therefore the whole cross-engine
+claim, is Chromium-only evidence.
+- A real touch device: taps were synthesized pointer and mouse events.
+- Screen readers and the accessibility tree of the collapsed disclosure.
+- The copy against a released build.
+- RevenueCat, billing, Maps/Places, Firebase rules, iOS: unrelated to this
+feature and still owner-gated.
 
 ## Next step
-(to be recorded)
+
+Publishing is the owner's decision and each piece of it has a runbook now: buy
+the domain and replace the placeholder origin (procedure in `website/README.md`),
+choose the host, decide the privacy policy and legal notice, the contact channel
+and the real APK link, then publish and keep `python tool/check_landing.py` green.
+The open engineering question is the cross-engine fallback for the desktop
+navigation, which needs a Firefox or Safari run to settle.
