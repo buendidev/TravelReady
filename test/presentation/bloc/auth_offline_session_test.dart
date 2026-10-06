@@ -36,13 +36,18 @@ void main() {
 
   setUpAll(registerFallbacks);
 
-  AuthBloc build({Duration grace = const Duration(milliseconds: 40)}) => AuthBloc(
+  AuthBloc build({
+    Duration grace = const Duration(milliseconds: 40),
+    Duration provisionalGrace = const Duration(milliseconds: 20),
+  }) =>
+      AuthBloc(
         signInUseCase: MockSignInUseCase(),
         signUpUseCase: MockSignUpUseCase(),
         signOutUseCase: MockSignOutUseCase(),
         authRepository: repo,
         sessionStore: store,
         startupGrace: grace,
+        provisionalGrace: provisionalGrace,
       );
 
   Future<void> settle([int ms = 200]) =>
@@ -136,6 +141,122 @@ void main() {
 
     expect(bloc.state, isA<AuthAuthenticated>(),
         reason: 'un error de red no cierra la sesión de nadie');
+  });
+
+  group('restauración provisional', () {
+    final verificado = UserModel(
+      id: 'u-real',
+      name: 'Pepito Real',
+      email: 'pepito@gmail.com',
+      createdAt: DateTime.utc(2026, 2, 2),
+    );
+
+    test('sin emisión, la sesión guardada aparece en el plazo provisional, sin esperar la gracia exterior',
+        () async {
+      when(() => store.read()).thenAnswer((_) async => _guardado);
+      final bloc = build(
+        grace: const Duration(seconds: 10),
+        provisionalGrace: const Duration(milliseconds: 20),
+      );
+      addTearDown(bloc.close);
+
+      bloc.add(const AuthStarted());
+      await settle();
+
+      expect(bloc.state, isA<AuthAuthenticated>(),
+          reason: 'con el plazo provisional vencido no hay que esperar 30 s '
+              'de splash para llegar a la sesión guardada');
+      expect((bloc.state as AuthAuthenticated).user.id, 'u-guardado');
+    });
+
+    test('una emisión verificada posterior sustituye la sesión provisional',
+        () async {
+      final controller = StreamController<User?>();
+      addTearDown(controller.close);
+      when(() => repo.authStateChanges).thenAnswer((_) => controller.stream);
+      when(() => store.read()).thenAnswer((_) async => _guardado);
+      final bloc = build(
+        grace: const Duration(seconds: 10),
+        provisionalGrace: const Duration(milliseconds: 20),
+      );
+      addTearDown(bloc.close);
+
+      bloc.add(const AuthStarted());
+      await settle();
+      expect((bloc.state as AuthAuthenticated).user.id, 'u-guardado');
+
+      controller.add(verificado);
+      await settle();
+
+      expect((bloc.state as AuthAuthenticated).user.id, 'u-real');
+      verify(() => store.save(any())).called(1);
+    });
+
+    test('una emisión nula posterior cierra la sesión provisional y borra la instantánea',
+        () async {
+      final controller = StreamController<User?>();
+      addTearDown(controller.close);
+      when(() => repo.authStateChanges).thenAnswer((_) => controller.stream);
+      when(() => store.read()).thenAnswer((_) async => _guardado);
+      final bloc = build(
+        grace: const Duration(seconds: 10),
+        provisionalGrace: const Duration(milliseconds: 20),
+      );
+      addTearDown(bloc.close);
+
+      bloc.add(const AuthStarted());
+      await settle();
+      expect(bloc.state, isA<AuthAuthenticated>());
+
+      controller.add(null);
+      await settle();
+
+      expect(bloc.state, isA<AuthUnauthenticated>(),
+          reason: 'la respuesta verificada manda siempre, también la nula');
+      verify(() => store.clear()).called(1);
+    });
+
+    test('si la respuesta verificada llega antes del plazo provisional, la instantánea no se lee',
+        () async {
+      final controller = StreamController<User?>();
+      addTearDown(controller.close);
+      when(() => repo.authStateChanges).thenAnswer((_) => controller.stream);
+      final bloc = build(
+        grace: const Duration(seconds: 10),
+        provisionalGrace: const Duration(milliseconds: 500),
+      );
+      addTearDown(bloc.close);
+
+      bloc.add(const AuthStarted());
+      await settle(50);
+      controller.add(verificado);
+      await settle();
+      expect((bloc.state as AuthAuthenticated).user.id, 'u-real');
+
+      // Se rebasa el plazo provisional: no debe haberse leído la instantánea
+      // ni emitirse estado provisional alguno.
+      await settle(600);
+      expect((bloc.state as AuthAuthenticated).user.id, 'u-real');
+      verifyNever(() => store.read());
+    });
+
+    test('sin instantánea, el plazo provisional no cambia el comportamiento actual',
+        () async {
+      final bloc = build(
+        grace: const Duration(milliseconds: 60),
+        provisionalGrace: const Duration(milliseconds: 20),
+      );
+      addTearDown(bloc.close);
+
+      bloc.add(const AuthStarted());
+      await settle(40);
+      expect(bloc.state, isA<AuthLoading>(),
+          reason: 'sin sesión guardada el plazo provisional no emite nada');
+
+      await settle();
+      expect(bloc.state, isA<AuthUnauthenticated>(),
+          reason: 'la gracia exterior sigue siendo el plazo final');
+    });
   });
 
   group('SessionSnapshotStore', () {

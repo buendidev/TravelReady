@@ -21,9 +21,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _repo;
   StreamSubscription<User?>? _authSub;
   Timer? _startupTimer;
+  Timer? _provisionalTimer;
   bool _signingUp = false;  // true mientras el stream está pausado en signup
   final SessionSnapshotStore _sessions;
   final Duration _startupGrace;
+  final Duration _provisionalGrace;
 
   AuthBloc({
     required SignInUseCase signInUseCase,
@@ -32,12 +34,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required AuthRepository authRepository,
     SessionSnapshotStore? sessionStore,
     Duration startupGrace = const Duration(seconds: 30),
+    Duration provisionalGrace = const Duration(seconds: 5),
   })  : _signIn  = signInUseCase,
         _signUp  = signUpUseCase,
         _signOut = signOutUseCase,
         _repo    = authRepository,
         _sessions = sessionStore ?? SessionSnapshotStore(),
         _startupGrace = startupGrace,
+        _provisionalGrace = provisionalGrace,
         super(const AuthInitial()) {
     on<AuthStarted>(_onStarted);
     on<_AuthUserChanged>(_onUserChanged);
@@ -54,12 +58,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     await _authSub?.cancel();
     _startupTimer?.cancel();
+    _provisionalTimer?.cancel();
 
     _authSub = _repo.authStateChanges.listen(
       (user) {
         // Firebase respondió: la instantánea se refresca (o se borra si ya no
-        // hay sesión) y deja de hacer falta el respaldo.
+        // hay sesión) y dejan de hacer falta los respaldos.
         _startupTimer?.cancel();
+        _provisionalTimer?.cancel();
         user != null
             ? unawaited(_sessions.save(user))
             : unawaited(_sessions.clear());
@@ -71,13 +77,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
     );
 
-    // Sin conexión, el stream de Firebase puede no emitir nunca: se espera un
-    // margen y, si no llegó nada, se arranca con la sesión guardada. El stream
-    // sigue escuchando, así que en cuanto responda sustituye esa sesión por la
-    // verificada, y si responde que ya no hay sesión, se cierra igual.
+    // Sin conexión, el stream de Firebase puede no emitir nunca. Con el plazo
+    // corto se muestra ya la sesión guardada (provisional: Firebase sigue
+    // verificando en segundo plano); si no hay instantánea, no se emite nada y
+    // manda el plazo exterior. El stream sigue escuchando, así que en cuanto
+    // responda sustituye esa sesión por la verificada, y si responde que ya no
+    // hay sesión, se cierra igual.
+    _provisionalTimer = Timer(_provisionalGrace, () {
+      if (state is! AuthAuthenticated) unawaited(_restoreProvisional());
+    });
     _startupTimer = Timer(_startupGrace, () {
       if (state is! AuthAuthenticated) unawaited(_startOffline());
     });
+  }
+
+  /// Restauración provisional al plazo corto: se muestra la última sesión que
+  /// Firebase confirmó sin esperar a que el stream responda.
+  ///
+  /// Si no hay instantánea no se emite nada (el plazo exterior decide), y si
+  /// mientras se leía llegó una respuesta verificada, tampoco: nunca se pisa.
+  Future<void> _restoreProvisional() async {
+    final guardada = await _sessions.read();
+    if (guardada == null || state is AuthAuthenticated) return;
+    AppLog.debug('[AuthBloc] Sesión guardada restaurada (provisional)');
+    add(_AuthUserChanged(guardada));
   }
 
   /// Arranca con la última sesión que Firebase confirmó.
@@ -218,6 +241,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   @override
   Future<void> close() {
     _startupTimer?.cancel();
+    _provisionalTimer?.cancel();
     _authSub?.cancel();
     return super.close();
   }
