@@ -842,12 +842,14 @@ img, svg { max-width: 100%; }
   /* Con el menú desplegado en filas, fijar la cabecera se comería media
      pantalla: queda estática hasta que el summary desaparece (>= 760px). */
   .site-header { position: static; }
+  /* La divulgación sólo ocupa fila propia cuando está ABIERTA: cerrada se
+     queda junto a la marca, que es lo que deja la cabecera en una fila. */
+  .site-nav { flex-wrap: wrap; }
+  .nav-disclosure[open] { flex-basis: 100%; }
   .nav-links { margin-top: 0.45rem; }
 }
 
 @media (max-width: 560px) {
-  .site-nav { flex-wrap: wrap; }
-  .nav-disclosure { flex-basis: 100%; }
   .btn-lg { width: 100%; }
   .hero-cta { flex-direction: column; align-items: stretch; }
   .steps li::before { display: none; }
