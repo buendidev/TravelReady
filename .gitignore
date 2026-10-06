@@ -97,6 +97,10 @@ stitch_travel_ready_login_screen/
 *.txt
 !docs/*.txt
 !website/robots.txt
+
+# ── Python: bytecode de los scripts de tool/ ──────────────────────────
+__pycache__/
+*.py[cod]
 !README.md
 !SECURITY.md
 !DATABASE_GUIDE.md
