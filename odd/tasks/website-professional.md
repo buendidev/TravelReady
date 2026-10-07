@@ -136,9 +136,40 @@ the reduce block. No inputs, no JS, no stored card data.
 | --- | --- | --- |
 | WPRO-1 | `237874f` | Brand assets and the head plumbing on the seven pages (doc: `9faa1a0`) |
 | WPRO-2a | `f0e5640` | 52-test unittest harness for the checker plus the CI step |
+| WPRO-2b | `1bfa65e` | Icon, social-card and ignored-file rules (74 tests) |
+| WPRO-3a | `5f23a1e` | The four legal pages, the sitemap entries and the `.draft-notice` rule |
+| WPRO-3c | `74bdf33` | The footer links every page, and two pages stop contradicting the drafts |
+| WPRO-3b | `4e2383c` | Launch gate for the legal texts (83 tests) |
+| WPRO-4 | `f530aa9` | `precios.html` and its entry in both header lists and the footer nav |
+| WPRO-5 | `94a0801` | `pago.html`, the purchase-path copy and the CSS-only animated card |
+
+## Open questions for the owner
+
+- **The card animation never stops.** `pago.html`'s illustration runs a 9-second
+  3D flip `infinite` inside the site's motion guard. It is honest decoration and
+  it is stilled by the reduce block, but an endless animation costs battery and
+  draws the eye on a page whose message is "you cannot pay here". Cheaper
+  alternatives are a single entrance turn or a flip on hover/focus. Left as the
+  owner's taste decision rather than changed unilaterally.
+- **`styles.css` is 31 897 bytes**, 871 bytes under the checker's 32 KiB warning.
+  The next visual addition trips the aviso: either raise the threshold
+  deliberately, with a reason, or trim the stylesheet.
+- **PayMorph:** its written licence from infiwebcraft is still an owner action.
+  Nothing of it is vendored, so nothing blocks the site today.
 
 ## Log
 
+- **WPRO-3** — the four legal texts landed in two commits (content, then the
+  links and the two pages that still claimed the texts were unpublished). The
+  checker grew a launch gate for them. Verified with my own probe on real
+  content: emptying a notice and dropping a link each produced exactly one
+  failure and exit 1.
+- **WPRO-4/5** — `precios.html` and `pago.html`. Neither invents anything: four
+  `TODO(owner)` items on the pricing page (two amounts, the product identifiers,
+  the final free-versus-subscription split) and the checkout page explains the
+  two real purchase routes and carries no field, no price and no button. The
+  checker refused a mid-work defect on its own: the word `html` inside a CSS
+  comment created a phantom declared class and an unused-rule aviso.
 - **WPRO-1** — `favicon.svg`, `og-card.svg`, `og-card.png` (1200×630, 196 907
   bytes, rendered from the source with headless Chrome using a throwaway
   profile) and the icon plus `og:image` block on all seven pages. The worker's
@@ -159,6 +190,16 @@ the reduce block. No inputs, no JS, no stored card data.
   Verified against real content, not only fixtures: a copied site inside the
   repository with one injected defect per rule returned exit 1 with exactly
   one message per rule, while the real site stayed at exit 0.
+- **WPRO-6** — real-engine pass over the DevTools protocol: 39/39 widths
+  with no horizontal overflow, zero text at `opacity: 0` in the
+  reduced-motion arm on all thirteen pages, the payment card contained at
+  320 px and stilled when motion is reduced, the header on the two new pages
+  62.44 px collapsed and 8 of 8 links reachable open, three requests on
+  `index.html` and two elsewhere, and the four legal footer links
+  hit-testable. Recorded in `website/README.md`.
+- **Open design question** for the owner: the card's 9-second turn is
+  `infinite`. It obeys reduced motion and costs nothing else, but an endless
+  animation is a taste and battery decision, not a technical one.
 - Opened after the owner chose milestone 0 over the repository cleanup and the
   RDD review fork. Bundle and the pre-rewrite repository contents were deleted
   with the owner's authorization; the academic PDFs stay in

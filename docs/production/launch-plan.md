@@ -12,10 +12,10 @@ Code and content work that needs no account, no decision and no payment:
 
 | Item | State |
 | --- | --- |
-| Remove the academic framing from app, website, docs and metadata | Planned |
-| Professional website: pricing page, checkout page with the animated payment component, legal pages (privacy, terms, cookies, legal notice), social/OG card, favicon | Planned |
-| App identity string in one place instead of two literals | Planned |
-| Delete the dead local-auth datasource (`AuthLocalDataSource`, `CryptoService.hashPassword`) | Planned |
+| Remove the academic framing from app, website, docs and metadata | Done — gone from the tree and from the rewritten history |
+| Professional website: pricing page, purchase-path page, four legal texts published as drafts, social/OG card, favicon | Done on `feat/website-professional`: thirteen pages, checker plus an 83-test suite green, real-engine pass recorded in `website/README.md` |
+| App identity string in one place instead of two literals | Done — `AppStrings.appVersion` |
+| Delete the dead local-auth datasource (`AuthLocalDataSource`, `CryptoService.hashPassword`) | Pending |
 | The two security loggers (`SecurityLog`, `SecurityLogger`) still coexist | Optional |
 
 Nothing here is blocked, and all of it is what a reader sees first.
