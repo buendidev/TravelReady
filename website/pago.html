@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pago en TravelReady: cómo se comprará y por qué aquí no hay formulario</title>
+  <meta name="description"
+        content="Nada se puede pagar hoy. El pago será dentro de la app mediante Google Play o el App Store, y un futuro checkout web usaría los campos alojados del procesador, nunca un formulario propio.">
+  <meta property="og:title" content="Pago en TravelReady: cómo se comprará y por qué aquí no hay formulario">
+  <meta property="og:description"
+        content="Nada se puede pagar hoy. El pago será dentro de la app mediante Google Play o el App Store, y un futuro checkout web usaría los campos alojados del procesador, nunca un formulario propio.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://travelready.example/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="TravelReady: equipaje, itinerario, lugares, clima y chat para tu viaje.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#006571">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://travelready.example/pago.html">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Navegación principal">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">🧳</span>
+        <span class="brand-name">TravelReady</span>
+      </a>
+
+      <details class="nav-disclosure">
+        <summary class="nav-summary">Menú</summary>
+        <ul class="nav-links">
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="funciones.html">Funciones</a></li>
+          <li><a href="como-funciona.html">Cómo funciona</a></li>
+          <li><a href="precios.html">Precios</a></li>
+          <li><a href="estado.html">Estado</a></li>
+          <li><a href="faq.html">Preguntas</a></li>
+          <li><a href="descargar.html">Descargar</a></li>
+          <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+      </details>
+      <ul class="nav-links nav-links-desktop">
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="funciones.html">Funciones</a></li>
+        <li><a href="como-funciona.html">Cómo funciona</a></li>
+        <li><a href="precios.html">Precios</a></li>
+        <li><a href="estado.html">Estado</a></li>
+        <li><a href="faq.html">Preguntas</a></li>
+        <li><a href="descargar.html">Descargar</a></li>
+        <li><a href="contacto.html">Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="contenido">
+
+    <!-- ── El estado real del pago ──────────────────────────────────── -->
+    <section class="section">
+      <header class="section-head">
+        <p class="eyebrow">Pago</p>
+        <h1>Aquí no se paga nada: así será el pago cuando exista</h1>
+        <p class="section-lede">
+          Esta página explica cómo será comprar TravelReady. Hoy no hay
+          nada a la venta: ni precios, ni productos en las tiendas, ni
+          pantalla de cobro. Cuando el pago exista, será dentro de la
+          app, no en este sitio.
+        </p>
+      </header>
+    </section>
+
+    <!-- ── Las dos rutas de compra ──────────────────────────────────── -->
+    <section class="section section-alt">
+      <header class="section-head">
+        <p class="eyebrow">Rutas de compra</p>
+        <h2>Los dos únicos caminos por los que se podrá pagar</h2>
+      </header>
+
+      <div class="grid">
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">📱</span>
+          <h3>La ruta real: dentro de la app</h3>
+          <p>La suscripción se contratará con la facturación de Google
+             Play o la del App Store, desde la propia app. El cobro lo
+             hace la tienda con el método de pago que ya tengas dado de
+             alta ahí; TravelReady nunca ve los datos de tu tarjeta.</p>
+        </article>
+
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">🌐</span>
+          <h3>La ruta futura: checkout web</h3>
+          <p>Si algún día se cobra desde la web, será con una página de
+             pago alojada por el procesador, no con un formulario
+             nuestro: sus campos, su dominio, su cumplimiento. Esta
+             página jamás llevará un formulario de tarjeta.</p>
+        </article>
+
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">🚫</span>
+          <h3>Lo que no va a pasar</h3>
+          <p>Nuestro backend no tocará datos de tarjeta ni de
+             facturación: los tokeniza el procesador o la tienda. Y esta
+             página no pide ningún dato: no hay campos, no hay botón de
+             pagar y no hay nada que rellenar.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── La tarjeta es un dibujo ──────────────────────────────────── -->
+    <section class="section">
+      <header class="section-head">
+        <p class="eyebrow">El dibujo</p>
+        <h2>La tarjeta que ves es solo una ilustración</h2>
+      </header>
+
+      <p>
+        Esta tarjeta está dibujada con CSS, no es un componente de pago
+        ni recoge nada: es la misma técnica de los mockups del resto
+        del sitio. Se anima despacio y, si tu sistema pide reducir el
+        movimiento, queda quieta.
+      </p>
+
+      <div class="pay-demo" aria-hidden="true">
+        <div class="pay-card">
+          <div class="pay-card-face pay-card-front">
+            <span class="pay-card-chip"></span>
+            <span class="pay-card-num">•••• •••• •••• ••••</span>
+            <span class="pay-card-holder">Titular pendiente</span>
+            <span class="pay-card-exp">MM/AA</span>
+          </div>
+          <div class="pay-card-face pay-card-back">
+            <span class="pay-card-stripe"></span>
+            <span class="pay-card-sig"></span>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Y por si quedaba duda: esta página no recoge nada. No pone
+        cookies, no tiene formularios y no envía información a nadie;
+        lo que ves aquí es texto y un dibujo.
+      </p>
+    </section>
+
+    <!-- ── Desistimiento ────────────────────────────────────────────── -->
+    <section class="section section-alt">
+      <header class="section-head">
+        <p class="eyebrow">Desistimiento</p>
+        <h2>Catorce días para cambiar de idea, y cuándo se pierden</h2>
+      </header>
+
+      <p>
+        Cuando exista la compra, el derecho de desistimiento de catorce
+        días se aplicará como cuentan los <a href="terminos.html">términos</a>.
+        Se perderá antes solo si eliges contenido digital que empiece a
+        entregarse en el momento y marcas de forma expresa que
+        comprendes que con esa entrega renuncias al derecho; en una
+        suscripción, la entrega empieza al activar las funciones, y ese
+        aviso quedará escrito en la pantalla de compra antes de cobrar.
+      </p>
+      <p>
+        Cómo se cancela una suscripción, qué pasa con los periodos ya
+        pagados y el detalle legal completo están en los
+        <a href="terminos.html">términos</a> y en la
+        <a href="privacidad.html">privacidad</a>.
+      </p>
+    </section>
+
+    <!-- ── Estado ───────────────────────────────────────────────────── -->
+    <section class="section cta">
+      <header class="section-head">
+        <p class="eyebrow">Estado</p>
+        <h2>Hoy no hay nada que pagar en ningún sitio</h2>
+      </header>
+      <p class="section-lede">
+        Ni aquí ni en la app: el paso de compra de la pantalla premium
+        todavía no existe. Los importes, cuando los haya, se publican
+        primero en <a href="precios.html">precios</a>.
+      </p>
+      <p class="cta-row">
+        <span class="btn btn-disabled" aria-disabled="true">Sin pago disponible</span>
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand">
+          <span class="brand-mark" aria-hidden="true">🧳</span> TravelReady
+        </p>
+        <p class="muted">© 2026 TravelReady · Pablo Buendicho Ortín.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Navegación del pie">
+        <a href="index.html">Inicio</a>
+        <a href="funciones.html">Funciones</a>
+        <a href="como-funciona.html">Cómo funciona</a>
+        <a href="precios.html">Precios</a>
+        <a href="estado.html">Estado</a>
+        <a href="faq.html">Preguntas</a>
+        <a href="descargar.html">Descargar</a>
+        <a href="contacto.html">Contacto</a>
+      </nav>
+    </div>
+
+    <p class="footer-legal">
+      © 2026 TravelReady ·
+      <a href="aviso-legal.html">Aviso legal</a> ·
+      <a href="privacidad.html">Privacidad</a> ·
+      <a href="terminos.html">Términos</a> ·
+      <a href="cookies.html">Cookies</a>
+    </p>
+  </footer>
+</body>
+</html>
