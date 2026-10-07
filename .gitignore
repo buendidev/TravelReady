@@ -6,10 +6,11 @@ node_modules/
 .env.local
 .env.production
 
-# Firebase config — generado por FlutterFire CLI
-google-services.json
-GoogleService-Info.plist
-firebase_options.dart
+# Firebase config — generado por FlutterFire CLI, pero REQUERIDO para compilar.
+# NO lo ignores: sin firebase_options.dart el proyecto no analiza ni compila en
+# un clon limpio, y CI falla aunque en tu maquina pase. La apiKey de Firebase no
+# es un secreto (viaja dentro de la app); la proteccion real son las reglas de
+# seguridad, App Check y restringir la key en Google Cloud.
 
 # Editor
 .vscode/
@@ -39,13 +40,12 @@ build/
 npm-debug.log*
 
 # Android
-**/android/**/gradle-wrapper.jar
 **/android/.gradle
 **/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
+# El wrapper de Gradle SI va versionado: sin gradlew no se puede construir
+# Android desde un clon limpio.
 
 # iOS
 **/ios/**/*.mode1v3
@@ -109,13 +109,8 @@ __pycache__/
 !analysis_options.yaml
 
 # ── Firebase ────────────────────────────────────────────────────────────
-# Reglas y configuración de Firebase (sensible)
-firebase.json
-firestore.rules
-firestore.indexes.json
-storage.rules
-google-services.json
-GoogleService-Info.plist
+# Las reglas son CODIGO de seguridad, no config sensible: van versionadas y se
+# revisan como cualquier otro cambio. firebase.json es el deploy config.
 
 # ── Claves de firma ───────────────────────────────────────────────────────
 key.properties

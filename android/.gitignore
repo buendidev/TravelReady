@@ -1,10 +1,9 @@
-gradle-wrapper.jar
 /.gradle
 /captures/
-/gradlew
-/gradlew.bat
 /local.properties
 GeneratedPluginRegistrant.java
+# El wrapper (gradlew, gradlew.bat, gradle-wrapper.jar) va versionado a
+# proposito: sin el no se puede construir Android desde un clon limpio.
 .cxx/
 
 # Remember to never publicly share your keystore.
