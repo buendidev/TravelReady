@@ -130,8 +130,35 @@ the reduce block. No inputs, no JS, no stored card data.
 - Firefox and Safari are not installed here: the render pass is Chromium, and
   the claim stays scoped to it.
 
+## Commits
+
+| Unit | Commit | What |
+| --- | --- | --- |
+| WPRO-1 | `237874f` | Brand assets and the head plumbing on the seven pages (doc: `9faa1a0`) |
+| WPRO-2a | `f0e5640` | 52-test unittest harness for the checker plus the CI step |
+
 ## Log
 
+- **WPRO-1** — `favicon.svg`, `og-card.svg`, `og-card.png` (1200×630, 196 907
+  bytes, rendered from the source with headless Chrome using a throwaway
+  profile) and the icon plus `og:image` block on all seven pages. The worker's
+  first render failed with `net::ERR_FILE_NOT_FOUND` because Git Bash's `$TEMP`
+  is not a Windows path: the wrapper URL needs `cygpath -m`. The card carries
+  no domain on purpose, so buying the real domain never requires re-rendering
+  the raster. Retry this recipe rather than rediscovering it.
+- **WPRO-2a** — `check_directory(directory)` extracted from `main()`; the CLI
+  output was diffed against the previous revision and is byte-identical, so the
+  gate's behaviour is unchanged. 52 tests, 69 assertions, message-level
+  assertions against the real entry point.
+- **WPRO-2b** — three rules, each written test-first with its own RED run:
+  the icon, the social card (absolute, same origin as the canonical, PNG that
+  decodes to 1200×630 with agreeing `width`/`height` metas and a non-empty
+  `alt`) and the ignored-but-referenced file. The third generalises the
+  `website/robots.txt` incident: it asks git once per run for the tracked set
+  and degrades to an `aviso:` outside a work tree. Suite grew 52 → 74 tests.
+  Verified against real content, not only fixtures: a copied site inside the
+  repository with one injected defect per rule returned exit 1 with exactly
+  one message per rule, while the real site stayed at exit 0.
 - Opened after the owner chose milestone 0 over the repository cleanup and the
   RDD review fork. Bundle and the pre-rewrite repository contents were deleted
   with the owner's authorization; the academic PDFs stay in

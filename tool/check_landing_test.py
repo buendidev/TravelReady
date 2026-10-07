@@ -10,9 +10,13 @@ CLI. Solo biblioteca estandar y cero red: todo pasa leyendo archivos.
 
 from __future__ import annotations
 
+import struct
+import subprocess
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
+from unittest import mock
 
 import check_landing
 
@@ -30,23 +34,46 @@ def canonical_url(name: str) -> str:
     return f"{ORIGIN}/" if name == "index.html" else f"{ORIGIN}/{name}"
 
 
+def png_bytes(width: int, height: int) -> bytes:
+    """PNG minimo con la cabecera IHDR de las medidas pedidas.
+
+    Al verificador solo le importa decodificar el IHDR: firma, chunk
+    IHDR y IEND bastan. Sin bibliotecas externas.
+    """
+    ihdr = struct.pack(">II", width, height) + bytes([8, 6, 0, 0, 0])
+    ihdr_chunk = (struct.pack(">I", len(ihdr)) + b"IHDR" + ihdr
+                  + struct.pack(">I", zlib.crc32(b"IHDR" + ihdr)))
+    iend_chunk = (struct.pack(">I", 0) + b"IEND"
+                  + struct.pack(">I", zlib.crc32(b"IEND")))
+    return b"\x89PNG\r\n\x1a\n" + ihdr_chunk + iend_chunk
+
+
 def page(name: str, *, title: str | None = None, desc: str | None = None,
          h1: str | None = None, body: str = "", canonical: str | None = None,
-         og: bool = True, viewport: bool = True) -> str:
+         og: bool = True, viewport: bool = True, icon: bool = True,
+         og_image: bool = True) -> str:
     """Pagina valida para las reglas de sitio completo.
 
     Solo lo imprescindible: titulo, description, viewport, canonical
-    absoluto apuntando a la propia pagina, Open Graph y un h1 unico.
-    ``body`` anade justo el marcado que prueba la regla del test.
+    absoluto apuntando a la propia pagina, Open Graph con tarjeta
+    social, icono local y un h1 unico. ``body`` anade justo el marcado
+    que prueba la regla del test.
     """
     title = title if title is not None else f"Titulo de {name}"
     desc = desc if desc is not None else f"Descripcion unica de {name}"
     h1 = h1 if h1 is not None else f"Encabezado de {name}"
     canonical = canonical if canonical is not None else canonical_url(name)
+    og_image_metas = (f'<meta property="og:image" content="{ORIGIN}/og-card.png">\n'
+                      '<meta property="og:image:width" content="1200">\n'
+                      '<meta property="og:image:height" content="630">\n'
+                      f'<meta property="og:image:alt" content="Tarjeta de {name}">\n'
+                      if og and og_image else "")
     og_metas = (f'<meta property="og:title" content="{title}">\n'
                 f'<meta property="og:description" content="{desc}">\n'
                 '<meta property="og:type" content="website">\n' if og else "")
     vp = '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+    icon_link = ('<link rel="icon" href="favicon.svg" '
+                 'type="image/svg+xml">\n' if icon else "")
     return f"""<!doctype html>
 <html lang="es">
 <head>
@@ -54,7 +81,7 @@ def page(name: str, *, title: str | None = None, desc: str | None = None,
 {vp}<title>{title}</title>
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{canonical}">
-{og_metas}</head>
+{icon_link}{og_metas}{og_image_metas}</head>
 <body>
 <h1>{h1}</h1>
 {body}
@@ -70,20 +97,49 @@ def sitemap_xml(locs: list[str]) -> str:
             f"{body}\n</urlset>\n")
 
 
+def git(root: Path, *args: str) -> None:
+    subprocess.run(["git", *args], cwd=root, check=True,
+                   capture_output=True)
+
+
+def make_git_repo(root: Path, *, gitignore: str | None = None,
+                  add: list[str] | None = None) -> None:
+    """Repositorio git de verdad dentro del directorio temporal.
+
+    ``gitignore`` escribe un .gitignore antes de anadir; ``add`` anade
+    archivos concretos uno a uno (por defecto, todo con -A).
+    """
+    if gitignore is not None:
+        (root / ".gitignore").write_text(gitignore, encoding="utf-8")
+    git(root, "init", "-q")
+    if add is None:
+        git(root, "add", "-A")
+    else:
+        for name in add:
+            git(root, "add", name)
+
+
 def write_site(directory: str, pages: dict[str, str], *,
                css: str = "body{margin:0}\n",
                sitemap: str | None | bool = None,
-               robots: str | None | bool = None) -> Path:
+               robots: str | None | bool = None,
+               git: bool | str = True) -> Path:
     """Escribe el sitio y devuelve la ruta del directorio.
 
     ``sitemap`` y ``robots`` en None se generan correctos para las
     paginas dadas; ``False`` los omite y un str se escribe tal cual,
-    para poder probar sus reglas.
+    para poder probar sus reglas. ``git`` monta un repositorio de
+    verdad con todo rastreado (el caso real); un str es el contenido
+    del .gitignore (para los fixtures de archivos ignorados) y False
+    deja el directorio sin repositorio.
     """
     root = Path(directory)
     for name, html in pages.items():
         (root / name).write_text(html, encoding="utf-8")
     (root / check_landing.STYLESHEET_NAME).write_text(css, encoding="utf-8")
+    (root / "favicon.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg"></svg>\n', encoding="utf-8")
+    (root / "og-card.png").write_bytes(png_bytes(1200, 630))
     if sitemap is None:
         sitemap = sitemap_xml([canonical_url(n) for n in pages])
     if sitemap is not False:
@@ -94,6 +150,9 @@ def write_site(directory: str, pages: dict[str, str], *,
     if robots is not False:
         (root / check_landing.ROBOTS_NAME).write_text(robots,
                                                       encoding="utf-8")
+    if git is not False:
+        make_git_repo(root,
+                      gitignore=git if isinstance(git, str) else None)
     return root
 
 
@@ -133,6 +192,176 @@ class CleanSiteTest(CheckerTestCase):
             "otra.html": page("otra.html"),
         })
         self.assertEqual(run_checker(root), [])
+
+
+class IconTest(CheckerTestCase):
+    """R1: exactamente un <link rel="icon">, local y con archivo.
+
+    Un sitio de una pagina basta: la regla es por pagina, no de sitio
+    completo.
+    """
+
+    def test_one_local_icon_passes(self) -> None:
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html")})
+        # Con una sola pagina hay el aviso disenyado de sitio de una
+        # pagina: la regla del icono es por pagina y no entra ahi.
+        self.assertEqual(failures(run_checker(root)), [])
+
+    def test_missing_icon_fails(self) -> None:
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html", icon=False)})
+        self.assertSingleFailure(run_checker(root),
+                                 'index.html: falta el <link rel="icon">')
+
+    def test_two_icons_fail(self) -> None:
+        html = page("index.html",
+                    body='<link rel="icon" href="favicon.svg">')
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            'index.html: debe tener exactamente un '
+            '<link rel="icon"> (encontrados 2)')
+
+    def test_remote_icon_fails(self) -> None:
+        # Un icono remoto enciende tambien la regla de recursos externos:
+        # dos fallos, el segundo es el de esta regla.
+        html = page("index.html").replace(
+            'href="favicon.svg"', 'href="https://cdn.example/favicon.svg"')
+        root = write_site(str(self.root), {"index.html": html})
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        self.assertIn('el <link rel="icon"> debe ser una ruta local, no '
+                      "'https://cdn.example/favicon.svg'", joined)
+        self.assertEqual(len(failures(problems)), 2, joined)
+
+    def test_icon_to_missing_file_fails(self) -> None:
+        html = page("index.html").replace(
+            'href="favicon.svg"', 'href="ausente.svg"')
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            'index.html: el <link rel="icon"> apunta a un archivo que no '
+            "existe: 'ausente.svg'")
+
+
+class OgImageTest(CheckerTestCase):
+    """R2: la tarjeta social.
+
+    Exactamente una og:image, absoluta y en el origen del canonical, que
+    resuelva a un PNG de 1200x630 del sitio, con width/height que
+    coincidan con el raster y un alt presente y no vacio.
+    """
+
+    def test_social_card_passes(self) -> None:
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html")})
+        self.assertEqual(failures(run_checker(root)), [])
+
+    def test_missing_og_image_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html", og_image=False)})
+        self.assertSingleFailure(run_checker(root),
+                                 'index.html: falta <meta property="og:image">')
+
+    def test_two_og_images_fail(self) -> None:
+        extra = f'<meta property="og:image" content="{ORIGIN}/og-card.png">'
+        html = page("index.html", body=extra)
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            'index.html: debe tener exactamente una '
+            '<meta property="og:image"> (encontradas 2)')
+
+    def test_foreign_origin_og_image_fails(self) -> None:
+        html = page("index.html").replace(
+            f'content="{ORIGIN}/og-card.png"',
+            'content="https://otro.example/og-card.png"')
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            "index.html: og:image fuera del origen del canonical: "
+            "'https://otro.example/og-card.png'")
+
+    def test_og_image_outside_site_fails(self) -> None:
+        html = page("index.html").replace(
+            f'content="{ORIGIN}/og-card.png"',
+            f'content="{ORIGIN}/../fuera.png"')
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            "index.html: og:image sale del directorio del sitio: "
+            f"'{ORIGIN}/../fuera.png'")
+
+    def test_og_image_missing_file_fails(self) -> None:
+        html = page("index.html").replace(
+            f'content="{ORIGIN}/og-card.png"',
+            f'content="{ORIGIN}/fantasma.png"')
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            "index.html: og:image apunta a un archivo que no existe: "
+            f"'{ORIGIN}/fantasma.png'")
+
+    def test_wrong_dimensions_fail(self) -> None:
+        # El raster mide otra cosa y las metas lo cuentan igual: solo
+        # falla la regla de dimensiones.
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html")})
+        (root / "og-card.png").write_bytes(png_bytes(800, 418))
+        html = page("index.html").replace(
+            'content="1200"', 'content="800"').replace(
+            'content="630"', 'content="418"')
+        (root / "index.html").write_text(html, encoding="utf-8")
+        self.assertSingleFailure(
+            run_checker(root),
+            "index.html: la imagen de og:image mide 800x418, "
+            "se requiere 1200x630")
+
+    def test_width_meta_disagreeing_with_raster_fails(self) -> None:
+        html = page("index.html").replace(
+            '<meta property="og:image:width" content="1200">',
+            '<meta property="og:image:width" content="900">')
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            "index.html: <meta property=\"og:image:width\"> dice '900', "
+            "la imagen mide 1200")
+
+    def test_height_meta_disagreeing_with_raster_fails(self) -> None:
+        html = page("index.html").replace(
+            '<meta property="og:image:height" content="630">',
+            '<meta property="og:image:height" content="500">')
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            "index.html: <meta property=\"og:image:height\"> dice '500', "
+            "la imagen mide 630")
+
+    def test_missing_width_meta_fails(self) -> None:
+        html = page("index.html").replace(
+            '<meta property="og:image:width" content="1200">\n', "")
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            'index.html: falta <meta property="og:image:width">')
+
+    def test_missing_alt_fails(self) -> None:
+        html = page("index.html").replace(
+            '<meta property="og:image:alt" content="Tarjeta de index.html">\n',
+            "")
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            'index.html: falta <meta property="og:image:alt">')
+
+    def test_empty_alt_fails(self) -> None:
+        html = page("index.html").replace(
+            'content="Tarjeta de index.html"', 'content=" "')
+        root = write_site(str(self.root), {"index.html": html})
+        self.assertSingleFailure(
+            run_checker(root),
+            'index.html: <meta property="og:image:alt"> vacia')
 
 
 class PageRulesTest(CheckerTestCase):
@@ -359,6 +588,75 @@ class BudgetTest(CheckerTestCase):
             "otra.html": page("otra.html"),
         })
         self.assertEqual(run_checker(root), [])
+
+
+class GitTrackingTest(CheckerTestCase):
+    """R3: lo referenciado y lo listado en el sitemap, rastreado por git.
+
+    La leccion que costo una release: website/robots.txt quedaba fuera
+    del repositorio por un *.txt en el .gitignore, cada ejecucion local
+    pasaba y un clon limpio habria fallado. Los fixtures montan un
+    repositorio git de verdad dentro del directorio temporal.
+    """
+
+    def site_with_notes(self, *, gitignore: str | None = None) -> Path:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html",
+                               body='<a href="notas.txt">notas</a>')},
+            git=False)
+        (root / "notas.txt").write_text("notas\n", encoding="utf-8")
+        make_git_repo(root, gitignore=gitignore)
+        return root
+
+    def test_tracked_referenced_files_pass(self) -> None:
+        root = self.site_with_notes()
+        problems = run_checker(root)
+        self.assertEqual(failures(problems), [])
+        # y sin aviso de git: el repositorio existe y esta entero
+        self.assertFalse(any("git" in p for p in problems), problems)
+
+    def test_ignored_referenced_file_fails(self) -> None:
+        # notas.txt existe, esta referenciado y el *.txt del .gitignore
+        # lo deja fuera del indice: exactamente la trampa de robots.txt.
+        root = self.site_with_notes(gitignore="*.txt\n")
+        self.assertSingleFailure(
+            run_checker(root),
+            "archivo referenciado pero no rastreado por git: 'notas.txt'")
+
+    def test_sitemap_page_untracked_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html")}, git=False)
+        make_git_repo(root, add=["index.html", "sitemap.xml", "robots.txt",
+                                 "styles.css", "favicon.svg", "og-card.png"])
+        self.assertSingleFailure(
+            run_checker(root),
+            "pagina listada en sitemap.xml pero no rastreada por git: "
+            "'otra.html'")
+
+    def test_not_a_git_repo_emits_aviso_and_skips(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html")}, git=False)
+        problems = run_checker(root)
+        self.assertEqual(failures(problems), [])
+        joined = "\n".join(problems)
+        self.assertIn("aviso: se omite la comprobacion de archivos no "
+                      "rastreados por git:", joined)
+
+    def test_git_absent_emits_aviso_and_skips(self) -> None:
+        # El sitio de produccion se comprueba en maquinas sin git: la
+        # ausencia del binario no puede tumbar la verificacion.
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html")})
+        with mock.patch.object(check_landing.subprocess, "run",
+                               side_effect=FileNotFoundError("git")):
+            problems = run_checker(root)
+        self.assertEqual(failures(problems), [])
+        joined = "\n".join(problems)
+        self.assertIn("aviso: se omite la comprobacion de archivos no "
+                      "rastreados por git:", joined)
 
 
 class SiteWideTest(CheckerTestCase):
