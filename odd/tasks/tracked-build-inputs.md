@@ -129,3 +129,114 @@ green; the real tree green.
 
 - Opened after the owner chose to version everything missing rather than only
   the file that turns CI green.
+
+- **TBI-1** — `.gitignore` and `android/.gitignore` corrected. Both nested rules
+  that also covered the wrapper were found and fixed, not just the root one.
+  After the edit, `git check-ignore` reports none of the ten required paths and
+  still reports every secret: `.env`, `android/key.properties`,
+  `android/local.properties`, `android/app/travelready-release.keystore`,
+  `build/`, `.dart_tool/`. Commits `a878bde` (the ignore rules and the two
+  Firebase config files).
+
+- **TBI-2** — the wrapper is tracked, and it was run rather than trusted: from
+  `android/`, `./gradlew --version` prints `Gradle 8.14` with revision
+  `34c560e3be961658a6fbcd7170ec2443a228b109` and exits 0, resolving the
+  `gradle-8.14-all.zip` that `gradle-wrapper.properties` already declared.
+  `git update-index --chmod=+x` was needed: staged as `100644` the shell script
+  would not be executable in a clone, which is a tracked-but-broken outcome.
+  Commit `9abb1ba`.
+
+- **TBI-3** — `firebase.json`, `firestore.rules`, `firestore.indexes.json` and
+  `storage.rules` are tracked. The two security findings are recorded in the
+  commit message and in this document, unfixed on purpose. Commit `95b2776`.
+
+- Checked before writing anything: every other build input was already tracked
+  (`pubspec.yaml`, `pubspec.lock` — which CI's `--enforce-lockfile` requires —,
+  `gradle-wrapper.properties`, the three Gradle build scripts, `MainActivity.kt`
+  and `analysis_options.yaml`). The nine files above were the whole gap.
+
+- **Independent clean-clone verification** (delegated, not self-reported; a real
+  `git clone --branch chore/tracked-build-inputs` into a temporary directory,
+  `git status --porcelain` empty, source repository untouched):
+  - `flutter pub get --enforce-lockfile` → exit 0, `Got dependencies!`.
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings` → exit 0, `78 issues
+    found`. **Zero errors**, and specifically zero matches for `error` and no
+    occurrence of `main.dart` anywhere in the output: both
+    `uri_does_not_exist` and `undefined_identifier` are gone.
+  - The 78-versus-75 difference against the developer's machine is exactly the
+    three warnings this feature records and does not fix: the clone has 75
+    infos plus the three `pubspec.yaml` warnings for the absent
+    `assets/images/`, `assets/animations/` and `.env`.
+  - `./gradlew --version` in the clone → exit 0, `Gradle 8.14` really printed,
+    and the file mode after cloning is `-rwxr-xr-x`: the executable bit
+    survived, which is the half of TBI-2 that a mode-blind check would miss.
+  - `git check-ignore -v` still reports `.env`, `android/key.properties`,
+    `android/local.properties` and `android/app/travelready-release.keystore`
+    as ignored, from the rules it names; `git ls-files` lists all nine required
+    inputs.
+
+- **Recorded follow-up this verification exposed, deliberately not fixed here**:
+  `pubspec.yaml` declares `assets/images/`, `assets/animations/` and `.env`,
+  and none of the three exists in a clone. The warnings do not fail CI, but a
+  build from a clone is not the build the developer tests. `.env` in
+  particular is declared as a Flutter asset, which ships its contents inside
+  the app bundle — that is a secret-handling decision, not a buildability one,
+  and it needs its own work unit.
+
+- **Review scope, decided and recorded because it was not obvious.** The
+  receipt-driven-development reminder fired twice during this branch, offering
+  `review.start` on a `current-changes`/`workspace` projection each time. Both
+  inspections returned `paths: ["odd/tasks/tracked-build-inputs.md"]` with the
+  same `paths_digest` and a `base_tree` equal to `HEAD^{tree}` (`4599a6aa`):
+  the candidate was this documentation file, uncommitted, with a changed
+  content digest because the log entry was being written. The branch's four
+  commits never appear in that projection, because it is the working tree
+  against `HEAD`. START was therefore **not** invoked, twice, with the entry
+  rule's own words as the reason — a trivial passive documentation-only edit is
+  an explicit ground for omission — and because the candidate is neither a
+  work-unit commit nor a PR slice. No lineage was created and no authority was
+  consumed. The review is deferred to the committed range
+  (`42b113e..HEAD`, `committedOnly`), which is where this branch's actual work
+  lives: the ignore-rule correction, the nine tracked inputs and the gate.
+
+- **TBI-4** — `tool/check_tracked_inputs.py` and its 12-test suite are in, with the
+  CI steps in `.github/workflows/ci.yml`. The rules live as data (`REQUIRED_TRACKED`
+  nine paths, `REQUIRED_IGNORED` four secrets) and git is asked exactly twice per
+  run: one `git ls-files -z`, then one `git check-ignore -z --no-index --stdin`
+  carrying all thirteen candidates at once. Outside a work tree it degrades to
+  `aviso:` and exit 0, like the landing checker.
+
+- **The gate's RED was re-derived by hand, because the writer's own "RED" was not
+  behavioural.** Its recorded RED was `ModuleNotFoundError: No module named
+  'check_tracked_inputs'`, which proves the module did not exist, not that a rule
+  fails. The real RED came from building a throwaway git repository out of
+  `git archive main` — the pre-fix tree — and committing it with `git add -A`,
+  which respects the old rules and therefore leaves all nine inputs untracked,
+  exactly as this repository was. The gate reported **18 violations and exit 1**,
+  naming each of the nine paths twice: once as untracked and once as
+  ignore-matched. The mirror rule was exercised the same way: after a deliberate
+  `git add -f .env`, the gate reported `.env: es un secreto y esta rastreado por
+  git` and exited 1.
+
+- **Two details worth not rediscovering.** `git check-ignore --stdin` refuses
+  pathspec arguments (`fatal: cannot specify pathnames with --stdin`), so the
+  candidates must go in on stdin; and without `--no-index` it consults the index
+  and skips tracked files, which would make the "a rule still covers this tracked
+  file" half of the rule undetectable.
+
+- **Incident worth recording**: `tool/check_landing_test.py` does **not** exist on
+  this branch — it belongs to `feat/website-professional` — so the writer took its
+  style reference from a leftover native-review candidate view under
+  `.git/gentle-ai/candidate-views/003123ba-…/`, which holds that branch's reviewed
+  files. The reference file was the right one, but a stale review scratch directory
+  silently served as a source, and nothing in this branch declared it. That
+  directory tree is 3.1 MB of leftovers and is safe to delete; grepping it for the
+  academic markers returns no text hit, so nothing academic survives there.
+
+- **CI interaction with the open website PR**: both branches edit
+  `.github/workflows/ci.yml`, and both need a `unittest discover -s tool` step.
+  This branch appends both of its steps at the end of the file precisely so the
+  hunks do not overlap, but whichever of the two merges second must keep **one**
+  discover step, not two. Order matters for another reason: PR #1
+  (`feat/website-professional`) cannot go green until this branch lands on `main`,
+  because its `Analyze` step fails for exactly the missing file this branch tracks.
