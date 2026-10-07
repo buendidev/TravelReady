@@ -836,6 +836,20 @@ img, svg { max-width: 100%; }
   color: var(--ink-soft);
 }
 
+/* ── Aviso de borrador legal ────────────────────────────────────────
+   Banda que llevan las páginas legales mientras su texto no pasa
+   revisión letrada: un solo bloque compartido por las cuatro, con los
+   tokens existentes (sin paleta propia) y nada de posición fija. */
+.draft-notice {
+  margin-bottom: 1.75rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .hero-inner { grid-template-columns: 1fr; }

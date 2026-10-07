@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://travelready.example/</loc></url>
+  <url><loc>https://travelready.example/aviso-legal.html</loc></url>
   <url><loc>https://travelready.example/como-funciona.html</loc></url>
   <url><loc>https://travelready.example/contacto.html</loc></url>
+  <url><loc>https://travelready.example/cookies.html</loc></url>
   <url><loc>https://travelready.example/descargar.html</loc></url>
   <url><loc>https://travelready.example/estado.html</loc></url>
   <url><loc>https://travelready.example/faq.html</loc></url>
   <url><loc>https://travelready.example/funciones.html</loc></url>
+  <url><loc>https://travelready.example/privacidad.html</loc></url>
+  <url><loc>https://travelready.example/terminos.html</loc></url>
 </urlset>
