@@ -24,11 +24,12 @@ imprime antes del veredicto.
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 # Presupuesto de peso: límite duro (fallo) y umbral de aviso, en bytes.
 HTML_FAIL_BYTES = 40 * 1024
@@ -71,6 +72,7 @@ class PageParser(HTMLParser):
         self.titles: list[str] = []
         self.metas: list[dict[str, str]] = []
         self.canonicals: list[str] = []
+        self.icon_links: list[str] = []  # href de <link rel="icon">
         self.navs: list[dict] = []  # {"classes": [...], "hrefs": [...],
         #                            "current": [...], "lists": [...]}
         # lists: cada <ul> del nav, con sus hrefs en orden y los hrefs que
@@ -108,8 +110,12 @@ class PageParser(HTMLParser):
             self._title_parts = []
         if tag == "meta":
             self.metas.append(attributes)
-        if tag == "link" and attributes.get("rel", "").strip().lower() == "canonical":
-            self.canonicals.append(attributes.get("href", ""))
+        if tag == "link":
+            rel = attributes.get("rel", "").strip().lower()
+            if rel == "canonical":
+                self.canonicals.append(attributes.get("href", ""))
+            elif rel == "icon":
+                self.icon_links.append(attributes.get("href", ""))
         if tag == "nav":
             self._nav_depth += 1
             self.navs.append({
@@ -226,8 +232,98 @@ def check_header_lists(name: str, parser: PageParser) -> list[str]:
     return problems
 
 
+def check_icon(name: str, parser: PageParser,
+               directory: Path) -> list[str]:
+    """El icono: exactamente un <link rel="icon">, local y con archivo.
+
+    El favicon forma parte de la identidad de la pagina: sin el, el
+    navegador ensena una ficha anonima; con un destino externo o roto,
+    una pestana sin marca. La ruta tiene que ser relativa al sitio y el
+    archivo tiene que existir.
+    """
+    links = parser.icon_links
+    if not links:
+        return [f'{name}: falta el <link rel="icon">']
+    if len(links) > 1:
+        return [f'{name}: debe tener exactamente un <link rel="icon"> '
+                f"(encontrados {len(links)})"]
+    href = links[0].strip()
+    if href.startswith(("http://", "https://", "//")) or SCHEME_RE.match(href):
+        return [f'{name}: el <link rel="icon"> debe ser una ruta local, '
+                f"no {href!r}"]
+    target = href.partition("#")[0].partition("?")[0]
+    if target.startswith("./"):
+        target = target[2:]
+    if not (directory / target).is_file():
+        return [f'{name}: el <link rel="icon"> apunta a un archivo que no '
+                f"existe: {href!r}"]
+    return []
+
+
+def check_og_image(name: str, parser: PageParser,
+                   directory: Path) -> list[str]:
+    """La tarjeta social: una og:image que sea real y del sitio.
+
+    La tarjeta es lo que redes y mensajería enseñan al compartir un
+    enlace: tiene que ser exactamente una, absoluta y en el origen del
+    canonical, resolver a un archivo del directorio que, siendo PNG,
+    decodifique a 1200x630 (la medida que ninguna red recorta), con
+    width/height que no contradigan al raster y un alt que describa la
+    imagen a quien no la ve.
+    """
+    images = og_named(parser, "og:image")
+    if not images:
+        return [f'{name}: falta <meta property="og:image">']
+    if len(images) > 1:
+        return [f"{name}: debe tener exactamente una "
+                f'<meta property="og:image"> (encontradas {len(images)})']
+    url = images[0].strip()
+    parts = urlsplit(url)
+    if not parts.scheme or not parts.netloc:
+        return [f"{name}: og:image no absoluto: {url!r}"]
+
+    # Mismo origen que el canonical. Si el canonical no es absoluto, su
+    # propia regla ya lo canta: aqui no se compara contra una basura.
+    canonical = parser.canonicals[0].strip() if parser.canonicals else ""
+    cparts = urlsplit(canonical)
+    if cparts.scheme and cparts.netloc:
+        if f"{parts.scheme}://{parts.netloc}" != f"{cparts.scheme}://{cparts.netloc}":
+            return [f"{name}: og:image fuera del origen del canonical: {url!r}"]
+
+    resolved = (directory / unquote(parts.path).lstrip("/")).resolve()
+    if not resolved.is_relative_to(directory.resolve()):
+        return [f"{name}: og:image sale del directorio del sitio: {url!r}"]
+    if not resolved.is_file():
+        return [f"{name}: og:image apunta a un archivo que no existe: {url!r}"]
+
+    problems: list[str] = []
+    data = resolved.read_bytes()
+    if data[:8] == b"\x89PNG\r\n\x1a\n" and data[12:16] == b"IHDR":
+        width = int.from_bytes(data[16:20], "big")
+        height = int.from_bytes(data[20:24], "big")
+        if (width, height) != (1200, 630):
+            problems.append(f"{name}: la imagen de og:image mide "
+                            f"{width}x{height}, se requiere 1200x630")
+        for prop, decoded in (("og:image:width", width),
+                              ("og:image:height", height)):
+            values = og_named(parser, prop)
+            if not values:
+                problems.append(f'{name}: falta <meta property="{prop}">')
+            elif values[0].strip() != str(decoded):
+                problems.append(f'{name}: <meta property="{prop}"> dice '
+                                f"{values[0].strip()!r}, la imagen mide "
+                                f"{decoded}")
+    alt = og_named(parser, "og:image:alt")
+    if not alt:
+        problems.append(f'{name}: falta <meta property="og:image:alt">')
+    elif not alt[0].strip():
+        problems.append(f'{name}: <meta property="og:image:alt"> vacia')
+    return problems
+
+
 def check_page(name: str, parser: PageParser, declared: set[str],
-               parsers: dict[str, PageParser]) -> list[str]:
+               parsers: dict[str, PageParser],
+               directory: Path) -> list[str]:
     """Comprobaciones que aplican a cada página por separado."""
     problems: list[str] = []
 
@@ -257,6 +353,10 @@ def check_page(name: str, parser: PageParser, declared: set[str],
         problems.append(f"{name}: recursos externos: {external}")
 
     problems += check_links(name, parser, parsers)
+
+    problems += check_icon(name, parser, directory)
+
+    problems += check_og_image(name, parser, directory)
 
     problems += check_header_lists(name, parser)
 
@@ -312,6 +412,86 @@ def analyze_page(path: Path) -> tuple[str, PageParser]:
     return text, parser
 
 
+def tracked_files(directory: Path) -> set[str] | None:
+    """Archivos rastreados por git bajo ``directory``, en rutas relativas.
+
+    La raiz del repositorio se resuelve con ``git rev-parse
+    --show-toplevel`` desde el propio directorio comprobado; si git no
+    esta disponible o el directorio no vive en un arbol de trabajo se
+    devuelve None, y la comprobacion que la llama se omite con un
+    aviso: la ausencia de git no es un problema del sitio.
+    """
+    try:
+        subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=directory, capture_output=True, text=True, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    out = subprocess.run(
+        ["git", "ls-files", "--", "."],
+        cwd=directory, capture_output=True, text=True, check=True).stdout
+    return {line for line in out.splitlines() if line}
+
+
+def check_git_tracking(directory: Path,
+                       parsers: dict[str, PageParser]) -> list[str]:
+    """Lo que las paginas nombran y el sitemap lista, rastreado por git.
+
+    La leccion que costo una release: website/robots.txt quedaba fuera
+    del repositorio por un *.txt en el .gitignore, todas las ejecuciones
+    locales pasaban y un clon limpio habria fallado. Todo archivo local
+    referenciado por href o src que exista en disco, y toda pagina del
+    sitemap, tiene que salir en git ls-files. La lista de rastreados se
+    pide a git una sola vez por ejecucion, no una por archivo.
+    """
+    tracked = tracked_files(directory)
+    if tracked is None:
+        return [f"aviso: se omite la comprobacion de archivos no rastreados "
+                f"por git: {directory} no es un arbol de trabajo de git"]
+
+    refs: set[str] = set()
+    for parser in parsers.values():
+        for href in parser.hrefs + parser.srcs:
+            if SCHEME_RE.match(href) or href.startswith("//"):
+                continue  # externos: no viven en el repositorio
+            target, _, _frag = href.partition("#")
+            target = target.partition("?")[0]
+            if target.startswith("./"):
+                target = target[2:]
+            if target:
+                refs.add(target)
+
+    problems: list[str] = []
+    reported: set[str] = set()
+    for ref in sorted(refs):
+        if (directory / ref).is_file() and ref not in tracked:
+            problems.append(
+                f"archivo referenciado pero no rastreado por git: {ref!r}")
+            reported.add(ref)
+
+    # El sitemap es otra fuente de referencias: una pagina listada que
+    # git no ve se pierde en el primer clon limpio igual que un CSS.
+    sitemap_path = directory / SITEMAP_NAME
+    if sitemap_path.is_file():
+        try:
+            sitemap_root = ET.fromstring(sitemap_path.read_bytes())
+        except ET.ParseError:
+            sitemap_root = None  # XML roto: su propia regla ya lo canta
+        if sitemap_root is not None:
+            locs = {(el.text or "").strip() for el in sitemap_root.iter()
+                    if el.tag.split("}")[-1] == "loc"
+                    and (el.text or "").strip()}
+            for loc in sorted(locs):
+                path = urlsplit(loc).path.lstrip("/")
+                if (path and path not in reported
+                        and (directory / path).is_file()
+                        and path not in tracked):
+                    problems.append(
+                        f"pagina listada en {SITEMAP_NAME} pero no "
+                        f"rastreada por git: {path!r}")
+    return problems
+
+
 def check_directory(directory: Path) -> tuple[list[str], list[str]]:
     """Punto de entrada comprobable: mismas reglas que la línea de órdenes.
 
@@ -355,7 +535,8 @@ def check_directory(directory: Path) -> tuple[list[str], list[str]]:
     # ── Comprobaciones por página ─────────────────────────────────────
     problems: list[str] = []
     for name in sorted(names):
-        problems += check_page(name, parsers[name], declared, parsers)
+        problems += check_page(name, parsers[name], declared, parsers,
+                               directory)
 
     # Clases CSS sin uso: se calcula sobre todas las páginas juntas.
     used = set().union(*(p.classes for p in parsers.values()))
@@ -395,6 +576,9 @@ def check_directory(directory: Path) -> tuple[list[str], list[str]]:
             "aviso: sitio de una sola pagina: se omiten las comprobaciones "
             "de sitio completo (titulos, metas, canonical, Open Graph, "
             f"{SITEMAP_NAME}, {ROBOTS_NAME} y navegacion)")
+
+    # ── Archivos referenciados que git ignora ─────────────────────
+    problems += check_git_tracking(directory, parsers)
 
     # ── Resultado ─────────────────────────────────────────────────────
     # "aviso:" es informativo; el resto son fallos.
