@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "527231712148",
+    "project_id": "travelready-app",
+    "storage_bucket": "travelready-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:527231712148:android:4c8640a93b25faaed4ed81",
+        "android_client_info": {
+          "package_name": "com.buendidev.travel_ready"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAimHYhClG15J2SHEzqaKE18_wGFNIbTos"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

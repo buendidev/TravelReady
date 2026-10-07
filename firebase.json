@@ -1,0 +1,32 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "travelready-app",
+          "appId": "1:527231712148:android:4c8640a93b25faaed4ed81",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "travelready-app",
+          "configurations": {
+            "android": "1:527231712148:android:4c8640a93b25faaed4ed81",
+            "ios":     "1:527231712148:ios:cb7afa4cb3dd7b71d4ed81",
+            "macos":   "1:527231712148:ios:cb7afa4cb3dd7b71d4ed81",
+            "web":     "1:527231712148:web:5f92f82d9b3021f3d4ed81",
+            "windows": "1:527231712148:web:974ab7b1fd3bf630d4ed81"
+          }
+        }
+      }
+    }
+  }
+}

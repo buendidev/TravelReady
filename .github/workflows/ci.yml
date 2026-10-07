@@ -38,3 +38,7 @@ jobs:
         run: python3 tool/check_landing.py
       - name: Test
         run: flutter test
+      - name: Check tracked build inputs
+        run: python3 tool/check_tracked_inputs.py
+      - name: Test tracked inputs gate
+        run: python3 -m unittest discover -s tool -p "*_test.py"
