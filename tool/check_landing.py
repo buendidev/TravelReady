@@ -9,6 +9,9 @@ hoja de estilos, recursos externos y presupuesto de peso) y, cuando hay
 más de una página, las comprobaciones de sitio completo: títulos,
 descripciones, viewport, canonical, Open Graph, sitemap.xml, robots.txt,
 coherencia de la navegación entre páginas y prosa repetida entre páginas.
+Los cuatro textos legales se comprueban además como borradores con su
+aviso visible —la puerta de publicación que impide publicar un borrador
+como si estuviera en vigor— y cada página debe enlazarlos.
 
 Uso:
     python tool/check_landing.py [directorio]   # por defecto: website
@@ -40,6 +43,13 @@ CSS_WARN_BYTES = 32 * 1024
 SITEMAP_NAME = "sitemap.xml"
 ROBOTS_NAME = "robots.txt"
 STYLESHEET_NAME = "styles.css"
+
+# Los cuatro textos legales: la puerta de publicacion exige que
+# existan y lleven su aviso de borrador, y cada pagina del sitio debe
+# enlazarlos.
+LEGAL_PAGES = ("aviso-legal.html", "privacidad.html", "terminos.html",
+               "cookies.html")
+DRAFT_NOTICE_CLASS = "draft-notice"
 
 VOID_TAGS = {"meta", "link", "br", "hr", "img", "input", "source", "area", "col"}
 
@@ -78,12 +88,14 @@ class PageParser(HTMLParser):
         # lists: cada <ul> del nav, con sus hrefs en orden y los hrefs que
         # llevan aria-current="page".
         self.paragraphs: list[str] = []  # <p> fuera de header/footer/nav
+        self.draft_notices: list[str] = []  # texto de <p class="draft-notice">
         self.headings: list[tuple[str, str]] = []  # (h1..h6, texto) en orden
         self._in_title = False
         self._title_parts: list[str] = []
         self._nav_depth = 0
         self._p_parts: list[str] | None = None
         self._p_excluded = False
+        self._notice_parts: list[str] | None = None
         self._prose_skip = 0  # header/footer/nav abiertos en este punto
         self._h_tag: str | None = None
         self._h_parts: list[str] = []
@@ -143,6 +155,9 @@ class PageParser(HTMLParser):
         if tag == "p" and self._p_parts is None:
             self._p_parts = []
             self._p_excluded = self._prose_skip > 0
+        if (tag == "p" and self._notice_parts is None
+                and DRAFT_NOTICE_CLASS in attributes.get("class", "").split()):
+            self._notice_parts = []
         if tag in ("h1", "h2", "h3", "h4", "h5", "h6") and self._h_tag is None:
             self._h_tag = tag
             self._h_parts = []
@@ -158,6 +173,9 @@ class PageParser(HTMLParser):
             if not self._p_excluded:
                 self.paragraphs.append("".join(self._p_parts))
             self._p_parts = None
+        if tag == "p" and self._notice_parts is not None:
+            self.draft_notices.append("".join(self._notice_parts))
+            self._notice_parts = None
         if self._h_tag and tag == self._h_tag:
             self.headings.append((tag, "".join(self._h_parts)))
             self._h_tag = None
@@ -179,6 +197,8 @@ class PageParser(HTMLParser):
             self._title_parts.append(data)
         if self._p_parts is not None:
             self._p_parts.append(data)
+        if self._notice_parts is not None:
+            self._notice_parts.append(data)
         if self._h_tag is not None:
             self._h_parts.append(data)
 
@@ -492,6 +512,65 @@ def check_git_tracking(directory: Path,
     return problems
 
 
+def check_legal_drafts(parsers: dict[str, PageParser]) -> list[str]:
+    """Puerta de publicacion de los textos legales: existen y son borradores.
+
+    Los cuatro textos legales se publican como borradores mientras el
+    abogado no los apruebe y el titular no rellene en ellos sus datos
+    de identidad (LSSI). Esta regla es la puerta de salida de esa
+    etapa y es deliberadamente temporal: exige que cada texto exista
+    y lleve exactamente un aviso de borrador visible y con texto, de
+    modo que ningun borrador pueda publicarse como si estuviera en
+    vigor. Cuando los textos se aprueben y los datos del titular
+    esten, el aviso se retira de las paginas y esta regla se
+    sustituye a proposito por la que corresponda comprobar entonces.
+    """
+    problems: list[str] = []
+    for name in LEGAL_PAGES:
+        parser = parsers.get(name)
+        if parser is None:
+            problems.append(f"falta la pagina legal {name}")
+            continue
+        notices = parser.draft_notices
+        if not notices:
+            problems.append(
+                f"{name}: falta el aviso de borrador "
+                f'<p class="{DRAFT_NOTICE_CLASS}">')
+        elif len(notices) > 1:
+            problems.append(
+                f"{name}: debe tener exactamente un "
+                f'<p class="{DRAFT_NOTICE_CLASS}"> '
+                f"(encontrados {len(notices)})")
+        elif not re.sub(r"\s+", " ", notices[0]).strip():
+            problems.append(
+                f'{name}: el <p class="{DRAFT_NOTICE_CLASS}"> está vacío')
+    return problems
+
+
+def check_legal_links(parsers: dict[str, PageParser]) -> list[str]:
+    """Cada pagina enlaza los cuatro textos legales.
+
+    Los enlaces legales del pie son parte de la pagina, no un adorno:
+    una pagina nueva que los olvide, o una edicion que los retira, se
+    cantan aqui. La regla solo mira los href de cada pagina, sin
+    importar donde cuelguen (nav del pie, parrafo propio o bloque
+    aparte), asi que no depende de la copia del sitio.
+    """
+    problems: list[str] = []
+    for name in sorted(parsers):
+        targets: set[str] = set()
+        for href in parsers[name].hrefs:
+            target = href.partition("#")[0]
+            if target.startswith("./"):
+                target = target[2:]
+            targets.add(target)
+        missing = [legal for legal in LEGAL_PAGES if legal not in targets]
+        if missing:
+            problems.append(
+                f"{name}: faltan enlaces a las paginas legales: {missing}")
+    return problems
+
+
 def check_directory(directory: Path) -> tuple[list[str], list[str]]:
     """Punto de entrada comprobable: mismas reglas que la línea de órdenes.
 
@@ -576,6 +655,11 @@ def check_directory(directory: Path) -> tuple[list[str], list[str]]:
             "aviso: sitio de una sola pagina: se omiten las comprobaciones "
             "de sitio completo (titulos, metas, canonical, Open Graph, "
             f"{SITEMAP_NAME}, {ROBOTS_NAME} y navegacion)")
+
+    # ── Textos legales: puerta de publicacion y enlaces ────────────
+    # Incondicionales: no dependen del tamano del sitio ni de su copia.
+    problems += check_legal_drafts(parsers)
+    problems += check_legal_links(parsers)
 
     # ── Archivos referenciados que git ignora ─────────────────────
     problems += check_git_tracking(directory, parsers)

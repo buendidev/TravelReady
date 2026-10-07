@@ -10,6 +10,7 @@ CLI. Solo biblioteca estandar y cero red: todo pasa leyendo archivos.
 
 from __future__ import annotations
 
+import re
 import struct
 import subprocess
 import tempfile
@@ -27,6 +28,24 @@ ORIGIN = "https://travelready.example"
 LONG_PROSE = ("este parrafo largo existe unicamente para cruzar el umbral de "
               "ciento veinte caracteres de la regla de prosa repetida entre "
               "paginas del verificador estructural del sitio estatico.")
+
+# Las cuatro paginas legales que la puerta de publicacion exige (R4)
+# y que cada pagina debe enlazar (R5).
+LEGAL_PAGES = ("aviso-legal.html", "privacidad.html", "terminos.html",
+               "cookies.html")
+
+# Aviso de borrador que el helper escribe en cada pagina legal.
+# Corto a proposito: por debajo del umbral de 120 caracteres de la
+# regla de prosa repetida entre paginas.
+DRAFT_NOTICE = ('<p class="draft-notice">Texto juridico pendiente de '
+                'revision: esta pagina todavia no esta en vigor.</p>')
+
+# Bloque de enlaces legales que page() anade a cada pagina, fuera de
+# cualquier nav para no mezclar con la regla de navegacion coherente.
+LEGAL_LINKS = ('<p><a href="aviso-legal.html">Aviso legal</a> · '
+               '<a href="privacidad.html">Privacidad</a> · '
+               '<a href="terminos.html">Terminos</a> · '
+               '<a href="cookies.html">Cookies</a></p>')
 
 
 def canonical_url(name: str) -> str:
@@ -51,13 +70,15 @@ def png_bytes(width: int, height: int) -> bytes:
 def page(name: str, *, title: str | None = None, desc: str | None = None,
          h1: str | None = None, body: str = "", canonical: str | None = None,
          og: bool = True, viewport: bool = True, icon: bool = True,
-         og_image: bool = True) -> str:
+         og_image: bool = True, legal_links: bool = True) -> str:
     """Pagina valida para las reglas de sitio completo.
 
     Solo lo imprescindible: titulo, description, viewport, canonical
     absoluto apuntando a la propia pagina, Open Graph con tarjeta
-    social, icono local y un h1 unico. ``body`` anade justo el marcado
-    que prueba la regla del test.
+    social, icono local y un h1 unico. ``legal_links`` anade el bloque
+    de enlaces a los cuatro textos legales (R5 lo exige en toda
+    pagina). ``body`` anade justo el marcado que prueba la regla del
+    test.
     """
     title = title if title is not None else f"Titulo de {name}"
     desc = desc if desc is not None else f"Descripcion unica de {name}"
@@ -74,6 +95,7 @@ def page(name: str, *, title: str | None = None, desc: str | None = None,
     vp = '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
     icon_link = ('<link rel="icon" href="favicon.svg" '
                  'type="image/svg+xml">\n' if icon else "")
+    legal_block = LEGAL_LINKS + "\n" if legal_links else ""
     return f"""<!doctype html>
 <html lang="es">
 <head>
@@ -85,7 +107,7 @@ def page(name: str, *, title: str | None = None, desc: str | None = None,
 <body>
 <h1>{h1}</h1>
 {body}
-</body>
+{legal_block}</body>
 </html>
 """
 
@@ -95,6 +117,11 @@ def sitemap_xml(locs: list[str]) -> str:
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             f"{body}\n</urlset>\n")
+
+
+def sitemap_for(names: list[str]) -> str:
+    """Sitemap con las paginas dadas mas las cuatro legales del helper."""
+    return sitemap_xml([canonical_url(n) for n in names + list(LEGAL_PAGES)])
 
 
 def git(root: Path, *args: str) -> None:
@@ -123,7 +150,8 @@ def write_site(directory: str, pages: dict[str, str], *,
                css: str = "body{margin:0}\n",
                sitemap: str | None | bool = None,
                robots: str | None | bool = None,
-               git: bool | str = True) -> Path:
+               git: bool | str = True,
+               legal: bool = True) -> Path:
     """Escribe el sitio y devuelve la ruta del directorio.
 
     ``sitemap`` y ``robots`` en None se generan correctos para las
@@ -131,9 +159,23 @@ def write_site(directory: str, pages: dict[str, str], *,
     para poder probar sus reglas. ``git`` monta un repositorio de
     verdad con todo rastreado (el caso real); un str es el contenido
     del .gitignore (para los fixtures de archivos ignorados) y False
-    deja el directorio sin repositorio.
+    deja el directorio sin repositorio. ``legal`` anade las cuatro
+    paginas legales con su aviso de borrador y su regla CSS: R4 y R5
+    son incondicionales, asi que todo sitio de prueba las lleva;
+    ``False`` las omite para probar la propia puerta. Las paginas
+    legales heredan los <nav> de index.html para no despertar la
+    regla de navegacion coherente en los fixtures que construyen
+    navegacion a mano.
     """
     root = Path(directory)
+    pages = dict(pages)
+    if legal:
+        navs = "\n".join(re.findall(r"<nav\b.*?</nav>",
+                                    pages.get("index.html", ""), re.S))
+        for name in LEGAL_PAGES:
+            pages.setdefault(name, page(name, body=navs + DRAFT_NOTICE))
+        if ".draft-notice" not in css:
+            css += ".draft-notice{margin:0}\n"
     for name, html in pages.items():
         (root / name).write_text(html, encoding="utf-8")
     (root / check_landing.STYLESHEET_NAME).write_text(css, encoding="utf-8")
@@ -184,7 +226,7 @@ class CheckerTestCase(unittest.TestCase):
 
 
 class CleanSiteTest(CheckerTestCase):
-    """El caso que pasa: sitio de dos paginas, todo en regla."""
+    """El caso que pasa: dos paginas mas las cuatro legales del helper."""
 
     def test_clean_two_page_site_has_no_problems(self) -> None:
         root = write_site(str(self.root), {
@@ -204,8 +246,8 @@ class IconTest(CheckerTestCase):
     def test_one_local_icon_passes(self) -> None:
         root = write_site(str(self.root),
                           {"index.html": page("index.html")})
-        # Con una sola pagina hay el aviso disenyado de sitio de una
-        # pagina: la regla del icono es por pagina y no entra ahi.
+        # La regla del icono es por pagina: no depende de las
+        # comprobaciones de sitio completo.
         self.assertEqual(failures(run_checker(root)), [])
 
     def test_missing_icon_fails(self) -> None:
@@ -305,7 +347,9 @@ class OgImageTest(CheckerTestCase):
 
     def test_wrong_dimensions_fail(self) -> None:
         # El raster mide otra cosa y las metas lo cuentan igual: solo
-        # falla la regla de dimensiones.
+        # falla la regla de dimensiones. El raster es uno para todo el
+        # sitio, asi que el mismo fallo canta en las paginas legales
+        # del helper; todos los fallos son de esta regla.
         root = write_site(str(self.root),
                           {"index.html": page("index.html")})
         (root / "og-card.png").write_bytes(png_bytes(800, 418))
@@ -313,10 +357,12 @@ class OgImageTest(CheckerTestCase):
             'content="1200"', 'content="800"').replace(
             'content="630"', 'content="418"')
         (root / "index.html").write_text(html, encoding="utf-8")
-        self.assertSingleFailure(
-            run_checker(root),
-            "index.html: la imagen de og:image mide 800x418, "
-            "se requiere 1200x630")
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        self.assertIn("index.html: la imagen de og:image mide 800x418, "
+                      "se requiere 1200x630", joined)
+        for failure in failures(problems):
+            self.assertIn("og:image", failure)
 
     def test_width_meta_disagreeing_with_raster_fails(self) -> None:
         html = page("index.html").replace(
@@ -365,18 +411,26 @@ class OgImageTest(CheckerTestCase):
 
 
 class PageRulesTest(CheckerTestCase):
-    """Reglas por pagina: un sitio de una pagina basta.
+    """Reglas por pagina.
 
-    Con una sola pagina el verificador omite las comprobaciones de
-    sitio completo (y lo dice con un aviso), asi que cada fallo tiene
-    una sola causa posible.
+    El helper anade las cuatro paginas legales a todo sitio, asi que
+    las comprobaciones cruzadas de sitio completo estan activas; los
+    fixtures siguen construidos para que cada fallo tenga una sola
+    causa posible.
     """
 
     def test_page_without_script_or_img_passes(self) -> None:
         root = write_site(str(self.root),
                           {"index.html": page("index.html")})
+        self.assertEqual(failures(run_checker(root)), [])
+
+    def test_single_page_site_announces_omitted_cross_checks(self) -> None:
+        # Sin las paginas legales (legal=False) el sitio de prueba
+        # vuelve a una sola pagina: el verificador lo anuncia con su
+        # aviso de siempre, junto a los fallos de la puerta legal.
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html")}, legal=False)
         problems = run_checker(root)
-        self.assertEqual(failures(problems), [])
         self.assertTrue(any("sitio de una sola pagina" in p
                             for p in problems))
 
@@ -486,15 +540,21 @@ class PageRulesTest(CheckerTestCase):
     def test_two_header_lists_with_different_hrefs_fail(self) -> None:
         # El nav de cabecera lleva varias listas identicas (disclosure y
         # escritorio); separar sus enlaces debe cantar. Los hrefs apuntan
-        # a la propia pagina para no mezclar la regla de enlaces.
+        # a la propia pagina para no mezclar la regla de enlaces. La
+        # regla es por pagina y las legales del helper heredan el nav:
+        # el mismo fallo canta en cada una, y ninguno de otro tipo.
         nav = ('<nav><ul><li><a href="index.html">A</a></li></ul>'
                '<ul><li><a href="#">B</a></li></ul></nav>')
         root = write_site(str(self.root),
                           {"index.html": page("index.html", body=nav)})
-        self.assertSingleFailure(run_checker(root),
-                                 "la lista de enlaces 2 de la cabecera no "
-                                 "coincide con la primera: esperado "
-                                 "['index.html'], encontrado ['#']")
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        self.assertIn("la lista de enlaces 2 de la cabecera no "
+                      "coincide con la primera: esperado "
+                      "['index.html'], encontrado ['#']", joined)
+        for failure in failures(problems):
+            self.assertIn("de la cabecera no coincide con la primera",
+                          failure)
 
     def test_two_header_lists_with_different_current_fail(self) -> None:
         nav = ('<nav><ul><li><a href="index.html">A</a></li></ul>'
@@ -502,9 +562,13 @@ class PageRulesTest(CheckerTestCase):
                '</li></ul></nav>')
         root = write_site(str(self.root),
                           {"index.html": page("index.html", body=nav)})
-        self.assertSingleFailure(run_checker(root),
-                                 "aria-current de la lista 2 de la cabecera "
-                                 "no coincide con la primera")
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        self.assertIn("aria-current de la lista 2 de la cabecera "
+                      "no coincide con la primera", joined)
+        for failure in failures(problems):
+            self.assertIn("de la cabecera no coincide con la primera",
+                          failure)
 
     def test_two_identical_header_lists_pass(self) -> None:
         nav = ('<nav><ul><li><a href="index.html">A</a></li></ul>'
@@ -581,8 +645,8 @@ class BudgetTest(CheckerTestCase):
         self.assertEqual(len(failures(problems)), 1)
 
     def test_under_budget_is_quiet(self) -> None:
-        # Dos paginas: con una sola, el verificador emite el aviso de
-        # "sitio de una sola pagina" por diseno.
+        # Varias paginas (el helper anade las legales): sin avisos de
+        # presupuesto ni de nada mas.
         root = write_site(str(self.root), {
             "index.html": page("index.html"),
             "otra.html": page("otra.html"),
@@ -627,7 +691,9 @@ class GitTrackingTest(CheckerTestCase):
         root = write_site(str(self.root), {
             "index.html": page("index.html"),
             "otra.html": page("otra.html")}, git=False)
-        make_git_repo(root, add=["index.html", "sitemap.xml", "robots.txt",
+        make_git_repo(root, add=["index.html", "aviso-legal.html",
+                                 "privacidad.html", "terminos.html",
+                                 "cookies.html", "sitemap.xml", "robots.txt",
                                  "styles.css", "favicon.svg", "og-card.png"])
         self.assertSingleFailure(
             run_checker(root),
@@ -657,6 +723,114 @@ class GitTrackingTest(CheckerTestCase):
         joined = "\n".join(problems)
         self.assertIn("aviso: se omite la comprobacion de archivos no "
                       "rastreados por git:", joined)
+
+
+class LegalDraftTest(CheckerTestCase):
+    """R4: puerta de publicacion de los cuatro textos legales.
+
+    Los textos legales se publican como borradores mientras el
+    abogado no los apruebe y el titular no rellene en ellos sus datos
+    de identidad. Esta regla es deliberadamente temporal: mientras el
+    aviso de borrador este en las paginas, la puerta exige que cada
+    texto exista y lo lleve exactamente una vez y con texto, de modo
+    que ningun borrador pueda publicarse como si estuviera en vigor;
+    cuando los textos se aprueben y los datos del titular esten, el
+    aviso se retira y esta regla se sustituye a proposito por la que
+    corresponda comprobar entonces.
+    """
+
+    def test_draft_legal_pages_pass(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+        })
+        self.assertEqual(run_checker(root), [])
+
+    def test_missing_legal_page_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+        }, legal=False)
+        joined = "\n".join(run_checker(root))
+        for name in LEGAL_PAGES:
+            with self.subTest(pagina=name):
+                self.assertIn(f"falta la pagina legal {name}", joined)
+
+    def test_legal_page_without_notice_fails(self) -> None:
+        # La pagina cookies se construye a mano sin aviso; el helper
+        # respeta la pagina dada y completa las otras tres.
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+            "cookies.html": page("cookies.html"),
+        })
+        self.assertSingleFailure(
+            run_checker(root),
+            'cookies.html: falta el aviso de borrador '
+            '<p class="draft-notice">')
+
+    def test_legal_page_with_empty_notice_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+            "cookies.html": page(
+                "cookies.html", body='<p class="draft-notice"> </p>'),
+        })
+        self.assertSingleFailure(
+            run_checker(root),
+            'cookies.html: el <p class="draft-notice"> está vacío')
+
+    def test_legal_page_with_two_notices_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+            "cookies.html": page(
+                "cookies.html", body=DRAFT_NOTICE + DRAFT_NOTICE),
+        })
+        self.assertSingleFailure(
+            run_checker(root),
+            'cookies.html: debe tener exactamente un '
+            '<p class="draft-notice"> (encontrados 2)')
+
+
+class LegalLinksTest(CheckerTestCase):
+    """R5: cada pagina enlaza los cuatro textos legales.
+
+    Una pagina nueva no puede publicarse sin los enlaces legales y un
+    enlace retirado falla la puerta. La regla mira los href de cada
+    pagina sin importar donde cuelguen (nav del pie, parrafo propio o
+    bloque aparte), asi que no depende de la copia del sitio.
+    """
+
+    def test_pages_link_the_legal_pages(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+        })
+        self.assertEqual(run_checker(root), [])
+
+    def test_page_without_legal_links_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html", legal_links=False),
+            "otra.html": page("otra.html"),
+        })
+        self.assertSingleFailure(
+            run_checker(root),
+            "index.html: faltan enlaces a las paginas legales: "
+            "['aviso-legal.html', 'privacidad.html', 'terminos.html', "
+            "'cookies.html']")
+
+    def test_page_missing_one_legal_link_fails(self) -> None:
+        html = page("index.html").replace(
+            '<a href="cookies.html">Cookies</a>', "")
+        root = write_site(str(self.root), {
+            "index.html": html,
+            "otra.html": page("otra.html"),
+        })
+        self.assertSingleFailure(
+            run_checker(root),
+            "index.html: faltan enlaces a las paginas legales: "
+            "['cookies.html']")
 
 
 class SiteWideTest(CheckerTestCase):
@@ -749,7 +923,7 @@ class SiteWideTest(CheckerTestCase):
         # entre; el fallo debe ser solo el canonical no absoluto.
         root, _ = self.two_pages(
             index={"canonical": "/index"},
-            sitemap=sitemap_xml([canonical_url("otra.html")]))
+            sitemap=sitemap_for(["otra.html"]))
         self.assertSingleFailure(run_checker(root),
                                  "index.html: canonical no absoluto: "
                                  "'/index'")
@@ -757,9 +931,10 @@ class SiteWideTest(CheckerTestCase):
     def test_canonical_of_another_page_fails(self) -> None:
         root, _ = self.two_pages(
             index={"canonical": canonical_url("otra.html")},
-            # el sitemap generado a mano solo contiene la otra pagina,
-            # para que el fallo sea exclusivamente el canonical
-            sitemap=sitemap_xml([canonical_url("otra.html")]))
+            # el sitemap generado a mano contiene la otra pagina y las
+            # legales del helper, para que el fallo sea exclusivamente
+            # el canonical
+            sitemap=sitemap_for(["otra.html"]))
         self.assertSingleFailure(run_checker(root),
                                  "index.html: el canonical no apunta a esa "
                                  "misma pagina")
@@ -789,15 +964,14 @@ class SiteWideTest(CheckerTestCase):
         self.assertSingleFailure(run_checker(root), "falta sitemap.xml")
 
     def test_sitemap_missing_page_fails(self) -> None:
-        root, _ = self.two_pages(sitemap=sitemap_xml([canonical_url("otra.html")]))
+        root, _ = self.two_pages(sitemap=sitemap_for(["otra.html"]))
         self.assertSingleFailure(run_checker(root),
                                  "paginas ausentes en sitemap.xml: "
                                  f"['{canonical_url('index.html')}']")
 
     def test_sitemap_extra_entry_fails(self) -> None:
-        root, _ = self.two_pages(sitemap=sitemap_xml(
-            [canonical_url("index.html"), canonical_url("otra.html"),
-             "https://travelready.example/fantasma.html"]))
+        root, _ = self.two_pages(sitemap=sitemap_for(
+            ["index.html", "otra.html", "fantasma.html"]))
         self.assertSingleFailure(run_checker(root),
                                  "entradas de sitemap.xml sin pagina: "
                                  "['https://travelready.example/fantasma.html']")
