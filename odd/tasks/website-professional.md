@@ -142,6 +142,7 @@ the reduce block. No inputs, no JS, no stored card data.
 | WPRO-3b | `4e2383c` | Launch gate for the legal texts (83 tests) |
 | WPRO-4 | `f530aa9` | `precios.html` and its entry in both header lists and the footer nav |
 | WPRO-5 | `94a0801` | `pago.html`, the purchase-path copy and the CSS-only animated card |
+| WPRO-6 | `896f884` | Real-engine verification recorded, launch plan and owner register updated |
 
 ## Open questions for the owner
 
