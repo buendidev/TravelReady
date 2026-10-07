@@ -113,3 +113,23 @@ branch `chore/tracked-build-inputs` and are therefore expected to remain here.
 
 - Opened after the owner approved the corrected plan and rejected the
   `--dart-define` refactor, on the strength of the three findings recorded above.
+
+- **CIA-1 and CIA-2 applied; CIA-3 verified independently** in a clean checkout of
+  this branch (delegated, `git clone --branch fix/ci-asset-inputs`, a clone that
+  starts with no `.env`, no `assets/images/` and no `assets/animations/`, and
+  nothing staged). Verbatim exit codes for CI's own sequence:
+  `cp .env.example .env` 0, `flutter pub get --enforce-lockfile` 0,
+  `dart run tool/release_config_validator.dart` **0** — the security validator
+  still passes and was not touched — `python tool/check_landing.py` 0, and
+  **`flutter test` 0 with `01:13 +436: All tests passed!`**, the full suite rather
+  than a single file.
+
+- `flutter analyze` exits 1 with **exactly two errors**, both the known
+  `firebase_options.dart` pair (`uri_does_not_exist` at `lib/main.dart:10:8` and
+  `undefined_identifier` at `lib/main.dart:40:14`) that belongs to the sibling
+  branch `chore/tracked-build-inputs`. The report count fell from 80 to **77**:
+  removing the two dead declarations removed exactly the three asset warnings and
+  nothing else, which is the arithmetic confirming the change was bounded.
+
+- `.env` produced by the copy step is ignored (`.gitignore:5`) and never staged:
+  `git status --porcelain` empty, `git ls-files .env` empty.
