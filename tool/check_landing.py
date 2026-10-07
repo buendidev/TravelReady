@@ -13,6 +13,12 @@ coherencia de la navegación entre páginas y prosa repetida entre páginas.
 Uso:
     python tool/check_landing.py [directorio]   # por defecto: website
 Sale con código 0 si solo quedan avisos y 1 si encuentra algún problema.
+
+Para los tests, ``check_directory(directorio)`` ejecuta exactamente las
+mismas comprobaciones sin imprimir nada y devuelve ``(problems, info)``:
+los problemas con prefijo ``aviso:`` son informativos y el resto son
+fallos; ``info`` son las líneas de resumen que la versión interactiva
+imprime antes del veredicto.
 """
 
 from __future__ import annotations
@@ -306,21 +312,18 @@ def analyze_page(path: Path) -> tuple[str, PageParser]:
     return text, parser
 
 
-def main() -> int:
-    directory = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("website")
-    if not directory.is_dir():
-        print(f"No existe el directorio: {directory}")
-        return 1
+def check_directory(directory: Path) -> tuple[list[str], list[str]]:
+    """Punto de entrada comprobable: mismas reglas que la línea de órdenes.
 
+    Devuelve ``(problems, info)``. ``problems`` incluye también los
+    ``aviso:``; el criterio de fallo es el mismo del CLI: fallan los que
+    no empiezan por ``aviso:``. ``info`` reproduce, en orden, las líneas
+    de resumen que ``main`` imprime antes del veredicto, de modo que la
+    salida del comando no cambia. No imprime nada ni toca el disco más
+    allá de leer el directorio, así que importarlo no tiene efectos.
+    """
     html_paths = sorted(p for p in directory.glob("*.html") if p.is_file())
-    if not html_paths:
-        print(f"No hay archivos HTML en: {directory}")
-        return 1
     css_path = directory / STYLESHEET_NAME
-    if not css_path.is_file():
-        print(f"Falta {STYLESHEET_NAME} en: {directory}")
-        return 1
-
     css_text = css_path.read_text(encoding="utf-8")
     declared = set(re.findall(r"\.([A-Za-z][\w-]*)", css_text))
 
@@ -332,18 +335,22 @@ def main() -> int:
     sizes = {p.name: p.stat().st_size for p in html_paths}
     lines = {name: len(texts[name].splitlines()) for name in texts}
 
-    print(f"Verificando {directory}: {len(names)} pagina(s): {', '.join(sorted(names))}")
+    print_info: list[str] = [
+        f"Verificando {directory}: {len(names)} pagina(s): "
+        f"{', '.join(sorted(names))}"]
 
     # ── Resumen por página (peso: bytes y lineas) ─────────────────────
     for name in sorted(names):
         parser = parsers[name]
         anchors = sum(1 for h in parser.hrefs if h.startswith("#"))
-        print(f"  {name}: {sizes[name]} bytes, {lines[name]} lineas | "
-              f"{len(parser.ids)} ids, {len(parser.classes)} clases, "
-              f"{anchors} anclajes internos")
+        print_info.append(
+            f"  {name}: {sizes[name]} bytes, {lines[name]} lineas | "
+            f"{len(parser.ids)} ids, {len(parser.classes)} clases, "
+            f"{anchors} anclajes internos")
     css_size = css_path.stat().st_size
-    print(f"  {STYLESHEET_NAME}: {css_size} bytes, "
-          f"{len(css_text.splitlines())} lineas")
+    print_info.append(
+        f"  {STYLESHEET_NAME}: {css_size} bytes, "
+        f"{len(css_text.splitlines())} lineas")
 
     # ── Comprobaciones por página ─────────────────────────────────────
     problems: list[str] = []
@@ -379,8 +386,9 @@ def main() -> int:
 
     # ── Comprobaciones de sitio completo ──────────────────────────────
     if len(names) > 1:
-        print(f"\nSitio completo: {len(names)} paginas - "
-              f"comprobaciones cruzadas activas")
+        print_info.append(
+            f"\nSitio completo: {len(names)} paginas - "
+            f"comprobaciones cruzadas activas")
         problems += check_site_wide(directory, names, parsers)
     else:
         problems.append(
@@ -390,6 +398,25 @@ def main() -> int:
 
     # ── Resultado ─────────────────────────────────────────────────────
     # "aviso:" es informativo; el resto son fallos.
+    return problems, print_info
+
+
+def main() -> int:
+    directory = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("website")
+    if not directory.is_dir():
+        print(f"No existe el directorio: {directory}")
+        return 1
+    if not any(p.is_file() for p in directory.glob("*.html")):
+        print(f"No hay archivos HTML en: {directory}")
+        return 1
+    if not (directory / STYLESHEET_NAME).is_file():
+        print(f"Falta {STYLESHEET_NAME} en: {directory}")
+        return 1
+
+    problems, info = check_directory(directory)
+    for line in info:
+        print(line)
+
     failures = [p for p in problems if not p.startswith("aviso:")]
     for problem in problems:
         print(f"  - {problem}")

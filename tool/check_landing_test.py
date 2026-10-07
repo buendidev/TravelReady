@@ -1,0 +1,600 @@
+#!/usr/bin/env python3
+"""Suite unittest de tool/check_landing.py.
+
+Cada test monta un sitio minimo en un directorio temporal y llama al
+punto de entrada real del verificador (``check_directory``): las reglas
+no estan reimplementadas aqui, se comprueba el mensaje que sueltan.
+Los ``aviso:`` son informativos y el resto son fallos, igual que en el
+CLI. Solo biblioteca estandar y cero red: todo pasa leyendo archivos.
+"""
+
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+import check_landing
+
+ORIGIN = "https://travelready.example"
+
+# Prosa de mas de 120 caracteres ya normalizada, para la regla de
+# prosa repetida entre paginas.
+LONG_PROSE = ("este parrafo largo existe unicamente para cruzar el umbral de "
+              "ciento veinte caracteres de la regla de prosa repetida entre "
+              "paginas del verificador estructural del sitio estatico.")
+
+
+def canonical_url(name: str) -> str:
+    """URL canonical que el verificador espera para esa pagina."""
+    return f"{ORIGIN}/" if name == "index.html" else f"{ORIGIN}/{name}"
+
+
+def page(name: str, *, title: str | None = None, desc: str | None = None,
+         h1: str | None = None, body: str = "", canonical: str | None = None,
+         og: bool = True, viewport: bool = True) -> str:
+    """Pagina valida para las reglas de sitio completo.
+
+    Solo lo imprescindible: titulo, description, viewport, canonical
+    absoluto apuntando a la propia pagina, Open Graph y un h1 unico.
+    ``body`` anade justo el marcado que prueba la regla del test.
+    """
+    title = title if title is not None else f"Titulo de {name}"
+    desc = desc if desc is not None else f"Descripcion unica de {name}"
+    h1 = h1 if h1 is not None else f"Encabezado de {name}"
+    canonical = canonical if canonical is not None else canonical_url(name)
+    og_metas = (f'<meta property="og:title" content="{title}">\n'
+                f'<meta property="og:description" content="{desc}">\n'
+                '<meta property="og:type" content="website">\n' if og else "")
+    vp = '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+    return f"""<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+{vp}<title>{title}</title>
+<meta name="description" content="{desc}">
+<link rel="canonical" href="{canonical}">
+{og_metas}</head>
+<body>
+<h1>{h1}</h1>
+{body}
+</body>
+</html>
+"""
+
+
+def sitemap_xml(locs: list[str]) -> str:
+    body = "".join(f"<url><loc>{loc}</loc></url>" for loc in locs)
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            f"{body}\n</urlset>\n")
+
+
+def write_site(directory: str, pages: dict[str, str], *,
+               css: str = "body{margin:0}\n",
+               sitemap: str | None | bool = None,
+               robots: str | None | bool = None) -> Path:
+    """Escribe el sitio y devuelve la ruta del directorio.
+
+    ``sitemap`` y ``robots`` en None se generan correctos para las
+    paginas dadas; ``False`` los omite y un str se escribe tal cual,
+    para poder probar sus reglas.
+    """
+    root = Path(directory)
+    for name, html in pages.items():
+        (root / name).write_text(html, encoding="utf-8")
+    (root / check_landing.STYLESHEET_NAME).write_text(css, encoding="utf-8")
+    if sitemap is None:
+        sitemap = sitemap_xml([canonical_url(n) for n in pages])
+    if sitemap is not False:
+        (root / check_landing.SITEMAP_NAME).write_text(sitemap,
+                                                       encoding="utf-8")
+    if robots is None:
+        robots = f"Sitemap: {ORIGIN}/{check_landing.SITEMAP_NAME}\n"
+    if robots is not False:
+        (root / check_landing.ROBOTS_NAME).write_text(robots,
+                                                      encoding="utf-8")
+    return root
+
+
+def run_checker(root: Path) -> list[str]:
+    problems, _info = check_landing.check_directory(root)
+    return problems
+
+
+def failures(problems: list[str]) -> list[str]:
+    """Los problemas que hacen salir 1, mismo criterio que el CLI."""
+    return [p for p in problems if not p.startswith("aviso:")]
+
+
+class CheckerTestCase(unittest.TestCase):
+    """Base con directorio temporal y asertos sobre mensajes."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+
+    def assertSingleFailure(self, problems: list[str], expected: str) -> None:
+        """El sitio falla, y por lo que se pide, citando el mensaje."""
+        self.maxDiff = None
+        joined = "\n".join(problems)
+        self.assertIn(expected, joined)
+        self.assertEqual(len(failures(problems)), 1,
+                         f"fallos inesperados: {failures(problems)}")
+
+
+class CleanSiteTest(CheckerTestCase):
+    """El caso que pasa: sitio de dos paginas, todo en regla."""
+
+    def test_clean_two_page_site_has_no_problems(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+        })
+        self.assertEqual(run_checker(root), [])
+
+
+class PageRulesTest(CheckerTestCase):
+    """Reglas por pagina: un sitio de una pagina basta.
+
+    Con una sola pagina el verificador omite las comprobaciones de
+    sitio completo (y lo dice con un aviso), asi que cada fallo tiene
+    una sola causa posible.
+    """
+
+    def test_page_without_script_or_img_passes(self) -> None:
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html")})
+        problems = run_checker(root)
+        self.assertEqual(failures(problems), [])
+        self.assertTrue(any("sitio de una sola pagina" in p
+                            for p in problems))
+
+    def test_script_tag_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html",
+                               body="<script>alert('hola')</script>"),
+        })
+        self.assertSingleFailure(run_checker(root), "etiqueta(s) <script>")
+
+    def test_img_tag_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html", body='<img src="foto.png">'),
+        })
+        self.assertSingleFailure(run_checker(root), "<img>: los mockups")
+
+    def test_broken_internal_link_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html",
+                               body='<a href="ausente.html">x</a>'),
+        })
+        self.assertSingleFailure(run_checker(root),
+                                 "enlaces a archivos que no existen: "
+                                 "['ausente.html']")
+
+    def test_internal_link_to_existing_page_passes(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html",
+                               body='<a href="otra.html">x</a>'),
+            "otra.html": page("otra.html"),
+        })
+        self.assertEqual(run_checker(root), [])
+
+    def test_dangling_fragment_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html", body='<a href="#nadie">x</a>'),
+        })
+        self.assertSingleFailure(run_checker(root),
+                                 "anclajes sin destino: ['#nadie']")
+
+    def test_fragment_to_existing_id_passes(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html",
+                               body='<a href="#top">x</a>'
+                                    '<div id="top">destino</div>'),
+            "otra.html": page("otra.html"),
+        })
+        self.assertEqual(run_checker(root), [])
+
+    def test_external_resource_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page(
+                "index.html",
+                body='<a href="https://cdn.example/app.css">x</a>'),
+        })
+        self.assertSingleFailure(run_checker(root),
+                                 "recursos externos: "
+                                 "['https://cdn.example/app.css']")
+
+    def test_absolute_canonical_is_not_reported_as_external(self) -> None:
+        # Con dos paginas el sitio queda del todo callado: con una sola
+        # habria el aviso disenyado de "sitio de una sola pagina".
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+        })
+        self.assertEqual(run_checker(root), [])
+
+    def test_duplicate_id_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html",
+                               body='<div id="x"></div><div id="x"></div>'),
+        })
+        self.assertSingleFailure(run_checker(root), "ids duplicados: ['x']")
+
+    def test_unclosed_tag_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html", body="<div><p>texto</p>"),
+        })
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        # Un div abierto arrastra dos mensajes del mismo grupo de reglas:
+        # el div sin cerrar y los cierres de body/html que ya no
+        # emparejan. Ninguna otra regla entra.
+        self.assertIn("etiquetas sin cerrar: ['div']", joined)
+        for failure in failures(problems):
+            self.assertIn("index.html:", failure)
+            self.assertRegex(
+                failure, "etiquetas sin cerrar|cierres inesperados")
+
+    def test_unstyled_class_fails(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html",
+                               body='<p class="sinregla">texto</p>'),
+        })
+        self.assertSingleFailure(run_checker(root),
+                                 "clases del HTML sin regla CSS: ['sinregla']")
+
+    def test_class_declared_in_css_passes(self) -> None:
+        root = write_site(str(self.root), {
+            "index.html": page("index.html",
+                               body='<p class="conregla">texto</p>'),
+            "otra.html": page("otra.html"),
+        }, css="body{margin:0}\n.conregla{color:red}\n")
+        self.assertEqual(run_checker(root), [])
+
+    def test_two_header_lists_with_different_hrefs_fail(self) -> None:
+        # El nav de cabecera lleva varias listas identicas (disclosure y
+        # escritorio); separar sus enlaces debe cantar. Los hrefs apuntan
+        # a la propia pagina para no mezclar la regla de enlaces.
+        nav = ('<nav><ul><li><a href="index.html">A</a></li></ul>'
+               '<ul><li><a href="#">B</a></li></ul></nav>')
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html", body=nav)})
+        self.assertSingleFailure(run_checker(root),
+                                 "la lista de enlaces 2 de la cabecera no "
+                                 "coincide con la primera: esperado "
+                                 "['index.html'], encontrado ['#']")
+
+    def test_two_header_lists_with_different_current_fail(self) -> None:
+        nav = ('<nav><ul><li><a href="index.html">A</a></li></ul>'
+               '<ul><li><a aria-current="page" href="index.html">B</a>'
+               '</li></ul></nav>')
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html", body=nav)})
+        self.assertSingleFailure(run_checker(root),
+                                 "aria-current de la lista 2 de la cabecera "
+                                 "no coincide con la primera")
+
+    def test_two_identical_header_lists_pass(self) -> None:
+        nav = ('<nav><ul><li><a href="index.html">A</a></li></ul>'
+               '<ul><li><a href="index.html">A</a></li></ul></nav>')
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html", body=nav)})
+        self.assertEqual(failures(run_checker(root)), [])
+
+
+class BudgetTest(CheckerTestCase):
+    """Presupuesto de bytes: aviso por debajo del duro, fallo por encima."""
+
+    def pad_html(self, text: str, target: int) -> str:
+        # Un comentario HTML: bytes sin marcado comprobable.
+        filler = "<!-- " + "a" * 1024 + " -->\n"
+        while len(text.encode("utf-8")) <= target:
+            text += filler
+        return text
+
+    def pad_css(self, text: str, target: int) -> str:
+        filler = "/* " + "a" * 1024 + " */\n"
+        while len(text.encode("utf-8")) <= target:
+            text += filler
+        return text
+
+    def test_html_over_warn_is_only_a_warning(self) -> None:
+        big = self.pad_html(page("index.html"),
+                            check_landing.HTML_WARN_BYTES + 1)
+        self.assertGreater(len(big.encode("utf-8")),
+                           check_landing.HTML_WARN_BYTES)
+        self.assertLessEqual(len(big.encode("utf-8")),
+                             check_landing.HTML_FAIL_BYTES)
+        root = write_site(str(self.root), {"index.html": big})
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        self.assertIn("aviso: index.html:", joined)
+        self.assertIn("supera el umbral de 28 KiB", joined)
+        self.assertEqual(failures(problems), [])
+
+    def test_html_over_hard_budget_fails(self) -> None:
+        big = self.pad_html(page("index.html"),
+                            check_landing.HTML_FAIL_BYTES + 1)
+        self.assertGreater(len(big.encode("utf-8")),
+                           check_landing.HTML_FAIL_BYTES)
+        root = write_site(str(self.root), {"index.html": big})
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        self.assertIn("index.html:", joined)
+        self.assertIn("supera el presupuesto duro de 40 KiB", joined)
+        self.assertEqual(len(failures(problems)), 1)
+
+    def test_css_over_warn_is_only_a_warning(self) -> None:
+        big = self.pad_css("body{margin:0}\n",
+                           check_landing.CSS_WARN_BYTES + 1)
+        self.assertLessEqual(len(big.encode("utf-8")),
+                             check_landing.CSS_FAIL_BYTES)
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html")}, css=big)
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        self.assertIn("aviso: styles.css:", joined)
+        self.assertIn("supera el umbral de 32 KiB", joined)
+        self.assertEqual(failures(problems), [])
+
+    def test_css_over_hard_budget_fails(self) -> None:
+        big = self.pad_css("body{margin:0}\n",
+                           check_landing.CSS_FAIL_BYTES + 1024)
+        root = write_site(str(self.root),
+                          {"index.html": page("index.html")}, css=big)
+        problems = run_checker(root)
+        joined = "\n".join(problems)
+        self.assertIn("styles.css:", joined)
+        self.assertIn("supera el presupuesto duro de 40 KiB", joined)
+        self.assertEqual(len(failures(problems)), 1)
+
+    def test_under_budget_is_quiet(self) -> None:
+        # Dos paginas: con una sola, el verificador emite el aviso de
+        # "sitio de una sola pagina" por diseno.
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"),
+            "otra.html": page("otra.html"),
+        })
+        self.assertEqual(run_checker(root), [])
+
+
+class SiteWideTest(CheckerTestCase):
+    """Reglas de sitio completo: siempre dos paginas validas de base."""
+
+    def two_pages(self, **overrides) -> tuple[Path, dict[str, str]]:
+        index = page("index.html", **overrides.get("index", {}))
+        otra = page("otra.html", **overrides.get("otra", {}))
+        root = write_site(str(self.root), {
+            "index.html": index,
+            "otra.html": otra,
+        }, css=overrides.get("css", "body{margin:0}\n"),
+            sitemap=overrides.get("sitemap"), robots=overrides.get("robots"))
+        return root, {"index.html": index, "otra.html": otra}
+
+    # ── titulo y description ────────────────────────────────────────
+
+    def test_unique_title_and_description_pass(self) -> None:
+        root, _ = self.two_pages()
+        self.assertEqual(run_checker(root), [])
+
+    def test_duplicate_title_fails(self) -> None:
+        root, _ = self.two_pages(index={"title": "Igual"},
+                                 otra={"title": "Igual"})
+        self.assertSingleFailure(run_checker(root),
+                                 "titulo duplicado 'Igual' en: "
+                                 "['index.html', 'otra.html']")
+
+    def test_missing_title_fails(self) -> None:
+        html = page("otra.html").replace("<title>Titulo de otra.html</title>",
+                                         "")
+        root = write_site(str(self.root), {
+            "index.html": page("index.html"), "otra.html": html})
+        self.assertSingleFailure(run_checker(root),
+                                 "otra.html: debe tener exactamente un "
+                                 "<title> (encontrados 0)")
+
+    def test_duplicate_description_fails(self) -> None:
+        root, _ = self.two_pages(index={"desc": "Misma descripción"},
+                                 otra={"desc": "Misma descripción"})
+        self.assertSingleFailure(run_checker(root),
+                                 "description duplicada 'Misma descripción' "
+                                 "en: ['index.html', 'otra.html']")
+
+    # ── h1 y jerarquia de encabezados ────────────────────────────────
+
+    def test_exactly_one_h1_per_page_passes(self) -> None:
+        root, _ = self.two_pages()
+        self.assertEqual(run_checker(root), [])
+
+    def test_two_h1_on_a_page_fails(self) -> None:
+        root, _ = self.two_pages(
+            otra={"body": "<h1>Segundo</h1>"})
+        self.assertSingleFailure(run_checker(root),
+                                 "otra.html: debe tener exactamente un <h1> "
+                                 "(encontrados 2)")
+
+    def test_empty_h1_fails(self) -> None:
+        root, _ = self.two_pages(otra={"h1": "   "})
+        self.assertSingleFailure(run_checker(root),
+                                 "otra.html: el <h1> está vacío")
+
+    def test_duplicate_h1_text_across_pages_fails(self) -> None:
+        root, _ = self.two_pages(index={"h1": "Repetido"},
+                                 otra={"h1": "Repetido"})
+        self.assertSingleFailure(run_checker(root),
+                                 "h1 duplicado 'repetido' en: "
+                                 "['index.html', 'otra.html']")
+
+    def test_skipped_heading_level_fails(self) -> None:
+        root, _ = self.two_pages(
+            otra={"body": "<h3>Sin h2 delante</h3>"})
+        self.assertSingleFailure(run_checker(root),
+                                 "salto de nivel en los encabezados: de h1 "
+                                 "a h3")
+
+    def test_contiguous_heading_levels_pass(self) -> None:
+        root, _ = self.two_pages(
+            otra={"body": "<h2>Seccion</h2><h3>Subseccion</h3>"})
+        self.assertEqual(run_checker(root), [])
+
+    # ── canonical ────────────────────────────────────────────────────
+
+    def test_absolute_own_page_canonical_passes(self) -> None:
+        root, _ = self.two_pages()
+        self.assertEqual(run_checker(root), [])
+
+    def test_relative_canonical_fails(self) -> None:
+        # Sin extension .html para que la regla de enlaces internos no
+        # entre; el fallo debe ser solo el canonical no absoluto.
+        root, _ = self.two_pages(
+            index={"canonical": "/index"},
+            sitemap=sitemap_xml([canonical_url("otra.html")]))
+        self.assertSingleFailure(run_checker(root),
+                                 "index.html: canonical no absoluto: "
+                                 "'/index'")
+
+    def test_canonical_of_another_page_fails(self) -> None:
+        root, _ = self.two_pages(
+            index={"canonical": canonical_url("otra.html")},
+            # el sitemap generado a mano solo contiene la otra pagina,
+            # para que el fallo sea exclusivamente el canonical
+            sitemap=sitemap_xml([canonical_url("otra.html")]))
+        self.assertSingleFailure(run_checker(root),
+                                 "index.html: el canonical no apunta a esa "
+                                 "misma pagina")
+
+    # ── Open Graph ───────────────────────────────────────────────────
+
+    def test_missing_og_tags_fail(self) -> None:
+        for prop in ("og:title", "og:description", "og:type"):
+            with self.subTest(prop=prop):
+                tmp = tempfile.TemporaryDirectory()
+                self.addCleanup(tmp.cleanup)
+                html = page("otra.html").replace(
+                    f'<meta property="{prop}" content=', '<meta data-x="')
+                root = write_site(tmp.name, {
+                    "index.html": page("index.html"), "otra.html": html})
+                self.assertSingleFailure(run_checker(root),
+                                         f'falta <meta property="{prop}">')
+
+    def test_present_og_tags_pass(self) -> None:
+        root, _ = self.two_pages()
+        self.assertEqual(run_checker(root), [])
+
+    # ── sitemap.xml ──────────────────────────────────────────────────
+
+    def test_sitemap_must_exist(self) -> None:
+        root, _ = self.two_pages(sitemap=False)
+        self.assertSingleFailure(run_checker(root), "falta sitemap.xml")
+
+    def test_sitemap_missing_page_fails(self) -> None:
+        root, _ = self.two_pages(sitemap=sitemap_xml([canonical_url("otra.html")]))
+        self.assertSingleFailure(run_checker(root),
+                                 "paginas ausentes en sitemap.xml: "
+                                 f"['{canonical_url('index.html')}']")
+
+    def test_sitemap_extra_entry_fails(self) -> None:
+        root, _ = self.two_pages(sitemap=sitemap_xml(
+            [canonical_url("index.html"), canonical_url("otra.html"),
+             "https://travelready.example/fantasma.html"]))
+        self.assertSingleFailure(run_checker(root),
+                                 "entradas de sitemap.xml sin pagina: "
+                                 "['https://travelready.example/fantasma.html']")
+
+    def test_sitemap_equal_to_canonical_set_passes(self) -> None:
+        root, _ = self.two_pages()
+        self.assertEqual(run_checker(root), [])
+
+    # ── robots.txt ───────────────────────────────────────────────────
+
+    def test_robots_must_exist(self) -> None:
+        root, _ = self.two_pages(robots=False)
+        self.assertSingleFailure(run_checker(root), "falta robots.txt")
+
+    def test_robots_wrong_sitemap_line_fails(self) -> None:
+        root, _ = self.two_pages(
+            robots="Sitemap: https://otro-origin.example/sitemap.xml\n")
+        self.assertSingleFailure(run_checker(root),
+                                 "robots.txt: la linea Sitemap no apunta al "
+                                 "sitemap.xml del origen canonical")
+
+    def test_robots_without_sitemap_line_fails(self) -> None:
+        root, _ = self.two_pages(robots="User-agent: *\nAllow: /\n")
+        self.assertSingleFailure(run_checker(root),
+                                 "robots.txt sin linea Sitemap:")
+
+    def test_robots_matching_sitemap_line_passes(self) -> None:
+        root, _ = self.two_pages()
+        self.assertEqual(run_checker(root), [])
+
+    # ── prosa repetida ───────────────────────────────────────────────
+
+    def test_repeated_long_prose_fails(self) -> None:
+        body = f"<p>{LONG_PROSE}</p>"
+        root, _ = self.two_pages(index={"body": body}, otra={"body": body})
+        self.assertSingleFailure(run_checker(root),
+                                 "prosa repetida entre paginas "
+                                 "['index.html', 'otra.html']")
+
+    def test_repeated_short_prose_passes(self) -> None:
+        body = "<p>texto corto repetido, por debajo del umbral</p>"
+        root, _ = self.two_pages(index={"body": body}, otra={"body": body})
+        self.assertEqual(run_checker(root), [])
+
+    def test_long_prose_on_one_page_only_passes(self) -> None:
+        root, _ = self.two_pages(otra={"body": f"<p>{LONG_PROSE}</p>"})
+        self.assertEqual(run_checker(root), [])
+
+    # ── navegacion coherente con index.html ──────────────────────────
+
+    def test_header_nav_mismatch_fails(self) -> None:
+        # index no lleva nav; otra.html sí: la comparación contra la
+        # referencia (index.html) se rompe.
+        root, _ = self.two_pages(
+            otra={"body": '<nav><ul><li><a href="index.html">Inicio</a></li>'
+                          "</ul></nav>"})
+        self.assertSingleFailure(run_checker(root),
+                                 "navegacion de cabecera distinta en "
+                                 "otra.html: esperado [], encontrado "
+                                 "['index.html']")
+
+    def test_header_nav_match_passes(self) -> None:
+        nav = ('<nav><ul><li><a href="index.html">Inicio</a></li>'
+               '<li><a href="otra.html">Otra</a></li></ul></nav>')
+        root, _ = self.two_pages(index={"body": nav}, otra={"body": nav})
+        self.assertEqual(run_checker(root), [])
+
+    def test_footer_nav_mismatch_fails(self) -> None:
+        # Ambas paginas llevan un nav de cabecera vacio e identico para
+        # que la comparacion de cabecera calle: si no, el nav del pie de
+        # otra.html seria navs[0] y romperia tambien la de cabecera.
+        empty_header = "<nav><ul></ul></nav>"
+        footer_ref = ('<nav class="footer"><ul>'
+                      '<li><a href="index.html">Inicio</a></li></ul></nav>')
+        footer_otra = ('<nav class="footer"><ul>'
+                       '<li><a href="otra.html">Otra</a></li></ul></nav>')
+        root, _ = self.two_pages(
+            index={"body": empty_header + footer_ref},
+            otra={"body": empty_header + footer_otra},
+            css="body{margin:0}\n.footer{padding:1rem}\n")
+        self.assertSingleFailure(run_checker(root),
+                                 "navegacion de pie distinta en otra.html: "
+                                 "esperado ['index.html'], encontrado "
+                                 "['otra.html']")
+
+    def test_footer_nav_match_passes(self) -> None:
+        footer = ('<nav class="footer"><ul>'
+                  '<li><a href="index.html">Inicio</a></li>'
+                  '<li><a href="otra.html">Otra</a></li></ul></nav>')
+        root, _ = self.two_pages(
+            index={"body": "<nav><ul></ul></nav>" + footer},
+            otra={"body": "<nav><ul></ul></nav>" + footer},
+            css="body{margin:0}\n.footer{padding:1rem}\n")
+        self.assertEqual(run_checker(root), [])
+
+
+if __name__ == "__main__":
+    unittest.main()
