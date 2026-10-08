@@ -59,6 +59,13 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: rules_test/package-lock.json
+      # The runner image ships an older JDK (17) and firebase-tools 15 refuses
+      # anything below Java 21, so the emulator does not start without this.
+      - name: Set up Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: 21
       - name: Install pinned dependencies
         run: npm ci
       - name: Run Firestore rules suite against the emulator
