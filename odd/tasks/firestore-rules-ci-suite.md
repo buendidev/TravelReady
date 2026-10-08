@@ -211,3 +211,40 @@ later:
   deleting is changing a key that is inside the allowed set. That lets a
   member blank their own chat's preview and counters; it exposes nobody's data
   and grants no access, so it is accepted rather than tightened.
+
+### CI evidence
+
+The job's first real run failed in 30 seconds, which is the value of having
+it:
+
+```
+Error: firebase-tools no longer supports Java version before 21.
+Please install a JDK at version 21 or above to get a compatible runtime.
+```
+
+The `ubuntu-latest` image ships JDK 17 and `firebase-tools` 15.15.0 refuses
+anything below 21, so the emulator never started. `actions/setup-java` with
+Temurin 21 fixed it; nothing else in the job changed, and the pre-existing
+`validate` job passed on that same run.
+
+The next run was green on both jobs, and the log is the evidence this unit
+existed to produce:
+
+```
+Detected demo project ID "demo-travelready", emulated services will use a
+  demo configuration and attempts to access non-emulated services ... will fail.
+downloading cloud-firestore-emulator-v1.20.4.jar...
+Firestore Emulator was started in standard edition.
+rules under test: /home/runner/work/TravelReady/TravelReady/firestore.rules
+pass 40 · fail 0
+```
+
+The path on that third-from-last line is the point: `rules_test` reads the
+repository's own `firestore.rules` in the runner, not a copy and not a
+snapshot.
+
+Known, accepted: the job reports a `Node.js 20 is deprecated` annotation for
+`actions/checkout` and `actions/setup-node`, which is pre-existing and shared
+with the `validate` job (both pin those actions by SHA), and the Firestore
+emulator jar is downloaded on each run (~3 seconds) rather than cached, which
+is not worth another action in the workflow.
