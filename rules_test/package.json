@@ -1,0 +1,14 @@
+{
+  "name": "travelready-rules-test",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Firestore security rules emulator suite for TravelReady",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "firebase-tools": "15.15.0"
+  }
+}
