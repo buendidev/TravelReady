@@ -23,7 +23,6 @@ leakage — do not equate login with unrestricted directory access".
 | `R2-002` | `firestore.rules:15` | WARNING | the `\|\| isAuth()` makes `isOwner(userId)` dead code: the condition reads as a check that does not check anything |
 | `R3-rules-recorded-unfixed` | `firestore.rules:13-15` | WARNING | the rules were recorded as findings and left unfixed |
 | `R4-2` | `firestore.rules:27-35` | WARNING | `get()` of the parent trip per candidate document in `packingLists`/`packingItems` |
-
 ## What the client actually uses
 
 Verified by reading every Firestore call site, not by reading the rules:
@@ -67,11 +66,14 @@ Consequences:
   group participants resolved through the friend list. That is a product
   feature, not a rule edit, and it is **not** in this unit. Pretending the
   exposure is closed by tightening a query would be the dishonest option.
-- **D4 — the unreachable `trips`/`packingLists`/`packingItems` rules are left
-  untouched in this unit, pending an explicit owner decision** on whether to
-  delete them or keep them for a future remote target. Deleting them closes
-  `R4-2` as a side effect; desnormalizing a `userId` field into documents no
-  client writes would be work on dead code.
+- **D4 — the unreachable `trips`/`packingLists`/`packingItems` rules are
+  deleted, on the owner's explicit decision.** The `R4-2` finding assumed those
+  rules run; they cannot. Deleting them closes `R4-2` outright and shrinks the
+  audited surface to the two collections a client actually reaches. The file
+  records why those paths have no rules, so the absence reads as a decision
+  rather than an oversight, and says they come back with emulator tests if the
+  packing data ever syncs to Firestore. Firestore denies by default, so the
+  deleted paths are closed, not open.
 
 ## Verification
 
@@ -95,6 +97,8 @@ working tree. The emulator genuinely started both times
 | member adds `u3` to `memberIds` | **ALLOW — the hole** | DENY |
 | member shrinks `memberIds` to `[u1]` | **ALLOW — the hole** | DENY |
 | the other 18 cases | as expected | as expected |
+| `trips/x` read and write | allowed for the owner | **DENY** (rules deleted; the client has no such path) |
+| `trips/x/packingLists/y`, `.../packingItems/z` read and write | allowed for the owner, each paying a parent `get()` | **DENY** (same) |
 
 No case differs between the two runs other than those three, so the change
 closes exactly what it claims and widens or narrows nothing else. The 18
@@ -104,15 +108,15 @@ profile update, reading another user's doc, the directory list query,
 (sender spoofing, message edit, message delete, chat delete, non-member read
 and write).
 
-Not covered, stated plainly: no emulator cases were run against the
-`trips`/`packingLists`/`packingItems` rules (unchanged in this unit, see D4);
-the real chat-selector composite-index queries were approximated by a
-`lastSeen` list query; and nothing was deployed to a real Firebase project, so
-this is emulator behaviour, not deployed-state evidence.
+Not covered, stated plainly: the real chat-selector composite-index queries
+were approximated by a `lastSeen` list query, and nothing was deployed to a
+real Firebase project, so this is emulator behaviour, not deployed-state
+evidence.
 
 ## Out of scope
 
 - The friends/directory feature (`R1-001`'s exposure half).
 - `users.create`-adjacent storage rules (`storage.rules`).
 - Wiring an emulator rules suite into CI — a separate decision with real CI
-  cost, not smuggled into a rules fix.
+  cost, not smuggled into a rules fix. The owner has since asked for it, as its
+  own unit.
