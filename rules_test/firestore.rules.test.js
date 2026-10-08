@@ -126,6 +126,26 @@ describe('users', () => {
     await assertFails(updateDoc(doc(fs('u2'), 'users/u1'), { name: 'hack' }));
   });
 
+  test('DENY: u1 deletes users/u1 (nobody deletes user docs)', async () => {
+    await seed('users/u1', { name: 'uno' });
+    await assertFails(deleteDoc(doc(fs('u1'), 'users/u1')));
+  });
+
+  // No hay regla para subcolecciones de /users, así que Firestore deniega
+  // por defecto. Estas pruebas fijan ese comportamiento para que una futura
+  // regla match /users/{userId}/{document=**} no pueda abrirse sola sin
+  // romperlas.
+  test('DENY: u1 reads a subcollection doc of their own user doc (users/u1/private/secret)', async () => {
+    await seed('users/u1/private/secret', { note: 'intento' });
+    await assertFails(getDoc(doc(fs('u1'), 'users/u1/private/secret')));
+  });
+
+  test('DENY: u1 writes a subcollection doc of their own user doc (users/u1/private/secret)', async () => {
+    await assertFails(
+      setDoc(doc(fs('u1'), 'users/u1/private/secret'), { note: 'escondido' }),
+    );
+  });
+
   // Exposición transicional documentada en firestore.rules y
   // docs/production/threat-model.md ("User directory"): get/list abiertos a
   // cualquier usuario autenticado hasta que el modelo de amigos los
@@ -170,9 +190,45 @@ describe('chats (memberIds: ["u1","u2"])', () => {
     );
   });
 
-  test('ALLOW: member u1 updates another field with memberIds unchanged', async () => {
+  test('ALLOW: member u1 writes lastMessage and updatedAt (send message shape, firestore_chats_datasource.dart:227-230)', async () => {
     await assertSucceeds(
-      updateDoc(doc(fs('u1'), 'chats/c1'), { lastMessageText: 'hola' }),
+      updateDoc(doc(fs('u1'), 'chats/c1'), {
+        lastMessage: 'hola',
+        updatedAt: '2026-04-01T00:00:00Z',
+      }),
+    );
+  });
+
+  // El cliente solo escribe estos tres campos tras crear el chat
+  // (firestore_chats_datasource.dart:218-230 y 297-299). Cualquier otro
+  // campo — name, type, createdAt — debe quedar fuera del alcance de un
+  // miembro, o cualquiera puede reescribir la forma del chat.
+  test('DENY: member u1 renames the chat (name)', async () => {
+    await assertFails(updateDoc(doc(fs('u1'), 'chats/c1'), { name: 'renamed' }));
+  });
+
+  test('DENY: member u1 changes chat type', async () => {
+    await assertFails(updateDoc(doc(fs('u1'), 'chats/c1'), { type: 'group' }));
+  });
+
+  test('DENY: u1 creates a chat whose memberIds does not contain u1', async () => {
+    // Si se retira el containment de create, cualquiera podría sembrar un
+    // doc de chat al que no pertenece.
+    await assertFails(
+      setDoc(doc(fs('u1'), 'chats/c-no-member'), {
+        memberIds: ['u2', 'u3'],
+        unreadBy: { u2: 0, u3: 0 },
+      }),
+    );
+  });
+
+  // El remitente incrementa unreadBy de TODOS los miembros menos él mismo
+  // al enviar un mensaje (firestore_chats_datasource.dart:218-224), así que
+  // tocar la clave de OTRO miembro es exactamente lo que la app necesita:
+  // permitirlo es deliberado, no un hueco.
+  test('ALLOW: member u1 updates another member\'s counter (unreadBy.u2)', async () => {
+    await assertSucceeds(
+      updateDoc(doc(fs('u1'), 'chats/c1'), { 'unreadBy.u2': 5 }),
     );
   });
 

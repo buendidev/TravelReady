@@ -41,7 +41,10 @@ mismo que usa CI).
   exposición transicional documentada en `firestore.rules` que el modelo de
   amigos reemplazará.
 - `chats`: un miembro puede actualizar sus contadores pero no `memberIds`
-  (ni ampliarlo ni reducirlo); no miembros sin acceso; nadie borra.
+  (ni ampliarlo ni reducirlo); la suite fija además el conjunto exacto de
+  campos que un miembro puede cambiar tras crear el chat (`unreadBy`,
+  `lastMessage`, `updatedAt`), de modo que reescribir `name`, `type` o
+  cualquier otro campo queda denegado; no miembros sin acceso; nadie borra.
 - `messages`: `senderId` siempre igual al llamador; lectura solo para
   miembros; nadie edita ni borra mensajes.
 - `trips` y sus subcolecciones: denegado por defecto para todos, porque

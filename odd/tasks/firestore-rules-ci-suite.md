@@ -130,8 +130,84 @@ for anonymous, because no client reaches them and Firestore denies by default.
    `flutter analyze`/`flutter test` were not re-run; the `validate` job was
    not modified.
 
+## Verification (update: chat shape narrowing, 2026-10-08)
+
+An independent verification of the first commit found one rule hole and three
+coverage gaps. The verifier read every chat update call site in
+`lib/data/datasources/remote/firestore_chats_datasource.dart` and established
+that after a chat exists the client writes exactly three fields: `unreadBy`
+(incremented for every member except the sender on send, `:221-223`; zeroed
+for the reader, `:297-299`), `lastMessage` and `updatedAt` (both on send,
+`:227-230`). Any other field (`name`, `type`, `createdAt`, …) was still
+writable by any member.
+
+- **New condition.** The chat `update` rule now also requires
+  `request.resource.data.diff(resource.data).affectedKeys()
+    .hasOnly(['unreadBy', 'lastMessage', 'updatedAt'])`, alongside the
+  retained `memberIds` equality (the `R1-002` fix, kept explicitly even
+  though `hasOnly` also covers it, because it states the intent).
+- **Why the `unreadBy` allowance is deliberate.** Sending a message
+  increments `unreadBy.<memberId>` for every member except the sender, so a
+  rule that allowed only the caller's own key would break message sending.
+  The suite now pins this with an explicit
+  `ALLOW: member u1 updates another member's counter (unreadBy.u2)` test and
+  a comment in `firestore.rules` beside the update rule, so the next person
+does not "fix" it and break the app.
+- **Coverage gaps, test-first.** RED first: tests for member `u1` setting
+  `name` and `type` failed with `Error: Expected request to fail, but it
+  succeeded.` (tests 35 · pass 33 · fail 2) against the unmodified rule;
+  GREEN after the rule change (tests 35 · pass 35 · fail 0). The old
+  "ALLOW: member u1 updates another field" test was replaced by the
+  near-identical `lastMessage` + `updatedAt` pair, because `lastMessageText`
+  is exactly the kind of field the new condition denies.
+- **Coverage tests added** (each pins already-correct behaviour): create a
+  chat whose `memberIds` does not contain the caller → DENY (removing the
+  containment clause would otherwise keep every test green); delete
+  `users/u1` by its owner → DENY; read and write a subcollection document of
+  the caller's own user doc (`users/u1/private/secret`) → DENY, so a future
+  `match /users/{userId}/{document=**}` cannot open itself unnoticed;
+  member updates another member's `unreadBy.u2` → ALLOW.
+- Full matrix re-run after all changes:
+  `cd rules_test && npx firebase emulators:exec --only firestore
+  --project demo-travelready "npm test"` → `tests 40 · suites 4 · pass 40 ·
+  fail 0`. The four new coverage tests and the existing 33 do not conflict.
+- Legitimate client actions re-confirmed green: `unreadBy.<any member>`
+  writes (own key and another member's key), `lastMessage`/`updatedAt`
+  writes, sending a message (senderId == caller, plus the `unreadBy` and
+  `lastMessage`/`updatedAt` chat updates it performs), and reading a chat
+  (member read exercised via the message-read path, which evaluates the chat
+  read rule through `isMember(resource.data)`; the read rule itself is
+  untouched by this change).
+
 ## Out of scope
 
 - Deploying anything to the real Firebase project, and the "verify deployment
   matches the tested version" half of the threat model.
 - The friends/directory feature.
+
+### Independent verification of the final rules (chat shape narrowing)
+
+An independent read-only verification attacked this unit's riskiest claim —
+that `unreadBy`, `lastMessage` and `updatedAt` are the only fields the client
+writes to an existing chat — by sweeping the whole `lib/` tree instead of
+trusting the sentence. Every Firestore write to a `chats` document lives in
+`firestore_chats_datasource.dart`: two creates (`:133-141`, `:159-169`) and
+three updates (`:221-224` `unreadBy.<memberId>`, `:227-230`
+`lastMessage` + `updatedAt`, `:297-298` `unreadBy.<userId>`). No
+`SetOptions(merge: true)` exists anywhere, so no other field can reach an
+existing chat document. No runtime break found.
+
+The same verification re-ran the suite (40/40 green), mutated the update rule
+back to its previous two-clause form in a temp copy and confirmed that exactly
+the two new DENY tests fail, and probed `hasOnly` directly in the emulator.
+Two nuances are now written into the rules file instead of being discovered
+later:
+
+- `affectedKeys()` lists keys whose **value** changes, so rewriting `name`
+  with the value it already had passes. The value cannot change, so this is
+  not a hole — but `hasOnly` is a whitelist of *modified* keys, not of
+  *written* keys.
+- A member may delete `lastMessage` or the whole `unreadBy` map, because
+  deleting is changing a key that is inside the allowed set. That lets a
+  member blank their own chat's preview and counters; it exposes nobody's data
+  and grants no access, so it is accepted rather than tightened.
