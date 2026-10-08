@@ -164,9 +164,8 @@ green; the real tree green.
     occurrence of `main.dart` anywhere in the output: both
     `uri_does_not_exist` and `undefined_identifier` are gone.
   - The 78-versus-75 difference against the developer's machine is exactly the
-    three warnings this feature records and does not fix: the clone has 75
-    infos plus the three `pubspec.yaml` warnings for the absent
-    `assets/images/`, `assets/animations/` and `.env`.
+    three asset warnings below — which, as CI then proved, are **not** warnings
+    in practice.
   - `./gradlew --version` in the clone → exit 0, `Gradle 8.14` really printed,
     and the file mode after cloning is `-rwxr-xr-x`: the executable bit
     survived, which is the half of TBI-2 that a mode-blind check would miss.
@@ -175,13 +174,23 @@ green; the real tree green.
     as ignored, from the rules it names; `git ls-files` lists all nine required
     inputs.
 
-- **Recorded follow-up this verification exposed, deliberately not fixed here**:
-  `pubspec.yaml` declares `assets/images/`, `assets/animations/` and `.env`,
-  and none of the three exists in a clone. The warnings do not fail CI, but a
-  build from a clone is not the build the developer tests. `.env` in
-  particular is declared as a Flutter asset, which ships its contents inside
-  the app bundle — that is a secret-handling decision, not a buildability one,
-  and it needs its own work unit.
+- **Recorded follow-up this verification exposed, wrongly called benign at the
+  time, and promoted to its own work unit by CI**: `pubspec.yaml` declares
+  `assets/images/`, `assets/animations/` and `.env`, and none of the three exists
+  in a clone. The analyzer reports them as warnings, but `flutter test` builds an
+  asset bundle and **fails**: `unable to find directory entry in pubspec.yaml`
+  twice, then `No file or variants found for asset: .env.` and `Failed to build
+  asset bundle`. An earlier claim in this document that they do not fail CI was
+  wrong and is corrected here.
+
+  `assets/images/` and `assets/animations/` are empty directories on the
+  developer's machine, which git cannot track, so the fix is a placeholder file.
+  `.env` is the harder half and the reason this is its own unit: it holds real
+  `OPENWEATHER_API_KEY` and `GOOGLE_MAPS_API_KEY` values, it is loaded through
+  `dotenv.load(fileName: '.env')` in `lib/main.dart`, and declaring it as an asset
+  ships those values inside the app bundle. Stopping that means compile-time
+  `--dart-define`, or generating the file in CI from repository secrets — an
+  application change with runtime consequences, not a buildability patch.
 
 - **Review scope, decided and recorded because it was not obvious.** The
   receipt-driven-development reminder fired twice during this branch, offering
