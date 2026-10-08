@@ -23,25 +23,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── trips ──────────────────────────────────────────────────────────
-    match /trips/{tripId} {
-      allow read: if isAuth() && resource.data.userId == request.auth.uid;
-      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
-      allow update: if isAuth() && resource.data.userId == request.auth.uid;
-      allow delete: if isAuth() && resource.data.userId == request.auth.uid;
-
-      match /packingLists/{listId} {
-        allow read, write: if isAuth() &&
-          get(/databases/$(database)/documents/trips/$(tripId)).data.userId
-          == request.auth.uid;
-
-        match /packingItems/{itemId} {
-          allow read, write: if isAuth() &&
-            get(/databases/$(database)/documents/trips/$(tripId)).data.userId
-            == request.auth.uid;
-        }
-      }
-    }
+    // ── trips y packing ───────────────────────────────────────────────
+    // No hay reglas para trips, packingLists ni packingItems: esos datos
+    // viven en SQLite local (docs/database_schema.md) y ninguna ruta de
+    // Firestore los escribe ni los lee. Sus reglas se retiraron para no
+    // auditar una superficie que ningún cliente alcanza, y de paso
+    // desaparecieron las que pagaban un get() del trip padre por cada
+    // documento candidato. Si algún día el packing se sincroniza a
+    // Firestore, vuelven con sus pruebas de emulador.
 
     // ── chats ──────────────────────────────────────────────────────────
     match /chats/{chatId} {
