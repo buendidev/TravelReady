@@ -36,11 +36,9 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Check landing page structure
         run: python3 tool/check_landing.py
-      - name: Test landing checker rules
+      - name: Test the tool checks
         run: python3 -m unittest discover -s tool -p "*_test.py"
       - name: Test
         run: flutter test
       - name: Check tracked build inputs
         run: python3 tool/check_tracked_inputs.py
-      - name: Test tracked inputs gate
-        run: python3 -m unittest discover -s tool -p "*_test.py"
