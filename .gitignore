@@ -77,10 +77,11 @@ skills/
 .sdd/
 
 # Archivos de configuración de IA y prompts
+# AGENTS.md NO se ignora: es la guía que lee cualquier agente que abra el repo,
+# incluido un clon limpio y CI. Versionado desde 2026-10-09.
 CLAUDE.md
 CONTEXT.md
 WINDSURF_PROMPT.md
-AGENTS.md
 prompt.txt
 undefined_errors.txt
 task_tavelReady
