@@ -31,7 +31,7 @@ class ServerFailure extends Failure {
   const ServerFailure([super.message = 'Error del servidor. Inténtalo de nuevo.']);
 }
 
-/// Error de caché / Hive local
+/// Error de caché / SQLite local
 class CacheFailure extends Failure {
   const CacheFailure([super.message = 'Error al acceder a datos locales.']);
 }

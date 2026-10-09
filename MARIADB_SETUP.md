@@ -3,6 +3,11 @@
 # Contexto: esto describe la BD MariaDB necesaria si se creara un backend propio
 # en EC2 en lugar de usar Firestore. Es documentación de diseño del producto.
 
+> **Aviso (2026-10-09): no existe ni MariaDB ni EC2 en este proyecto.**
+> No hay backend propio: el lado remoto es Firestore (reglas, índices y
+> `storage.rules`) y la persistencia local es SQLite. Esto es una propuesta
+> hipotética de arquitectura, no una descripción de lo desplegado.
+
 ---
 
 ## PARTE 1 — BD DE CUENTAS (gestión de clientes/tenants del SaaS)

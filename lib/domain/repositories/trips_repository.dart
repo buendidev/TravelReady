@@ -6,7 +6,7 @@ import '../../core/errors/failures.dart';
 
 /// Contrato del repositorio de viajes.
 abstract class TripsRepository {
-  /// Obtiene todos los viajes del usuario (offline-first con Hive).
+  /// Obtiene todos los viajes del usuario (offline-first con SQLite local).
   Future<Either<Failure, List<Trip>>> getTrips(String userId);
 
   /// Stream de viajes en tiempo real (Firestore).

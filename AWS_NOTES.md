@@ -1,6 +1,11 @@
 # AWS_NOTES.md — TravelReady! · Uso de AWS
 # Pablo Buendicho Ortín · Abril 2026
 
+> **Aviso (2026-10-09): propuesta de diseño, NO arquitectura actual.**
+> TravelReady **no tiene backend propio**: no hay EC2, ni proxy en AWS, ni nada
+> desplegado fuera de Firebase. Este archivo se conserva como análisis de
+> alternativas y costes. No lo tomes como estado del proyecto.
+
 ---
 
 ## Usos recomendados (coste $0 con Free Tier)
