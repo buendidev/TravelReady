@@ -12,7 +12,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static const String _databaseName = 'travelready.db';
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3;
 
   // Tablas
   static const String tableUsers = 'users';
@@ -26,6 +26,8 @@ class DatabaseHelper {
   static const String tableMessages = 'messages';
   static const String tableSessions = 'user_sessions';
   static const String tableWeatherCache = 'weather_cache';
+  static const String tablePlaceFavorites = 'place_favorites';
+  static const String tablePlaceDislikes = 'place_dislikes';
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -250,6 +252,7 @@ class DatabaseHelper {
     ''');
 
     await _createWeatherCacheTable(db);
+    await createReactionTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -263,6 +266,9 @@ class DatabaseHelper {
     if (oldVersion < 2 && newVersion >= 2) {
       await _createWeatherCacheTable(db);
     }
+    if (oldVersion < 3 && newVersion >= 3) {
+      await createReactionTables(db);
+    }
   }
 
   static Future<void> _createWeatherCacheTable(Database db) async {
@@ -271,6 +277,36 @@ class DatabaseHelper {
         location_key TEXT PRIMARY KEY,
         weather_json TEXT NOT NULL,
         retrieved_at TEXT NOT NULL
+      )
+    ''');
+  }
+
+  /// Swipe-feed reactions, local to the device (v3).
+  ///
+  /// `place_favorites` keeps only the provider-neutral snapshot fields the
+  /// traveller chose to keep. `place_dislikes` deliberately keeps the key and a
+  /// timestamp and nothing else: "do not recommend this again" needs no venue
+  /// data. Idempotent, so the datasource can also call it lazily on databases
+  /// opened without going through [createSchema] or [upgradeSchema].
+  static Future<void> createReactionTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tablePlaceFavorites (
+        place_key TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        address TEXT,
+        latitude REAL,
+        longitude REAL,
+        website_uri TEXT,
+        opening_hours_text TEXT,
+        price_level_label TEXT,
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tablePlaceDislikes (
+        place_key TEXT PRIMARY KEY,
+        created_at TEXT NOT NULL
       )
     ''');
   }
