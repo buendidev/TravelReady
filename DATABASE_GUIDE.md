@@ -1,5 +1,11 @@
 # Guía de Bases de Datos - TravelReady!
 
+> **Aviso (2026-10-09): casi todo este documento describe una arquitectura Hive
+> que el proyecto NO usa.** No hay Hive, ni `hive_constants.dart`, ni modelos
+> `@HiveType`: es documentación de una versión anterior. La persistencia local
+> real es **SQLite** (`sqflite`) a través de `lib/core/database/database_helper.dart`
+> y sus datasources tipados. Verificado contra `pubspec.yaml` y `lib/`.
+
 ## Arquitectura de Datos
 
 TravelReady! utiliza una arquitectura **híbrida**:
