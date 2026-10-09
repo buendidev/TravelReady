@@ -18,6 +18,7 @@ import '../../presentation/pages/packing/packing_detail_page.dart';
 import '../../presentation/pages/packing/packing_lists_page.dart';
 import '../../presentation/pages/premium/premium_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
+import '../../presentation/pages/recommendations/recommendations_page.dart';
 import '../../presentation/pages/trips/trip_detail_page.dart';
 import '../../presentation/pages/trips/trips_page.dart';
 import '../../presentation/widgets/navigation/tr_bottom_nav.dart';
@@ -41,6 +42,9 @@ abstract final class AppRoutes {
   static String tripDetailPath(String tripId)    => '/trips/$tripId';
   static String itineraryPath(String tripId)     => '/trips/$tripId/itinerary';
   static String discoveryPath(String tripId)     => '/trips/$tripId/discovery';
+  static String recommendationsPath(String tripId) =>
+      '/trips/$tripId/recommendations';
+  static String favoritesPath(String tripId)     => '/trips/$tripId/favorites';
 
   static const _protected = [home, packingLists, trips, chats, profile, premium];
   static const _authOnly  = [login, register, resetPassword];
@@ -167,6 +171,32 @@ GoRouter buildAppRouter(AuthBloc authBloc) {
                                   child: Text('Viaje no encontrado')));
                         }
                         return DiscoveryPage(trip: trip);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'recommendations',
+                      builder: (_, s) {
+                        final trip = s.extra as Trip?;
+                        if (trip == null) {
+                          return const Scaffold(
+                              body: Center(
+                                  child: Text('Viaje no encontrado')));
+                        }
+                        return RecommendationsPage(trip: trip);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'favorites',
+                      builder: (_, s) {
+                        final trip = s.extra as Trip?;
+                        if (trip == null) {
+                          return const Scaffold(
+                              body: Center(
+                                  child: Text('Viaje no encontrado')));
+                        }
+                        return RecommendationsPage(
+                            trip: trip,
+                            initialTab: RecommendationsTab.favorites);
                       },
                     ),
                   ],

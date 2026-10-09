@@ -6,6 +6,7 @@ import '../core/database/database_helper.dart';
 import '../core/network/connectivity_checker.dart';
 import '../core/services/places/demo_places_gateway.dart';
 import '../core/services/places/places_gateway.dart';
+import '../data/datasources/local/favorites_local_datasource.dart';
 import '../data/datasources/local/itinerary/itinerary_local_datasource.dart';
 import '../data/datasources/local/trips_local_datasource.dart';
 import '../data/datasources/local/weather_cache_datasource.dart';
@@ -13,11 +14,13 @@ import '../data/datasources/remote/firebase_auth_datasource.dart';
 import '../data/datasources/remote/firestore_chats_datasource.dart';
 import '../data/datasources/remote/weather_service.dart';
 import '../data/repositories/chats_repository_impl.dart';
+import '../data/repositories/favorites_repository_impl.dart';
 import '../data/repositories/itinerary_repository_impl.dart';
 import '../data/repositories/auth_repository_impl.dart';
 import '../data/repositories/trips_repository_impl.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/chats_repository.dart';
+import '../domain/repositories/favorites_repository.dart';
 import '../domain/repositories/itinerary_repository.dart';
 import '../domain/repositories/trips_repository.dart';
 import '../domain/usecases/auth/sign_in_usecase.dart';
@@ -31,6 +34,11 @@ import '../domain/usecases/itinerary/delete_itinerary_item_usecase.dart';
 import '../domain/usecases/itinerary/get_itinerary_items_usecase.dart';
 import '../domain/usecases/itinerary/reorder_itinerary_items_usecase.dart';
 import '../domain/usecases/itinerary/update_itinerary_item_usecase.dart';
+import '../domain/usecases/recommendations/get_recommendation_feed_usecase.dart';
+import '../domain/usecases/recommendations/react_to_place_usecase.dart';
+import '../domain/usecases/recommendations/refill_recommendation_feed_usecase.dart';
+import '../domain/usecases/recommendations/reset_dislikes_usecase.dart';
+import '../domain/usecases/recommendations/undo_reaction_usecase.dart';
 import '../domain/usecases/trips/create_trip_usecase.dart';
 import '../domain/usecases/trips/get_trips_usecase.dart';
 import '../presentation/bloc/auth/auth_bloc.dart';
@@ -38,6 +46,8 @@ import '../presentation/bloc/chats/chats_bloc.dart';
 import '../presentation/bloc/itinerary/itinerary_bloc.dart';
 import '../presentation/bloc/language/language_cubit.dart';
 import '../presentation/bloc/packing/packing_bloc.dart';
+import '../presentation/bloc/recommendations/favorites_bloc.dart';
+import '../presentation/bloc/recommendations/recommendations_bloc.dart';
 import '../presentation/bloc/theme/theme_cubit.dart';
 import '../presentation/bloc/trips/trips_bloc.dart';
 import '../presentation/bloc/weather/weather_bloc.dart';
@@ -72,6 +82,10 @@ Future<void> setupDependencies() async {
     () => ItineraryLocalDataSource(
         openDatabase: () => getIt<DatabaseHelper>().database),
   );
+  getIt.registerLazySingleton<FavoritesLocalDataSource>(
+    () => FavoritesLocalDataSource(
+        openDatabase: () => getIt<DatabaseHelper>().database),
+  );
   getIt.registerLazySingleton<FirestoreChatsDataSource>(
     () => FirestoreChatsDataSource(),
   );
@@ -95,6 +109,8 @@ Future<void> setupDependencies() async {
       () => ChatsRepositoryImpl(remote: getIt()));
   getIt.registerLazySingleton<ItineraryRepository>(
       () => ItineraryRepositoryImpl(local: getIt()));
+  getIt.registerLazySingleton<FavoritesRepository>(
+      () => FavoritesRepositoryImpl(local: getIt()));
 
   // ── UseCases ───────────────────────────────────────────────────────────
   getIt.registerLazySingleton(() => SignInUseCase(getIt()));
@@ -110,6 +126,12 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => UpdateItineraryItemUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteItineraryItemUseCase(getIt()));
   getIt.registerLazySingleton(() => ReorderItineraryItemsUseCase(getIt()));
+  getIt.registerLazySingleton(() =>
+      GetRecommendationFeedUseCase(gateway: getIt(), favorites: getIt()));
+  getIt.registerLazySingleton(() => RefillRecommendationFeedUseCase(getIt()));
+  getIt.registerLazySingleton(() => ReactToPlaceUseCase(getIt()));
+  getIt.registerLazySingleton(() => UndoReactionUseCase(getIt()));
+  getIt.registerLazySingleton(() => ResetDislikesUseCase(getIt()));
 
   // ── BLoCs ─────────────────────────────────────────────────────────────
   getIt.registerFactory<AuthBloc>(
@@ -131,6 +153,16 @@ Future<void> setupDependencies() async {
       () => WeatherBloc(service: getIt(), cache: getIt()));
   getIt.registerFactory<ChatsBloc>(() => ChatsBloc(repo: getIt()));
   getIt.registerFactory<ItineraryBloc>(() => ItineraryBloc(repo: getIt()));
+  getIt.registerFactory<FavoritesBloc>(() => FavoritesBloc(repo: getIt()));
+  getIt.registerFactory<RecommendationsBloc>(
+    () => RecommendationsBloc(
+      getFeed:       getIt(),
+      refill:        getIt(),
+      react:         getIt(),
+      undo:          getIt(),
+      resetDislikes: getIt(),
+    ),
+  );
   // ChatDetailBloc se instancia directamente en ChatDetailPage (requiere currentUserId y chatName)
 }
 

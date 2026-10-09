@@ -1088,4 +1088,115 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get feedSwipeHint =>
       'Desliza a la derecha para guardar o a la izquierda para descartar';
+
+  @override
+  String get recommendationsTitle => 'Recomendaciones';
+
+  @override
+  String get feedFilterAll => 'Todos';
+
+  @override
+  String get feedFilterMonuments => 'Monumentos';
+
+  @override
+  String get feedFilterRestaurants => 'Restaurantes';
+
+  @override
+  String get feedFilterLeisure => 'Ocio';
+
+  @override
+  String get feedCityLabel => 'Ciudad o zona';
+
+  @override
+  String get feedLiked => 'Guardado en favoritos';
+
+  @override
+  String get feedDisliked => 'No volverás a ver este lugar';
+
+  @override
+  String get feedUndo => 'Deshacer';
+
+  @override
+  String get feedErrorTitle => 'No se pudieron cargar las recomendaciones';
+
+  @override
+  String get feedEmptyTitle => 'Sin recomendaciones';
+
+  @override
+  String get feedEmptyBody =>
+      'No hay lugares para este filtro. Prueba con otro.';
+
+  @override
+  String get feedExhaustedTitle => 'No hay más lugares con este filtro';
+
+  @override
+  String get feedExhaustedBody =>
+      'Ya has visto todo lo que tenemos. Cambia de filtro o reinicia el feed para volver a ver lo que descartaste.';
+
+  @override
+  String get feedShowAll => 'Ver todos';
+
+  @override
+  String get feedResetAction => 'Reiniciar feed';
+
+  @override
+  String get feedResetTitle => '¿Reiniciar el feed?';
+
+  @override
+  String get feedResetBody =>
+      'Volverás a ver los lugares que descartaste. Tus favoritos no cambian.';
+
+  @override
+  String get feedResetConfirm => 'Reiniciar';
+
+  @override
+  String get feedResetDone => 'Feed reiniciado';
+
+  @override
+  String get feedReactionFailed =>
+      'No se pudo guardar tu elección. Inténtalo de nuevo.';
+
+  @override
+  String get feedUndoFailed => 'No se pudo deshacer.';
+
+  @override
+  String get feedResetFailed => 'No se pudo reiniciar el feed.';
+
+  @override
+  String get recommendationsTabDiscover => 'Descubrir';
+
+  @override
+  String get recommendationsTabFavorites => 'Favoritos';
+
+  @override
+  String get favoritesEmptyTitle => 'Aún no tienes favoritos';
+
+  @override
+  String get favoritesEmptyBody =>
+      'Desliza a la derecha en Descubrir para guardar los lugares que te gusten.';
+
+  @override
+  String get favoritesErrorTitle => 'No se pudieron cargar tus favoritos';
+
+  @override
+  String get favoritesRemove => 'Quitar de favoritos';
+
+  @override
+  String get favoritesRemoved => 'Quitado de favoritos';
+
+  @override
+  String get favoritesRemoveFailed => 'No se pudo quitar de favoritos.';
+
+  @override
+  String get tripRecommendations => 'Recomendaciones';
+
+  @override
+  String get tripRecommendationsDescription =>
+      'Desliza para guardar lo que te gusta';
+
+  @override
+  String get tripFavorites => 'Favoritos';
+
+  @override
+  String get tripFavoritesDescription => 'Los lugares que has guardado';
 }

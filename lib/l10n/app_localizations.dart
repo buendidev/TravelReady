@@ -2071,6 +2071,216 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Desliza a la derecha para guardar o a la izquierda para descartar'**
   String get feedSwipeHint;
+
+  /// No description provided for @recommendationsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recomendaciones'**
+  String get recommendationsTitle;
+
+  /// No description provided for @feedFilterAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos'**
+  String get feedFilterAll;
+
+  /// No description provided for @feedFilterMonuments.
+  ///
+  /// In es, this message translates to:
+  /// **'Monumentos'**
+  String get feedFilterMonuments;
+
+  /// No description provided for @feedFilterRestaurants.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurantes'**
+  String get feedFilterRestaurants;
+
+  /// No description provided for @feedFilterLeisure.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocio'**
+  String get feedFilterLeisure;
+
+  /// No description provided for @feedCityLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Ciudad o zona'**
+  String get feedCityLabel;
+
+  /// No description provided for @feedLiked.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardado en favoritos'**
+  String get feedLiked;
+
+  /// No description provided for @feedDisliked.
+  ///
+  /// In es, this message translates to:
+  /// **'No volverás a ver este lugar'**
+  String get feedDisliked;
+
+  /// No description provided for @feedUndo.
+  ///
+  /// In es, this message translates to:
+  /// **'Deshacer'**
+  String get feedUndo;
+
+  /// No description provided for @feedErrorTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar las recomendaciones'**
+  String get feedErrorTitle;
+
+  /// No description provided for @feedEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin recomendaciones'**
+  String get feedEmptyTitle;
+
+  /// No description provided for @feedEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay lugares para este filtro. Prueba con otro.'**
+  String get feedEmptyBody;
+
+  /// No description provided for @feedExhaustedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay más lugares con este filtro'**
+  String get feedExhaustedTitle;
+
+  /// No description provided for @feedExhaustedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya has visto todo lo que tenemos. Cambia de filtro o reinicia el feed para volver a ver lo que descartaste.'**
+  String get feedExhaustedBody;
+
+  /// No description provided for @feedShowAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todos'**
+  String get feedShowAll;
+
+  /// No description provided for @feedResetAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Reiniciar feed'**
+  String get feedResetAction;
+
+  /// No description provided for @feedResetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Reiniciar el feed?'**
+  String get feedResetTitle;
+
+  /// No description provided for @feedResetBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Volverás a ver los lugares que descartaste. Tus favoritos no cambian.'**
+  String get feedResetBody;
+
+  /// No description provided for @feedResetConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Reiniciar'**
+  String get feedResetConfirm;
+
+  /// No description provided for @feedResetDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Feed reiniciado'**
+  String get feedResetDone;
+
+  /// No description provided for @feedReactionFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar tu elección. Inténtalo de nuevo.'**
+  String get feedReactionFailed;
+
+  /// No description provided for @feedUndoFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo deshacer.'**
+  String get feedUndoFailed;
+
+  /// No description provided for @feedResetFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo reiniciar el feed.'**
+  String get feedResetFailed;
+
+  /// No description provided for @recommendationsTabDiscover.
+  ///
+  /// In es, this message translates to:
+  /// **'Descubrir'**
+  String get recommendationsTabDiscover;
+
+  /// No description provided for @recommendationsTabFavorites.
+  ///
+  /// In es, this message translates to:
+  /// **'Favoritos'**
+  String get recommendationsTabFavorites;
+
+  /// No description provided for @favoritesEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes favoritos'**
+  String get favoritesEmptyTitle;
+
+  /// No description provided for @favoritesEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Desliza a la derecha en Descubrir para guardar los lugares que te gusten.'**
+  String get favoritesEmptyBody;
+
+  /// No description provided for @favoritesErrorTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar tus favoritos'**
+  String get favoritesErrorTitle;
+
+  /// No description provided for @favoritesRemove.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar de favoritos'**
+  String get favoritesRemove;
+
+  /// No description provided for @favoritesRemoved.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitado de favoritos'**
+  String get favoritesRemoved;
+
+  /// No description provided for @favoritesRemoveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo quitar de favoritos.'**
+  String get favoritesRemoveFailed;
+
+  /// No description provided for @tripRecommendations.
+  ///
+  /// In es, this message translates to:
+  /// **'Recomendaciones'**
+  String get tripRecommendations;
+
+  /// No description provided for @tripRecommendationsDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Desliza para guardar lo que te gusta'**
+  String get tripRecommendationsDescription;
+
+  /// No description provided for @tripFavorites.
+  ///
+  /// In es, this message translates to:
+  /// **'Favoritos'**
+  String get tripFavorites;
+
+  /// No description provided for @tripFavoritesDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Los lugares que has guardado'**
+  String get tripFavoritesDescription;
 }
 
 class _AppLocalizationsDelegate

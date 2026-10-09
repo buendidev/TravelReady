@@ -1080,4 +1080,113 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedSwipeHint => 'Swipe right to save or left to skip';
+
+  @override
+  String get recommendationsTitle => 'Recommendations';
+
+  @override
+  String get feedFilterAll => 'All';
+
+  @override
+  String get feedFilterMonuments => 'Monuments';
+
+  @override
+  String get feedFilterRestaurants => 'Restaurants';
+
+  @override
+  String get feedFilterLeisure => 'Leisure';
+
+  @override
+  String get feedCityLabel => 'City or area';
+
+  @override
+  String get feedLiked => 'Saved to favorites';
+
+  @override
+  String get feedDisliked => 'You won\'t see this place again';
+
+  @override
+  String get feedUndo => 'Undo';
+
+  @override
+  String get feedErrorTitle => 'Couldn\'t load recommendations';
+
+  @override
+  String get feedEmptyTitle => 'No recommendations';
+
+  @override
+  String get feedEmptyBody =>
+      'There are no places for this filter. Try another one.';
+
+  @override
+  String get feedExhaustedTitle => 'No more places with this filter';
+
+  @override
+  String get feedExhaustedBody =>
+      'You have seen everything we have. Change the filter or reset the feed to see what you skipped again.';
+
+  @override
+  String get feedShowAll => 'Show all';
+
+  @override
+  String get feedResetAction => 'Reset feed';
+
+  @override
+  String get feedResetTitle => 'Reset the feed?';
+
+  @override
+  String get feedResetBody =>
+      'You will see the places you skipped again. Your favorites stay as they are.';
+
+  @override
+  String get feedResetConfirm => 'Reset';
+
+  @override
+  String get feedResetDone => 'Feed reset';
+
+  @override
+  String get feedReactionFailed => 'Couldn\'t save your choice. Try again.';
+
+  @override
+  String get feedUndoFailed => 'Couldn\'t undo.';
+
+  @override
+  String get feedResetFailed => 'Couldn\'t reset the feed.';
+
+  @override
+  String get recommendationsTabDiscover => 'Discover';
+
+  @override
+  String get recommendationsTabFavorites => 'Favorites';
+
+  @override
+  String get favoritesEmptyTitle => 'You don\'t have favorites yet';
+
+  @override
+  String get favoritesEmptyBody =>
+      'Swipe right in Discover to save the places you like.';
+
+  @override
+  String get favoritesErrorTitle => 'Couldn\'t load your favorites';
+
+  @override
+  String get favoritesRemove => 'Remove from favorites';
+
+  @override
+  String get favoritesRemoved => 'Removed from favorites';
+
+  @override
+  String get favoritesRemoveFailed => 'Couldn\'t remove it from favorites.';
+
+  @override
+  String get tripRecommendations => 'Recommendations';
+
+  @override
+  String get tripRecommendationsDescription => 'Swipe to save what you like';
+
+  @override
+  String get tripFavorites => 'Favorites';
+
+  @override
+  String get tripFavoritesDescription => 'The places you have saved';
 }

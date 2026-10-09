@@ -72,6 +72,18 @@ void main() {
                 'discovery:${identical(state.extra, _trip)}',
               ),
             ),
+            GoRoute(
+              path: 'recommendations',
+              builder: (_, state) => Text(
+                'recommendations:${identical(state.extra, _trip)}',
+              ),
+            ),
+            GoRoute(
+              path: 'favorites',
+              builder: (_, state) => Text(
+                'favorites:${identical(state.extra, _trip)}',
+              ),
+            ),
           ],
         ),
       ],
@@ -127,5 +139,45 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('discovery:true'), findsOneWidget);
+  });
+
+  testWidgets('shows accessible recommendations and favorites actions',
+      (tester) async {
+    await pumpDetail(tester);
+
+    expect(find.byWidgetPredicate((widget) =>
+        widget is Semantics && widget.properties.label == 'Recomendaciones'),
+        findsOneWidget);
+    expect(find.byWidgetPredicate((widget) =>
+        widget is Semantics && widget.properties.label == 'Favoritos'),
+        findsOneWidget);
+  });
+
+  testWidgets('recommendations action pushes its nested route with the trip',
+      (tester) async {
+    await pumpDetail(tester);
+
+    await tester.tap(find.text('Recomendaciones'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('recommendations:true'), findsOneWidget);
+  });
+
+  testWidgets('favorites action pushes its nested route with the trip',
+      (tester) async {
+    await pumpDetail(tester);
+
+    await tester.tap(find.text('Favoritos'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('favorites:true'), findsOneWidget);
+  });
+
+  testWidgets('the favorites action does not claim the favorites are per trip',
+      (tester) async {
+    await pumpDetail(tester);
+
+    expect(find.textContaining('este viaje'), findsNothing,
+        reason: 'favorites are kept on the device, not per trip');
   });
 }

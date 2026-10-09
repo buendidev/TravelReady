@@ -40,6 +40,9 @@ class FakePlacesGateway implements PlacesGateway {
 
   List<PlaceResult> catalog;
   Failure? failure;
+
+  /// When set, a search waits for it before answering (to observe loading).
+  Future<void>? gate;
   final List<SearchCall> calls = [];
 
   /// Optional per-call override, e.g. to return different data on a refill.
@@ -59,6 +62,7 @@ class FakePlacesGateway implements PlacesGateway {
       limit: limit,
     );
     calls.add(call);
+    if (gate != null) await gate;
     if (failure != null) return Left(failure!);
     if (responder != null) return responder!(call);
     final matches = catalog
@@ -85,6 +89,9 @@ class InMemoryFavoritesRepository implements FavoritesRepository {
   Failure? readFailure;
 
   final List<String> log = [];
+
+  /// Live [watchFavorites] subscriptions, to catch a consumer that stacks them.
+  int activeWatchers = 0;
 
   Set<String> get dislikedKeys => Set.unmodifiable(_dislikes);
   List<FavoritePlace> get favorites => _sorted();
@@ -116,10 +123,14 @@ class InMemoryFavoritesRepository implements FavoritesRepository {
 
     controller = StreamController(
       onListen: () {
+        activeWatchers++;
         subscription = _changes.stream.listen((_) => emit());
         emit();
       },
-      onCancel: () => subscription?.cancel(),
+      onCancel: () {
+        activeWatchers--;
+        return subscription?.cancel();
+      },
     );
     return controller.stream;
   }
