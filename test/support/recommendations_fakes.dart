@@ -40,6 +40,9 @@ class FakePlacesGateway implements PlacesGateway {
 
   List<PlaceResult> catalog;
   Failure? failure;
+
+  /// When set, a search waits for it before answering (to observe loading).
+  Future<void>? gate;
   final List<SearchCall> calls = [];
 
   /// Optional per-call override, e.g. to return different data on a refill.
@@ -59,6 +62,7 @@ class FakePlacesGateway implements PlacesGateway {
       limit: limit,
     );
     calls.add(call);
+    if (gate != null) await gate;
     if (failure != null) return Left(failure!);
     if (responder != null) return responder!(call);
     final matches = catalog
