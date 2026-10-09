@@ -509,5 +509,8 @@
       }
     }
   },
-  "saving": "Guardando…"
+  "saving": "Guardando…",
+  "feedDislikeAction": "No me interesa",
+  "feedLikeAction": "Me gusta",
+  "feedSwipeHint": "Desliza a la derecha para guardar o a la izquierda para descartar"
 }

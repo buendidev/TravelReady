@@ -509,5 +509,8 @@
       }
     }
   },
-  "saving": "Saving…"
+  "saving": "Saving…",
+  "feedDislikeAction": "Not interested",
+  "feedLikeAction": "I like it",
+  "feedSwipeHint": "Swipe right to save or left to skip"
 }
