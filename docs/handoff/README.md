@@ -21,13 +21,11 @@ opinions. Fix them first (they are cheap) or the handoff will produce fiction:
 1. **`AGENTS.md` documented Hive as a critical rule.** There is no Hive
    anywhere: `pubspec.yaml` has `sqflite: ^2.3.0` and no `hive`. Local
    persistence is SQLite through `lib/core/database/database_helper.dart`.
-   **Corrected in the working copy only**: the rule now describes the real
-   SQLite path, but `AGENTS.md` is not tracked (see item 7), so that correction
-   does not travel through git.
+   **Fixed and versioned** (item 7), so the correction now travels with the
+   repository.
 2. **`AGENTS.md` pinned wrong Firebase versions** (`firebase_auth ^6.4`,
    `cloud_firestore ^6.3` against `^5.5.2` and `^5.6.5` in `pubspec.yaml`).
-   **Corrected in the working copy only**, for the same reason as item 1 (see
-   item 7). (`google_sign_in: ^6.2.1` did match.)
+   **Fixed and versioned** (item 7). (`google_sign_in: ^6.2.1` did match.)
 3. **`DATABASE_GUIDE.md`, `AWS_NOTES.md` and `MARIADB_SETUP.md` describe a
    backend and a persistence layer that do not exist.** There is no `functions/`,
    no EC2, no MariaDB, and **no Hive**: `DATABASE_GUIDE.md` (297 lines, the worst
@@ -47,14 +45,13 @@ opinions. Fix them first (they are cheap) or the handoff will produce fiction:
    to `AGENTS.md` plus "concise about results, not about reasoning".
 6. **`.gitignore` has a bare `*.pdf`**, so any legal or release PDF dropped into
    the repository is silently invisible to git.
-7. **`AGENTS.md` is not in the repository at all.** `.gitignore:83` ignores it, so
-   the agent-facing guide — the first file an agent reads — exists only in the
-   owner's working copy. A fresh clone has none. The same block ignores
-   `.windsurf/`, `skills/`, `prompt.txt`, `undefined_errors.txt` and
-   `task_tavelReady`. The Hive and version corrections in `AGENTS.md` were
-   applied **locally only** and cannot travel through git until that line is
-   revisited by the owner. An implementing agent working from a fresh clone must
-   therefore trust this directory over a missing `AGENTS.md`.
+7. **`AGENTS.md` is versioned again (2026-10-09).** It used to be ignored by
+   `.gitignore`, which meant the agent-facing guide existed only in the owner's
+   working copy, a fresh clone had none, and the Hive and version corrections in
+   items 1 and 2 could not travel through git. That ignore line was removed, so
+   the guide now ships with the repository — and its content is public, because
+   this repository is public. The same ignore block still hides `.windsurf/`,
+   `skills/`, `prompt.txt`, `undefined_errors.txt` and `task_tavelReady`.
 
 ## 2. Contract for the receiving agent
 
