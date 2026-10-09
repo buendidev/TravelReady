@@ -1186,4 +1186,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get favoritesRemoveFailed => 'No se pudo quitar de favoritos.';
+
+  @override
+  String get tripRecommendations => 'Recomendaciones';
+
+  @override
+  String get tripRecommendationsDescription =>
+      'Desliza para guardar lo que te gusta';
+
+  @override
+  String get tripFavorites => 'Favoritos';
+
+  @override
+  String get tripFavoritesDescription => 'Los lugares que has guardado';
 }

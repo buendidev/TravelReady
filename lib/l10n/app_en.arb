@@ -543,5 +543,9 @@
   "favoritesErrorTitle": "Couldn't load your favorites",
   "favoritesRemove": "Remove from favorites",
   "favoritesRemoved": "Removed from favorites",
-  "favoritesRemoveFailed": "Couldn't remove it from favorites."
+  "favoritesRemoveFailed": "Couldn't remove it from favorites.",
+  "tripRecommendations": "Recommendations",
+  "tripRecommendationsDescription": "Swipe to save what you like",
+  "tripFavorites": "Favorites",
+  "tripFavoritesDescription": "The places you have saved"
 }

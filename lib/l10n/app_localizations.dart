@@ -2257,6 +2257,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo quitar de favoritos.'**
   String get favoritesRemoveFailed;
+
+  /// No description provided for @tripRecommendations.
+  ///
+  /// In es, this message translates to:
+  /// **'Recomendaciones'**
+  String get tripRecommendations;
+
+  /// No description provided for @tripRecommendationsDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Desliza para guardar lo que te gusta'**
+  String get tripRecommendationsDescription;
+
+  /// No description provided for @tripFavorites.
+  ///
+  /// In es, this message translates to:
+  /// **'Favoritos'**
+  String get tripFavorites;
+
+  /// No description provided for @tripFavoritesDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Los lugares que has guardado'**
+  String get tripFavoritesDescription;
 }
 
 class _AppLocalizationsDelegate

@@ -302,6 +302,22 @@ class _TripPlanningSection extends StatelessWidget {
           onTap: () => context.push(AppRoutes.discoveryPath(trip.id),
               extra: trip),
         ),
+        const SizedBox(height: AppSizes.sm),
+        _PlanningAction(
+          label: l10n.tripRecommendations,
+          description: l10n.tripRecommendationsDescription,
+          icon: Icons.swipe_rounded,
+          onTap: () => context.push(AppRoutes.recommendationsPath(trip.id),
+              extra: trip),
+        ),
+        const SizedBox(height: AppSizes.sm),
+        _PlanningAction(
+          label: l10n.tripFavorites,
+          description: l10n.tripFavoritesDescription,
+          icon: Icons.favorite_rounded,
+          onTap: () =>
+              context.push(AppRoutes.favoritesPath(trip.id), extra: trip),
+        ),
       ]),
     );
   }

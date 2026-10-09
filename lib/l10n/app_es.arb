@@ -543,5 +543,9 @@
   "favoritesErrorTitle": "No se pudieron cargar tus favoritos",
   "favoritesRemove": "Quitar de favoritos",
   "favoritesRemoved": "Quitado de favoritos",
-  "favoritesRemoveFailed": "No se pudo quitar de favoritos."
+  "favoritesRemoveFailed": "No se pudo quitar de favoritos.",
+  "tripRecommendations": "Recomendaciones",
+  "tripRecommendationsDescription": "Desliza para guardar lo que te gusta",
+  "tripFavorites": "Favoritos",
+  "tripFavoritesDescription": "Los lugares que has guardado"
 }
