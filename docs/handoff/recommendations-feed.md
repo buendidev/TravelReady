@@ -113,15 +113,22 @@ Per session, in this order, and always testable:
 
 ## 6. Persistence and the place key
 
-Two tables, both local-only SQLite in v1:
+Two tables, **scoped to the account**, in local SQLite:
 
-- `place_favorites(place_key TEXT PRIMARY KEY, name, category, address, latitude,
-  longitude, website_uri, opening_hours_text, price_level_label, created_at)` —
-  the snapshot fields are what the user chose to keep and what the details screen
-  and the itinerary sheet need.
-- `place_dislikes(place_key TEXT PRIMARY KEY, created_at)` — deliberately stores
-  **no name and no snapshot**: "do not recommend this again" needs the key and
-  nothing else. Keeping less is both a privacy choice and a retention choice.
+- `place_favorites(user_id TEXT, place_key TEXT, name, category, address, latitude,
+  longitude, website_uri, opening_hours_text, price_level_label, created_at)`,
+  primary key `(user_id, place_key)` — the snapshot fields are what the user chose
+  to keep and what the details screen and the itinerary sheet need.
+- `place_dislikes(user_id TEXT, place_key TEXT, created_at)`, primary key
+  `(user_id, place_key)` — deliberately stores **no name and no snapshot**: "do not
+  recommend this again" needs the key and nothing else. Keeping less is both a
+  privacy choice and a retention choice.
+
+**Owner decision (2026-10-09): reactions belong to the account, not to the
+phone.** Every row carries the account id and every read filters by it, so
+signing in with a different account on the same device shows that account's own
+reactions and nothing else. The rows stay local: this is account isolation, not
+cross-device sync.
 
 `place_key` must be provider-neutral and stable, because `providerId` is not
 allowed to persist:
@@ -136,10 +143,10 @@ place_key = sha256(normalize(name) + '|' + (normalize(address) | rounded lat/lon
   same name and address collapse into one key, and the second is treated as
   already seen. Acceptable, and it must be stated in the code comment.
 
-**Deferred decision (state it in the ODD record):** reactions are per device in
-v1. Reinstalling or changing device loses them. Cross-device favorites need a
-user-scoped Firestore collection and rules, which belongs with the
-`users`/friends model and the rules hardening work — not here.
+What this does **not** give you: cross-device sync, and it does not survive a
+reinstall, because the rows never leave the phone. Cross-device favorites need a
+user-scoped Firestore collection and rules, which belongs with the `users`/friends
+model and the rules-hardening work — see the follow-ups at the end of this file.
 
 ## 7. UI requirements
 
@@ -175,8 +182,8 @@ user-scoped Firestore collection and rules, which belongs with the
 - "Quitar de favoritos" deletes the reaction, so the place can appear in the feed
   again. Removing a favorite is **not** a dislike.
 - The "reset the feed" action lives in the feed's overflow menu (or next to the
-  filters): it clears dislikes only, behind a confirmation, because dislikes are
-  otherwise unreachable by design.
+  filters): it clears the signed-in account's dislikes only, behind a
+  confirmation, because dislikes are otherwise unreachable by design.
 
 ## 9. Required tests
 
@@ -207,3 +214,24 @@ Deterministic, in the repository's existing test layout:
   implementation, by design).
 - Cross-device sync, sharing, and "friends' favorites".
 - Reservations or bookings of any kind.
+
+## 11. Follow-ups (owner decisions, 2026-10-09; not part of this feature)
+
+1. **Reactions belong to the account, not the phone.** Account scoping in local
+   SQLite (see §6): a different account signed in on the same phone sees its own
+   favorites and its own dislikes.
+2. **Cross-device sync is still open.** The rows never leave the phone, so they do
+   not follow the account to another device and do not survive a reinstall.
+   Moving them to a user-scoped Firestore collection is a separate decision that
+   belongs with the `users`/friends model and the rules hardening, and it would
+   also mean deciding offline-write semantics for a like.
+3. **City or current location, once the real provider lands.** In demo mode the
+   feed has no city field, which the owner accepts for now. When Google Maps and
+   Places work for real, the feed must let the traveller choose between **typing a
+   city** and **using the current location** for the venues around them. That
+   needs the location permission, the Android manifest work, and the provider
+   prerequisites already listed in `docs/places-integration.md`.
+4. **The Android device pass is deliberately deferred** (owner decision,
+   2026-10-09). Gestures, haptics and the snackbar position over the bottom bar
+   are covered by widget tests only. Tracked, not forgotten: the device script is
+   `docs/production/android-family-test.md`.
