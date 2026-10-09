@@ -14,6 +14,7 @@ import 'package:travel_ready/data/models/packing_item_model.dart';
 import 'package:travel_ready/domain/entities/trip.dart';
 import 'package:travel_ready/domain/entities/user.dart';
 import 'package:travel_ready/domain/repositories/favorites_repository.dart';
+import 'package:travel_ready/domain/repositories/itinerary_repository.dart';
 import 'package:travel_ready/domain/repositories/trips_repository.dart';
 import 'package:travel_ready/domain/usecases/recommendations/get_recommendation_feed_usecase.dart';
 import 'package:travel_ready/domain/usecases/recommendations/react_to_place_usecase.dart';
@@ -24,6 +25,8 @@ import 'package:travel_ready/domain/usecases/trips/create_trip_usecase.dart';
 import 'package:travel_ready/injection/injection.dart';
 import 'package:travel_ready/l10n/app_localizations.dart';
 import 'package:travel_ready/presentation/bloc/auth/auth_bloc.dart';
+import 'package:travel_ready/presentation/bloc/itinerary/itinerary_bloc.dart';
+import 'package:travel_ready/presentation/bloc/recommendations/favorites_bloc.dart';
 import 'package:travel_ready/presentation/bloc/language/language_cubit.dart';
 import 'package:travel_ready/presentation/bloc/recommendations/recommendations_bloc.dart';
 import 'package:travel_ready/presentation/bloc/theme/theme_cubit.dart';
@@ -37,6 +40,8 @@ class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
 class _MockTripsLocalDataSource extends Mock implements TripsLocalDataSource {}
+
+class _MockItineraryRepository extends Mock implements ItineraryRepository {}
 
 void main() {
   late _MockAuthBloc authBloc;
@@ -70,6 +75,9 @@ void main() {
       ..registerSingleton<TripsLocalDataSource>(dataSource)
       ..registerSingleton<PlacesGateway>(gateway)
       ..registerSingleton<FavoritesRepository>(repo)
+      ..registerFactory<FavoritesBloc>(() => FavoritesBloc(repo: repo))
+      ..registerFactory<ItineraryBloc>(
+          () => ItineraryBloc(repo: _MockItineraryRepository()))
       ..registerFactory<RecommendationsBloc>(() {
         final feed =
             GetRecommendationFeedUseCase(gateway: gateway, favorites: repo);
@@ -110,8 +118,11 @@ void main() {
     return router;
   }
 
-  test('the path is nested under the trip, next to discovery', () {
+  test('the paths are nested under the trip, next to discovery', () {
     expect(AppRoutes.recommendationsPath('abc'), '/trips/abc/recommendations');
+    expect(AppRoutes.favoritesPath('abc'), '/trips/abc/favorites');
+    expect(AppRoutes.favoritesPath('abc'),
+        startsWith(AppRoutes.tripDetailPath('abc')));
     expect(AppRoutes.recommendationsPath('abc'),
         startsWith(AppRoutes.tripDetailPath('abc')));
   });
@@ -132,6 +143,31 @@ void main() {
     final router = await pumpRouter(t);
 
     router.go(AppRoutes.recommendationsPath(tTrip.id));
+    await t.pumpAndSettle();
+
+    expect(find.byType(RecommendationsPage), findsNothing);
+    expect(find.text('Viaje no encontrado'), findsWidgets);
+  });
+
+  testWidgets('the favorites route opens the same page on the Favoritos tab',
+      (t) async {
+    final router = await pumpRouter(t);
+
+    router.go(AppRoutes.favoritesPath(tTrip.id), extra: tTrip);
+    await t.pumpAndSettle();
+
+    final page =
+        t.widget<RecommendationsPage>(find.byType(RecommendationsPage));
+    expect(page.trip, tTrip);
+    expect(page.initialTab, RecommendationsTab.favorites);
+    expect(find.byKey(const ValueKey('deck-top-card')), findsNothing);
+    expect(find.text('Aún no tienes favoritos'), findsOneWidget);
+  });
+
+  testWidgets('the favorites route also falls back without a trip', (t) async {
+    final router = await pumpRouter(t);
+
+    router.go(AppRoutes.favoritesPath(tTrip.id));
     await t.pumpAndSettle();
 
     expect(find.byType(RecommendationsPage), findsNothing);

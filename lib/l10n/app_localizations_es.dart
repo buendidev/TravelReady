@@ -1161,4 +1161,29 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get feedResetFailed => 'No se pudo reiniciar el feed.';
+
+  @override
+  String get recommendationsTabDiscover => 'Descubrir';
+
+  @override
+  String get recommendationsTabFavorites => 'Favoritos';
+
+  @override
+  String get favoritesEmptyTitle => 'Aún no tienes favoritos';
+
+  @override
+  String get favoritesEmptyBody =>
+      'Desliza a la derecha en Descubrir para guardar los lugares que te gusten.';
+
+  @override
+  String get favoritesErrorTitle => 'No se pudieron cargar tus favoritos';
+
+  @override
+  String get favoritesRemove => 'Quitar de favoritos';
+
+  @override
+  String get favoritesRemoved => 'Quitado de favoritos';
+
+  @override
+  String get favoritesRemoveFailed => 'No se pudo quitar de favoritos.';
 }

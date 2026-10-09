@@ -14,7 +14,16 @@ class PlaceCard extends StatelessWidget {
   final PlaceResult place;
   final VoidCallback onTap;
 
-  const PlaceCard({super.key, required this.place, required this.onTap});
+  /// Replaces the chevron, e.g. with a remove button. Taps on it do not open
+  /// the card.
+  final Widget? trailing;
+
+  const PlaceCard({
+    super.key,
+    required this.place,
+    required this.onTap,
+    this.trailing,
+  });
 
   static IconData iconFor(PlaceCategory c) => switch (c) {
         PlaceCategory.monument => Icons.account_balance_rounded,
@@ -88,9 +97,9 @@ class PlaceCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(right: AppSizes.sm),
-              child: Icon(Icons.chevron_right_rounded),
+            Padding(
+              padding: const EdgeInsets.only(right: AppSizes.sm),
+              child: trailing ?? const Icon(Icons.chevron_right_rounded),
             ),
           ]),
         ),

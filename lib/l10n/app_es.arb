@@ -535,5 +535,13 @@
   "feedResetDone": "Feed reiniciado",
   "feedReactionFailed": "No se pudo guardar tu elección. Inténtalo de nuevo.",
   "feedUndoFailed": "No se pudo deshacer.",
-  "feedResetFailed": "No se pudo reiniciar el feed."
+  "feedResetFailed": "No se pudo reiniciar el feed.",
+  "recommendationsTabDiscover": "Descubrir",
+  "recommendationsTabFavorites": "Favoritos",
+  "favoritesEmptyTitle": "Aún no tienes favoritos",
+  "favoritesEmptyBody": "Desliza a la derecha en Descubrir para guardar los lugares que te gusten.",
+  "favoritesErrorTitle": "No se pudieron cargar tus favoritos",
+  "favoritesRemove": "Quitar de favoritos",
+  "favoritesRemoved": "Quitado de favoritos",
+  "favoritesRemoveFailed": "No se pudo quitar de favoritos."
 }

@@ -76,6 +76,33 @@ void main() {
     expect(ready.removeFailed, isTrue);
   });
 
+  test('starting again recovers from an error and replaces the subscription',
+      () async {
+    repo.readFailure = const CacheFailure('db down');
+    final bloc = await started();
+    expect(bloc.state, isA<FavoritesError>());
+
+    repo.readFailure = null;
+    bloc.add(const FavoritesStarted());
+    await pumpEventQueue();
+
+    expect(bloc.state, isA<FavoritesReady>());
+    expect(repo.activeWatchers, 1,
+        reason: 'the previous subscription must be cancelled, not stacked');
+    await repo.like(prado);
+    await pumpEventQueue();
+    expect((bloc.state as FavoritesReady).favorites, hasLength(1));
+  });
+
+  test('closing the bloc releases its subscription', () async {
+    final bloc = await started();
+    expect(repo.activeWatchers, 1);
+
+    await bloc.close();
+
+    expect(repo.activeWatchers, 0);
+  });
+
   test('a read failure is an error state', () async {
     repo.readFailure = const CacheFailure('db down');
 

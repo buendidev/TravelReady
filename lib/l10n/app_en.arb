@@ -535,5 +535,13 @@
   "feedResetDone": "Feed reset",
   "feedReactionFailed": "Couldn't save your choice. Try again.",
   "feedUndoFailed": "Couldn't undo.",
-  "feedResetFailed": "Couldn't reset the feed."
+  "feedResetFailed": "Couldn't reset the feed.",
+  "recommendationsTabDiscover": "Discover",
+  "recommendationsTabFavorites": "Favorites",
+  "favoritesEmptyTitle": "You don't have favorites yet",
+  "favoritesEmptyBody": "Swipe right in Discover to save the places you like.",
+  "favoritesErrorTitle": "Couldn't load your favorites",
+  "favoritesRemove": "Remove from favorites",
+  "favoritesRemoved": "Removed from favorites",
+  "favoritesRemoveFailed": "Couldn't remove it from favorites."
 }

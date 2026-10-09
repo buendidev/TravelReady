@@ -46,6 +46,7 @@ import '../presentation/bloc/chats/chats_bloc.dart';
 import '../presentation/bloc/itinerary/itinerary_bloc.dart';
 import '../presentation/bloc/language/language_cubit.dart';
 import '../presentation/bloc/packing/packing_bloc.dart';
+import '../presentation/bloc/recommendations/favorites_bloc.dart';
 import '../presentation/bloc/recommendations/recommendations_bloc.dart';
 import '../presentation/bloc/theme/theme_cubit.dart';
 import '../presentation/bloc/trips/trips_bloc.dart';
@@ -152,6 +153,7 @@ Future<void> setupDependencies() async {
       () => WeatherBloc(service: getIt(), cache: getIt()));
   getIt.registerFactory<ChatsBloc>(() => ChatsBloc(repo: getIt()));
   getIt.registerFactory<ItineraryBloc>(() => ItineraryBloc(repo: getIt()));
+  getIt.registerFactory<FavoritesBloc>(() => FavoritesBloc(repo: getIt()));
   getIt.registerFactory<RecommendationsBloc>(
     () => RecommendationsBloc(
       getFeed:       getIt(),

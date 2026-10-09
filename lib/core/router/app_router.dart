@@ -44,6 +44,7 @@ abstract final class AppRoutes {
   static String discoveryPath(String tripId)     => '/trips/$tripId/discovery';
   static String recommendationsPath(String tripId) =>
       '/trips/$tripId/recommendations';
+  static String favoritesPath(String tripId)     => '/trips/$tripId/favorites';
 
   static const _protected = [home, packingLists, trips, chats, profile, premium];
   static const _authOnly  = [login, register, resetPassword];
@@ -182,6 +183,20 @@ GoRouter buildAppRouter(AuthBloc authBloc) {
                                   child: Text('Viaje no encontrado')));
                         }
                         return RecommendationsPage(trip: trip);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'favorites',
+                      builder: (_, s) {
+                        final trip = s.extra as Trip?;
+                        if (trip == null) {
+                          return const Scaffold(
+                              body: Center(
+                                  child: Text('Viaje no encontrado')));
+                        }
+                        return RecommendationsPage(
+                            trip: trip,
+                            initialTab: RecommendationsTab.favorites);
                       },
                     ),
                   ],

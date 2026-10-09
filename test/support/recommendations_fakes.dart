@@ -90,6 +90,9 @@ class InMemoryFavoritesRepository implements FavoritesRepository {
 
   final List<String> log = [];
 
+  /// Live [watchFavorites] subscriptions, to catch a consumer that stacks them.
+  int activeWatchers = 0;
+
   Set<String> get dislikedKeys => Set.unmodifiable(_dislikes);
   List<FavoritePlace> get favorites => _sorted();
 
@@ -120,10 +123,14 @@ class InMemoryFavoritesRepository implements FavoritesRepository {
 
     controller = StreamController(
       onListen: () {
+        activeWatchers++;
         subscription = _changes.stream.listen((_) => emit());
         emit();
       },
-      onCancel: () => subscription?.cancel(),
+      onCancel: () {
+        activeWatchers--;
+        return subscription?.cancel();
+      },
     );
     return controller.stream;
   }

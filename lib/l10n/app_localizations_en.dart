@@ -1152,4 +1152,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedResetFailed => 'Couldn\'t reset the feed.';
+
+  @override
+  String get recommendationsTabDiscover => 'Discover';
+
+  @override
+  String get recommendationsTabFavorites => 'Favorites';
+
+  @override
+  String get favoritesEmptyTitle => 'You don\'t have favorites yet';
+
+  @override
+  String get favoritesEmptyBody =>
+      'Swipe right in Discover to save the places you like.';
+
+  @override
+  String get favoritesErrorTitle => 'Couldn\'t load your favorites';
+
+  @override
+  String get favoritesRemove => 'Remove from favorites';
+
+  @override
+  String get favoritesRemoved => 'Removed from favorites';
+
+  @override
+  String get favoritesRemoveFailed => 'Couldn\'t remove it from favorites.';
 }

@@ -57,17 +57,19 @@ class RecommendationsFeedView extends StatefulWidget {
 }
 
 class _RecommendationsFeedViewState extends State<RecommendationsFeedView> {
-  late final TextEditingController _city =
-      TextEditingController(text: widget.trip.destination);
+  late final TextEditingController _city;
 
   PlacesGateway get _gateway => getIt<PlacesGateway>();
 
   @override
   void initState() {
     super.initState();
-    context
-        .read<RecommendationsBloc>()
-        .add(FeedStarted(destination: widget.trip.destination));
+    final bloc = context.read<RecommendationsBloc>();
+    // The bloc outlives a tab switch, so the field starts from the location in
+    // effect rather than always from the trip destination.
+    _city = TextEditingController(
+        text: bloc.state.destinationHint ?? widget.trip.destination);
+    bloc.add(FeedStarted(destination: widget.trip.destination));
   }
 
   @override

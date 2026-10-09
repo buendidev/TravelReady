@@ -2209,6 +2209,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo reiniciar el feed.'**
   String get feedResetFailed;
+
+  /// No description provided for @recommendationsTabDiscover.
+  ///
+  /// In es, this message translates to:
+  /// **'Descubrir'**
+  String get recommendationsTabDiscover;
+
+  /// No description provided for @recommendationsTabFavorites.
+  ///
+  /// In es, this message translates to:
+  /// **'Favoritos'**
+  String get recommendationsTabFavorites;
+
+  /// No description provided for @favoritesEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes favoritos'**
+  String get favoritesEmptyTitle;
+
+  /// No description provided for @favoritesEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Desliza a la derecha en Descubrir para guardar los lugares que te gusten.'**
+  String get favoritesEmptyBody;
+
+  /// No description provided for @favoritesErrorTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar tus favoritos'**
+  String get favoritesErrorTitle;
+
+  /// No description provided for @favoritesRemove.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar de favoritos'**
+  String get favoritesRemove;
+
+  /// No description provided for @favoritesRemoved.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitado de favoritos'**
+  String get favoritesRemoved;
+
+  /// No description provided for @favoritesRemoveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo quitar de favoritos.'**
+  String get favoritesRemoveFailed;
 }
 
 class _AppLocalizationsDelegate
