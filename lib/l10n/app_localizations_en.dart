@@ -1071,4 +1071,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saving => 'Saving…';
+
+  @override
+  String get feedDislikeAction => 'Not interested';
+
+  @override
+  String get feedLikeAction => 'I like it';
+
+  @override
+  String get feedSwipeHint => 'Swipe right to save or left to skip';
 }

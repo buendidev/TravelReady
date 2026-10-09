@@ -2053,6 +2053,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Guardando…'**
   String get saving;
+
+  /// No description provided for @feedDislikeAction.
+  ///
+  /// In es, this message translates to:
+  /// **'No me interesa'**
+  String get feedDislikeAction;
+
+  /// No description provided for @feedLikeAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Me gusta'**
+  String get feedLikeAction;
+
+  /// No description provided for @feedSwipeHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Desliza a la derecha para guardar o a la izquierda para descartar'**
+  String get feedSwipeHint;
 }
 
 class _AppLocalizationsDelegate
