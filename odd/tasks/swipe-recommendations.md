@@ -146,16 +146,19 @@ says `main` already has that job; on this base it does not.
 - **Demo feed is small.** The fixtures hold 7 feed-eligible places, so the feed exhausts after a
   handful of swipes. That is honest, and the exhausted state and reset are exactly for it. More
   fixtures would be a separate, labelled change to verified code.
-- **Reactions are per device, as the spec decided.** The tables carry no user id, so on a shared
-  device a second account sees the first one's favorites, and logging out does not clear them.
-  Fixing that needs the user-scoped Firestore model and rules the spec defers.
+- **Reactions are scoped to the signed-in account** (owner revision below). The tables carry the
+  account id and every read filters by it, so on a shared device a second account sees only its
+  own favorites and dislikes. What is still open is cross-device: the rows never leave the phone,
+  so they do not follow the account to another device and do not survive a reinstall. That needs
+  the user-scoped Firestore model and rules the spec defers.
 - The location field and attribution are tested with a fake provider; no real provider exists yet.
 
 ## Deferred, from spec §10 and this work
 
 - Cross-device favorites (user-scoped collection and rules, with the friends model).
 - Real Google Places, a map view, sharing, bookings.
-- Clearing reactions on sign-out, once the per-device decision is revisited.
+- Clearing reactions on sign-out is no longer a concern: the rows are keyed by account, so
+  another account cannot see them.
 
 ## Delivery strategy: open, needs an owner decision
 
@@ -163,6 +166,15 @@ The branch is about 7.3k changed lines (generated l10n excluded), far over the 4
 budget, and 7 of the 11 commits are over it on their own, mostly because tests are about 55 % of
 each. One honest slicing pass found no cohesive split that fits, so I recommend `size:exception`
 per slice rather than cutting tests or code. I have not opened any PR.
+
+**Decided (owner, 2026-10-09): `feature-branch-chain`.** The slices with their measured
+changed-line counts now live in `odd/tasks/swipe-recommendations-chain.md`, which is the single
+source of truth for the chain; the per-commit table above stays as the history of how the work
+was built.
+
+`size:exception` is not applicable: it is policy for Gentle's own repositories, not a universal
+label, and this repository has no size policy of its own. The overage is reported here, not
+excused.
 
 | Slice | Commits | Changed lines | Depends on |
 | --- | --- | --- | --- |
@@ -181,3 +193,43 @@ green) or a feature-branch chain with a draft tracker. Not decided here.
 Run it on a phone: swipe both ways, fling, drag short of the threshold, undo, reset, add a
 favorite to the itinerary, then switch language and dark mode. Report anything that feels off in
 the spring, the haptic tick or the snackbar position.
+
+## Account-scoped reactions (owner decision, revision on this branch)
+
+The original spec decided reactions were per device; the owner revised that decision: favorites
+and dislikes belong to the signed-in **account**. A different account on the same device sees
+only its own reactions; signing out leaks nothing. The change sits on top of the 11 commits as
+one uncommitted work unit.
+
+| Rule | Enforced in | Proof |
+| --- | --- | --- |
+| Two accounts on one device have disjoint favorites | `FavoritesLocalDataSource.getFavorites` (`WHERE account_id = ?`) | datasource test "two accounts on the same device have disjoint favorites"; mutation "drop the account filter from the favorites query" fails 2 tests |
+| A place account A disliked is still offered to account B | same column on both reaction tables; `getReactedKeys(accountId)` feeds the feed exclusions | datasource test "a place account A disliked still appears for account B" + usecase test "a place another account disliked is still offered" |
+| No read, list or watch returns another account's rows | every datasource query carries the account filter, including `watchFavorites` | datasource test "no read or list ever returns another account's rows" |
+| Reset clears only the signed-in account's dislikes | `clearDislikes(accountId)` | datasource test "resetting the feed clears only the signed-in account's dislikes" |
+| Mutual exclusion stays per account (B can like what A dislikes) | cross-delete inside the transaction is `account_id AND place_key` | datasource test "mutual exclusion is per account" |
+
+### Schema: v3 changed in place, no v4
+
+`place_favorites` and `place_dislikes` gained `account_id TEXT NOT NULL` and a composite primary
+key `(account_id, place_key)`. The schema is unreleased and unmerged, so v3 was rewritten instead
+of adding a v4; the v2-to-v3 migration tests now assert the new columns and the composite key,
+and the "fresh and upgraded DDL are identical" test still holds.
+
+### The account id: one source of truth
+
+The id is the signed-in user id, resolved exactly where the trips and chats screens resolve it:
+`RecommendationsPage` reads the `AuthBloc` state (`auth.user.id`), and the id is threaded
+explicitly page -> views -> bloc events -> use cases -> `FavoritesRepository` -> datasource, the
+same parameter-passing shape `TripsBloc` (`TripsLoaded(userId:)`) and the chats datasource use.
+No new id source was invented. Outside the authenticated app (widget tests pump the page without
+an `AuthBloc`) the page falls back to the empty id, which matches no rows — an empty feed, never
+another account's data.
+
+### RED before GREEN, and the mutation
+
+The new datasource and usecase tests were written first and failed to compile on the missing
+`accountId` parameter (`No named parameter with the name 'accountId'` in both test files) — the
+same RED shape units 2–10 used. After going green, the filter of `getFavorites` was mutated away:
+the disjoint-favorites test failed (`Expected: ['k1'] / Actual: ['k2', 'k1']`) together with the
+no-leak test; the code was restored and the file re-verified green.

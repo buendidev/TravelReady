@@ -239,13 +239,14 @@ void main() {
             .rawQuery('PRAGMA table_info(${DatabaseHelper.tablePlaceDislikes})'))
         .map((c) => c['name'])
         .toList();
-    expect(dislikeColumns, ['place_key', 'created_at'],
-        reason: 'a dislike keeps the key and nothing else');
+    expect(dislikeColumns, ['account_id', 'place_key', 'created_at'],
+        reason: 'a dislike keeps the account, the key and nothing else');
     final favoriteColumns = (await upgraded
             .rawQuery('PRAGMA table_info(${DatabaseHelper.tablePlaceFavorites})'))
         .map((c) => c['name'])
         .toList();
     expect(favoriteColumns, [
+      'account_id',
       'place_key',
       'name',
       'category',
@@ -257,6 +258,19 @@ void main() {
       'price_level_label',
       'created_at',
     ], reason: 'only provider-neutral snapshot fields, no provider id or photo');
+
+    for (final table in [
+      DatabaseHelper.tablePlaceFavorites,
+      DatabaseHelper.tablePlaceDislikes,
+    ]) {
+      final primaryKey = (await upgraded.rawQuery(
+              'PRAGMA table_info($table)'))
+          .where((c) => c['pk'] != 0)
+          .map((c) => c['name'])
+          .toList();
+      expect(primaryKey, ['account_id', 'place_key'],
+          reason: '$table is keyed per account');
+    }
     await upgraded.close();
   });
 

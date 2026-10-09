@@ -29,6 +29,7 @@ void main() {
     RecommendationFilter filter = RecommendationFilter.all,
     String? destinationHint = 'Madrid',
     int seed = 1,
+    String accountId = 'me',
     Set<String> seenKeys = const {},
     int limit = 20,
   }) async =>
@@ -36,6 +37,7 @@ void main() {
         filter: filter,
         destinationHint: destinationHint,
         seed: seed,
+        accountId: accountId,
         seenKeys: seenKeys,
         limit: limit,
       ))
@@ -102,14 +104,24 @@ void main() {
     test('never offers a liked or disliked place', () async {
       final liked = RecommendedPlace.from(fakePlace('monument-0', PlaceCategory.monument));
       final disliked = RecommendedPlace.from(fakePlace('food-1', PlaceCategory.food));
-      await favorites.like(liked);
-      await favorites.dislike(disliked.key);
+      await favorites.like(liked, accountId: 'me');
+      await favorites.dislike(disliked.key, accountId: 'me');
 
       final result = await run();
 
       final keys = result.cards.map((c) => c.key);
       expect(keys, isNot(contains(liked.key)));
       expect(keys, isNot(contains(disliked.key)));
+    });
+
+    test('a place another account disliked is still offered', () async {
+      final disliked =
+          RecommendedPlace.from(fakePlace('food-1', PlaceCategory.food));
+      await favorites.dislike(disliked.key, accountId: 'someone-else');
+
+      final result = await run(accountId: 'me');
+
+      expect(result.cards.map((c) => c.key), contains(disliked.key));
     });
 
     test('never offers a key already seen this session', () async {
@@ -131,7 +143,7 @@ void main() {
     test('reports eligibleCount before exclusions, so empty and exhausted differ',
         () async {
       for (final place in fakeCatalog()) {
-        await favorites.dislike(placeKeyOf(place));
+        await favorites.dislike(placeKeyOf(place), accountId: 'me');
       }
 
       final result = await run();
@@ -172,7 +184,10 @@ void main() {
       gateway.availability = PlacesAvailability.unavailable;
 
       final result = await feed(
-          filter: RecommendationFilter.all, seed: 1, destinationHint: 'x');
+          filter: RecommendationFilter.all,
+          seed: 1,
+          accountId: 'me',
+          destinationHint: 'x');
 
       expect(result.swap().getOrElse((_) => fail('expected Left')),
           isA<PlacesConfigFailure>());
@@ -191,7 +206,10 @@ void main() {
       gateway.failure = const ServerFailure('boom');
 
       final result =
-          await feed(filter: RecommendationFilter.leisure, seed: 1);
+          await feed(
+          filter: RecommendationFilter.leisure,
+          seed: 1,
+          accountId: 'me');
 
       expect(result.swap().getOrElse((_) => fail('expected Left')),
           const ServerFailure('boom'));
@@ -204,7 +222,8 @@ void main() {
           : Right([fakePlace('a-monument', PlaceCategory.monument)]);
 
       final result =
-          await feed(filter: RecommendationFilter.monuments, seed: 1);
+          await feed(
+          filter: RecommendationFilter.monuments, seed: 1, accountId: 'me');
 
       expect(result.isLeft(), isTrue);
     });
@@ -212,7 +231,8 @@ void main() {
     test('a failing reactions read fails the load', () async {
       favorites.readFailure = const CacheFailure('db down');
 
-      final result = await feed(filter: RecommendationFilter.all, seed: 1);
+      final result = await feed(
+          filter: RecommendationFilter.all, seed: 1, accountId: 'me');
 
       expect(result.swap().getOrElse((_) => fail('expected Left')),
           const CacheFailure('db down'));

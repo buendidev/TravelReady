@@ -18,7 +18,7 @@ void main() {
   Future<FavoritesBloc> started() async {
     final bloc = FavoritesBloc(repo: repo);
     addTearDown(bloc.close);
-    bloc.add(const FavoritesStarted());
+    bloc.add(const FavoritesStarted(accountId: 'me'));
     await pumpEventQueue();
     return bloc;
   }
@@ -31,10 +31,10 @@ void main() {
   });
 
   test('lists favorites newest first and follows new likes live', () async {
-    await repo.like(prado);
+    await repo.like(prado, accountId: 'me');
     final bloc = await started();
 
-    await repo.like(retiro);
+    await repo.like(retiro, accountId: 'me');
     await pumpEventQueue();
 
     final ready = bloc.state as FavoritesReady;
@@ -42,33 +42,33 @@ void main() {
   });
 
   test('removing a favorite deletes it without disliking the place', () async {
-    await repo.like(prado);
+    await repo.like(prado, accountId: 'me');
     final bloc = await started();
 
-    bloc.add(FavoriteRemoved(prado.key));
+    bloc.add(FavoriteRemoved(prado.key, accountId: 'me'));
     await pumpEventQueue();
 
     expect((bloc.state as FavoritesReady).favorites, isEmpty);
-    expect(repo.dislikedKeys, isEmpty);
+    expect(repo.dislikesFor('me'), isEmpty);
     expect(repo.log, contains('removeFavorite:${prado.key}'));
   });
 
   test('a disliked place disappears from the list', () async {
-    await repo.like(prado);
+    await repo.like(prado, accountId: 'me');
     final bloc = await started();
 
-    await repo.dislike(prado.key);
+    await repo.dislike(prado.key, accountId: 'me');
     await pumpEventQueue();
 
     expect((bloc.state as FavoritesReady).favorites, isEmpty);
   });
 
   test('a failed removal keeps the list and flags the failure', () async {
-    await repo.like(prado);
+    await repo.like(prado, accountId: 'me');
     final bloc = await started();
     repo.writeFailure = const CacheFailure('disk full');
 
-    bloc.add(FavoriteRemoved(prado.key));
+    bloc.add(FavoriteRemoved(prado.key, accountId: 'me'));
     await pumpEventQueue();
 
     final ready = bloc.state as FavoritesReady;
@@ -83,13 +83,13 @@ void main() {
     expect(bloc.state, isA<FavoritesError>());
 
     repo.readFailure = null;
-    bloc.add(const FavoritesStarted());
+    bloc.add(const FavoritesStarted(accountId: 'me'));
     await pumpEventQueue();
 
     expect(bloc.state, isA<FavoritesReady>());
     expect(repo.activeWatchers, 1,
         reason: 'the previous subscription must be cancelled, not stacked');
-    await repo.like(prado);
+    await repo.like(prado, accountId: 'me');
     await pumpEventQueue();
     expect((bloc.state as FavoritesReady).favorites, hasLength(1));
   });

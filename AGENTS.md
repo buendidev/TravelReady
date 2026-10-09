@@ -93,7 +93,7 @@ Stream<List<PackingList>> watchPackingLists(String tid)  // FirestoreDataSource
 | M6 Profile + idioma + tema | ✅ |
 | M7 Premium UI | ✅ (RevenueCat pendiente) |
 | M8 Discovery + itinerario | ✅ (gateway demo; Google Places real bloqueado por cuentas del owner) |
-| M9 Feed de recomendaciones con swipe | ✅ demo gateway, favorites per device, no device pass yet — `odd/tasks/swipe-recommendations.md` |
+| M9 Feed de recomendaciones con swipe | ✅ reacciones por cuenta, gateway demo, sin prueba en dispositivo — `odd/tasks/swipe-recommendations.md` |
 | M10 LLM del asistente | 📋 especificado — `docs/handoff/ai-assistant-llm.md` |
 
 ## Estado del repositorio (2026-10-09)

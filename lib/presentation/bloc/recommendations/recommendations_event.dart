@@ -8,30 +8,38 @@ sealed class RecommendationsEvent extends Equatable {
 
 /// Opens (or re-opens) the feed. [destination] is the trip destination, used as
 /// the pre-filled location until the traveller types another city.
+/// [accountId] is the signed-in account whose reactions this feed reads and
+/// writes.
 final class FeedStarted extends RecommendationsEvent {
   final String? destination;
-  const FeedStarted({this.destination});
+  final String accountId;
+  const FeedStarted({this.destination, required this.accountId});
   @override
-  List<Object?> get props => [destination];
+  List<Object?> get props => [destination, accountId];
 }
 
 final class FeedFilterChanged extends RecommendationsEvent {
   final RecommendationFilter filter;
-  const FeedFilterChanged(this.filter);
+  final String accountId;
+  const FeedFilterChanged(this.filter, {required this.accountId});
   @override
-  List<Object?> get props => [filter];
+  List<Object?> get props => [filter, accountId];
 }
 
 /// The traveller typed a city. Blank falls back to the trip destination.
 final class FeedLocationChanged extends RecommendationsEvent {
   final String text;
-  const FeedLocationChanged(this.text);
+  final String accountId;
+  const FeedLocationChanged(this.text, {required this.accountId});
   @override
-  List<Object?> get props => [text];
+  List<Object?> get props => [text, accountId];
 }
 
 final class FeedRetried extends RecommendationsEvent {
-  const FeedRetried();
+  final String accountId;
+  const FeedRetried({required this.accountId});
+  @override
+  List<Object?> get props => [accountId];
 }
 
 /// A swipe or a button press on a card. Carries the card's [key] so a stale or
@@ -39,16 +47,25 @@ final class FeedRetried extends RecommendationsEvent {
 final class FeedCardReacted extends RecommendationsEvent {
   final String key;
   final PlaceReaction reaction;
-  const FeedCardReacted({required this.key, required this.reaction});
+  final String accountId;
+  const FeedCardReacted(
+      {required this.key, required this.reaction, required this.accountId});
   @override
-  List<Object?> get props => [key, reaction];
+  List<Object?> get props => [key, reaction, accountId];
 }
 
 final class FeedUndoRequested extends RecommendationsEvent {
-  const FeedUndoRequested();
+  final String accountId;
+  const FeedUndoRequested({required this.accountId});
+  @override
+  List<Object?> get props => [accountId];
 }
 
-/// Clears every dislike. The confirmation lives in the UI.
+/// Clears every dislike of the signed-in account. The confirmation lives in
+/// the UI.
 final class FeedDislikesResetRequested extends RecommendationsEvent {
-  const FeedDislikesResetRequested();
+  final String accountId;
+  const FeedDislikesResetRequested({required this.accountId});
+  @override
+  List<Object?> get props => [accountId];
 }

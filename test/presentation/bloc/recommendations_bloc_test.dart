@@ -47,7 +47,7 @@ void main() {
   }) async {
     final bloc = build(seed: seed);
     addTearDown(bloc.close);
-    bloc.add(FeedStarted(destination: destination));
+    bloc.add(FeedStarted(destination: destination, accountId: 'me'));
     await pumpEventQueue();
     return bloc;
   }
@@ -61,7 +61,7 @@ void main() {
     blocTest<RecommendationsBloc, RecommendationsState>(
       'loads the feed for the trip destination',
       build: build,
-      act: (b) => b.add(const FeedStarted(destination: 'Madrid')),
+      act: (b) => b.add(const FeedStarted(destination: 'Madrid', accountId: 'me')),
       expect: () => [
         isA<RecommendationsState>()
             .having((s) => s.status, 'status', FeedStatus.loading),
@@ -79,7 +79,7 @@ void main() {
       'an unavailable provider is its own state and is never searched',
       build: build,
       setUp: () => gateway.availability = PlacesAvailability.unavailable,
-      act: (b) => b.add(const FeedStarted(destination: 'Madrid')),
+      act: (b) => b.add(const FeedStarted(destination: 'Madrid', accountId: 'me')),
       expect: () => [
         isA<RecommendationsState>()
             .having((s) => s.status, 'status', FeedStatus.loading),
@@ -93,7 +93,7 @@ void main() {
       'a provider failure is an error state with the message',
       build: build,
       setUp: () => gateway.failure = const ServerFailure('boom'),
-      act: (b) => b.add(const FeedStarted(destination: 'Madrid')),
+      act: (b) => b.add(const FeedStarted(destination: 'Madrid', accountId: 'me')),
       expect: () => [
         isA<RecommendationsState>()
             .having((s) => s.status, 'status', FeedStatus.loading),
@@ -109,7 +109,7 @@ void main() {
       expect(bloc.state.status, FeedStatus.error);
 
       gateway.failure = null;
-      bloc.add(const FeedRetried());
+      bloc.add(const FeedRetried(accountId: 'me'));
       await settle();
 
       expect(bloc.state.status, FeedStatus.ready);
@@ -126,7 +126,7 @@ void main() {
     test('a filter whose places were all reacted to is exhausted, not empty',
         () async {
       for (final place in gateway.catalog) {
-        await repo.dislike(placeKeyOf(place));
+        await repo.dislike(placeKeyOf(place), accountId: 'me');
       }
 
       final bloc = await started();
@@ -137,10 +137,10 @@ void main() {
     test('restarting the feed reloads it with a fresh session', () async {
       final bloc = await started();
       final first = bloc.state.cards.first;
-      bloc.add(FeedCardReacted(key: first.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: first.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
 
-      bloc.add(const FeedStarted(destination: 'Madrid'));
+      bloc.add(const FeedStarted(destination: 'Madrid', accountId: 'me'));
       await settle();
 
       expect(bloc.state.status, FeedStatus.ready);
@@ -155,10 +155,10 @@ void main() {
       final bloc = await started();
       final top = bloc.state.cards.first;
 
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
 
-      expect(repo.favorites.map((f) => f.key), [top.key]);
+      expect(repo.favoritesFor('me').map((f) => f.key), [top.key]);
       expect(bloc.state.cards.map((c) => c.key), isNot(contains(top.key)));
       expect(bloc.state.cards, hasLength(eligible - 1));
       expect(bloc.state.lastReaction,
@@ -169,11 +169,11 @@ void main() {
       final bloc = await started();
       final top = bloc.state.cards.first;
 
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.dislike));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.dislike, accountId: 'me'));
       await settle();
 
-      expect(repo.dislikedKeys, {top.key});
-      expect(repo.favorites, isEmpty);
+      expect(repo.dislikesFor('me'), {top.key});
+      expect(repo.favoritesFor('me'), isEmpty);
       expect(bloc.state.cards.map((c) => c.key), isNot(contains(top.key)));
     });
 
@@ -182,7 +182,7 @@ void main() {
       final top = bloc.state.cards.first;
       final second = bloc.state.cards[1];
 
-      bloc.add(FeedCardReacted(key: second.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: second.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
 
       expect(repo.log, isEmpty);
@@ -193,8 +193,8 @@ void main() {
       final bloc = await started();
       final top = bloc.state.cards.first;
 
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like));
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like, accountId: 'me'));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
 
       expect(repo.log, ['like:${top.key}']);
@@ -206,10 +206,10 @@ void main() {
       final top = bloc.state.cards.first;
       repo.writeFailure = const CacheFailure('disk full');
 
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
 
-      expect(repo.favorites, isEmpty);
+      expect(repo.favoritesFor('me'), isEmpty);
       expect(bloc.state.cards.first, top);
       expect(bloc.state.cards, hasLength(eligible));
       expect(bloc.state.notice, FeedNotice.reactionFailed);
@@ -227,7 +227,8 @@ void main() {
         bloc.add(FeedCardReacted(
             key: top.key,
             reaction:
-                offered.length.isEven ? PlaceReaction.like : PlaceReaction.dislike));
+                    offered.length.isEven ? PlaceReaction.like : PlaceReaction.dislike,
+                accountId: 'me'));
         await settle();
       }
 
@@ -251,7 +252,7 @@ void main() {
 
       for (var i = 0; i < 2; i++) {
         bloc.add(FeedCardReacted(
-            key: bloc.state.cards.first.key, reaction: PlaceReaction.dislike));
+            key: bloc.state.cards.first.key, reaction: PlaceReaction.dislike, accountId: 'me'));
         await settle();
       }
 
@@ -273,7 +274,7 @@ void main() {
       while (bloc.state.status == FeedStatus.ready) {
         final top = bloc.state.cards.first;
         offered.add(top.key);
-        bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.dislike));
+        bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.dislike, accountId: 'me'));
         await settle();
       }
 
@@ -289,7 +290,7 @@ void main() {
       for (var i = 0; i < eligible; i++) {
         if (bloc.state.cards.isEmpty) break;
         bloc.add(FeedCardReacted(
-            key: bloc.state.cards.first.key, reaction: PlaceReaction.dislike));
+            key: bloc.state.cards.first.key, reaction: PlaceReaction.dislike, accountId: 'me'));
         await settle();
       }
 
@@ -297,7 +298,7 @@ void main() {
       // not another pair on every remaining swipe.
       expect(gateway.calls.length - callsAfterLoad, lessThanOrEqualTo(2));
       expect(bloc.state.status, FeedStatus.exhausted);
-      expect(repo.dislikedKeys, hasLength(eligible));
+      expect(repo.dislikesFor('me'), hasLength(eligible));
     });
   });
 
@@ -306,16 +307,16 @@ void main() {
         () async {
       final bloc = await started();
       final top = bloc.state.cards.first;
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
 
-      bloc.add(const FeedUndoRequested());
+      bloc.add(const FeedUndoRequested(accountId: 'me'));
       await settle();
 
       expect(bloc.state.cards.first, top);
       expect(bloc.state.cards, hasLength(eligible));
-      expect(repo.favorites, isEmpty);
-      expect(repo.dislikedKeys, isEmpty);
+      expect(repo.favoritesFor('me'), isEmpty);
+      expect(repo.dislikesFor('me'), isEmpty);
       expect(bloc.state.lastReaction, isNull);
     });
 
@@ -323,26 +324,26 @@ void main() {
         () async {
       final bloc = await started();
       final top = bloc.state.cards.first;
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.dislike));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.dislike, accountId: 'me'));
       await settle();
 
-      bloc.add(const FeedUndoRequested());
+      bloc.add(const FeedUndoRequested(accountId: 'me'));
       await settle();
 
       expect(bloc.state.cards.first, top);
-      expect(repo.dislikedKeys, isEmpty);
+      expect(repo.dislikesFor('me'), isEmpty);
     });
 
     test('undo is single-step: a second undo does nothing', () async {
       final bloc = await started();
       final top = bloc.state.cards.first;
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
-      bloc.add(const FeedUndoRequested());
+      bloc.add(const FeedUndoRequested(accountId: 'me'));
       await settle();
       final logAfterUndo = List.of(repo.log);
 
-      bloc.add(const FeedUndoRequested());
+      bloc.add(const FeedUndoRequested(accountId: 'me'));
       await settle();
 
       expect(repo.log, logAfterUndo);
@@ -351,7 +352,7 @@ void main() {
     test('undo with nothing to undo is a no-op', () async {
       final bloc = await started();
 
-      bloc.add(const FeedUndoRequested());
+      bloc.add(const FeedUndoRequested(accountId: 'me'));
       await settle();
 
       expect(repo.log, isEmpty);
@@ -363,11 +364,11 @@ void main() {
       gateway.catalog = [fakePlace('only', PlaceCategory.food)];
       final bloc = await started();
       final only = bloc.state.cards.single;
-      bloc.add(FeedCardReacted(key: only.key, reaction: PlaceReaction.dislike));
+      bloc.add(FeedCardReacted(key: only.key, reaction: PlaceReaction.dislike, accountId: 'me'));
       await settle();
       expect(bloc.state.status, FeedStatus.exhausted);
 
-      bloc.add(const FeedUndoRequested());
+      bloc.add(const FeedUndoRequested(accountId: 'me'));
       await settle();
 
       expect(bloc.state.status, FeedStatus.ready);
@@ -377,11 +378,11 @@ void main() {
     test('a failed undo keeps the reaction and says so', () async {
       final bloc = await started();
       final top = bloc.state.cards.first;
-      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: top.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
       repo.writeFailure = const CacheFailure('disk full');
 
-      bloc.add(const FeedUndoRequested());
+      bloc.add(const FeedUndoRequested(accountId: 'me'));
       await settle();
 
       expect(bloc.state.notice, FeedNotice.undoFailed);
@@ -394,7 +395,7 @@ void main() {
         () async {
       final bloc = await started();
 
-      bloc.add(const FeedFilterChanged(RecommendationFilter.restaurants));
+      bloc.add(const FeedFilterChanged(RecommendationFilter.restaurants, accountId: 'me'));
       await settle();
 
       expect(bloc.state.filter, RecommendationFilter.restaurants);
@@ -409,10 +410,10 @@ void main() {
         () async {
       final bloc = await started();
       bloc.add(FeedCardReacted(
-          key: bloc.state.cards.first.key, reaction: PlaceReaction.like));
+          key: bloc.state.cards.first.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
 
-      bloc.add(const FeedFilterChanged(RecommendationFilter.leisure));
+      bloc.add(const FeedFilterChanged(RecommendationFilter.leisure, accountId: 'me'));
       await settle();
 
       expect(bloc.state.lastReaction, isNull);
@@ -421,7 +422,7 @@ void main() {
     test('a typed city becomes the location hint', () async {
       final bloc = await started(destination: 'Madrid');
 
-      bloc.add(const FeedLocationChanged('  Granada '));
+      bloc.add(const FeedLocationChanged('  Granada ', accountId: 'me'));
       await settle();
 
       expect(bloc.state.destinationHint, 'Granada');
@@ -431,10 +432,10 @@ void main() {
     test('clearing the typed city falls back to the trip destination',
         () async {
       final bloc = await started(destination: 'Madrid');
-      bloc.add(const FeedLocationChanged('Granada'));
+      bloc.add(const FeedLocationChanged('Granada', accountId: 'me'));
       await settle();
 
-      bloc.add(const FeedLocationChanged('   '));
+      bloc.add(const FeedLocationChanged('   ', accountId: 'me'));
       await settle();
 
       expect(bloc.state.destinationHint, 'Madrid');
@@ -443,10 +444,10 @@ void main() {
 
     test('the filter survives a restart of the feed', () async {
       final bloc = await started();
-      bloc.add(const FeedFilterChanged(RecommendationFilter.monuments));
+      bloc.add(const FeedFilterChanged(RecommendationFilter.monuments, accountId: 'me'));
       await settle();
 
-      bloc.add(const FeedStarted(destination: 'Madrid'));
+      bloc.add(const FeedStarted(destination: 'Madrid', accountId: 'me'));
       await settle();
 
       expect(bloc.state.filter, RecommendationFilter.monuments);
@@ -459,17 +460,17 @@ void main() {
       final bloc = await started();
       final liked = bloc.state.cards[0];
       final hidden = bloc.state.cards[1];
-      bloc.add(FeedCardReacted(key: liked.key, reaction: PlaceReaction.like));
+      bloc.add(FeedCardReacted(key: liked.key, reaction: PlaceReaction.like, accountId: 'me'));
       await settle();
-      bloc.add(FeedCardReacted(key: hidden.key, reaction: PlaceReaction.dislike));
+      bloc.add(FeedCardReacted(key: hidden.key, reaction: PlaceReaction.dislike, accountId: 'me'));
       await settle();
       expect(bloc.state.cards.map((c) => c.key), isNot(contains(hidden.key)));
 
-      bloc.add(const FeedDislikesResetRequested());
+      bloc.add(const FeedDislikesResetRequested(accountId: 'me'));
       await settle();
 
-      expect(repo.dislikedKeys, isEmpty);
-      expect(repo.favorites.map((f) => f.key), [liked.key]);
+      expect(repo.dislikesFor('me'), isEmpty);
+      expect(repo.favoritesFor('me').map((f) => f.key), [liked.key]);
       expect(bloc.state.cards.map((c) => c.key), contains(hidden.key));
       expect(bloc.state.cards.map((c) => c.key), isNot(contains(liked.key)));
       expect(bloc.state.notice, FeedNotice.resetDone);
@@ -477,12 +478,12 @@ void main() {
 
     test('lets an exhausted feed come back to life', () async {
       for (final place in gateway.catalog) {
-        await repo.dislike(placeKeyOf(place));
+        await repo.dislike(placeKeyOf(place), accountId: 'me');
       }
       final bloc = await started();
       expect(bloc.state.status, FeedStatus.exhausted);
 
-      bloc.add(const FeedDislikesResetRequested());
+      bloc.add(const FeedDislikesResetRequested(accountId: 'me'));
       await settle();
 
       expect(bloc.state.status, FeedStatus.ready);
@@ -494,7 +495,7 @@ void main() {
       final before = bloc.state.cards;
       repo.writeFailure = const CacheFailure('disk full');
 
-      bloc.add(const FeedDislikesResetRequested());
+      bloc.add(const FeedDislikesResetRequested(accountId: 'me'));
       await settle();
 
       expect(bloc.state.notice, FeedNotice.resetFailed);

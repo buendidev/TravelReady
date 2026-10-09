@@ -281,7 +281,12 @@ class DatabaseHelper {
     ''');
   }
 
-  /// Swipe-feed reactions, local to the device (v3).
+  /// Swipe-feed reactions of the signed-in account (v3).
+  ///
+  /// Rows carry `account_id` (the signed-in user id, the same value the trips
+  /// and chats stores key on) with a composite primary key
+  /// `(account_id, place_key)`: two accounts on the same device never see each
+  /// other's favorites or dislikes, and signing out cannot leak them.
   ///
   /// `place_favorites` keeps only the provider-neutral snapshot fields the
   /// traveller chose to keep. `place_dislikes` deliberately keeps the key and a
@@ -291,7 +296,8 @@ class DatabaseHelper {
   static Future<void> createReactionTables(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS $tablePlaceFavorites (
-        place_key TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL,
+        place_key TEXT NOT NULL,
         name TEXT NOT NULL,
         category TEXT NOT NULL,
         address TEXT,
@@ -300,13 +306,16 @@ class DatabaseHelper {
         website_uri TEXT,
         opening_hours_text TEXT,
         price_level_label TEXT,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (account_id, place_key)
       )
     ''');
     await db.execute('''
       CREATE TABLE IF NOT EXISTS $tablePlaceDislikes (
-        place_key TEXT PRIMARY KEY,
-        created_at TEXT NOT NULL
+        account_id TEXT NOT NULL,
+        place_key TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (account_id, place_key)
       )
     ''');
   }

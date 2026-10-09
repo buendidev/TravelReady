@@ -35,6 +35,7 @@ class GetRecommendationFeedUseCase {
     required RecommendationFilter filter,
     String? destinationHint,
     required int seed,
+    required String accountId,
     Set<String> seenKeys = const {},
     int limit = feedPageSize,
   }) async {
@@ -43,7 +44,7 @@ class GetRecommendationFeedUseCase {
           PlacesConfigFailure('The places provider is not configured.'));
     }
 
-    final reacted = await _favorites.getReactedKeys();
+    final reacted = await _favorites.getReactedKeys(accountId: accountId);
     final reactedFailure = reacted.fold<Failure?>((f) => f, (_) => null);
     if (reactedFailure != null) return Left(reactedFailure);
 

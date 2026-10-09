@@ -10,6 +10,7 @@ import 'package:travel_ready/domain/entities/recommendations/place_key.dart';
 import 'package:travel_ready/domain/entities/recommendations/recommended_place.dart';
 
 void main() {
+  const accountId = 'me';
   late Database db;
   late FavoritesLocalDataSource dataSource;
   late FavoritesRepositoryImpl repo;
@@ -53,9 +54,9 @@ void main() {
 
   test('like keeps the provider-neutral snapshot and drops provider data',
       () async {
-    expect(await repo.like(pradoCard), const Right(unit));
+    expect(await repo.like(pradoCard, accountId: accountId), const Right(unit));
 
-    final favorite = right(await repo.getFavorites()).single;
+    final favorite = right(await repo.getFavorites(accountId: accountId)).single;
 
     expect(favorite.key, placeKeyOf(prado));
     final shown = favorite.toPlaceResult();
@@ -71,11 +72,11 @@ void main() {
   test('like stamps the injected clock, so ordering is deterministic',
       () async {
     await repo.like(RecommendedPlace.from(
-        const PlaceResult(name: 'A', category: PlaceCategory.food, address: 'a')));
+        const PlaceResult(name: 'A', category: PlaceCategory.food, address: 'a')), accountId: accountId);
     await repo.like(RecommendedPlace.from(
-        const PlaceResult(name: 'B', category: PlaceCategory.food, address: 'b')));
+        const PlaceResult(name: 'B', category: PlaceCategory.food, address: 'b')), accountId: accountId);
 
-    final favorites = right(await repo.getFavorites());
+    final favorites = right(await repo.getFavorites(accountId: accountId));
 
     expect(favorites.map((f) => f.name), ['B', 'A']);
     expect(favorites.first.createdAt, DateTime.utc(2026, 10, 9, 8, 2));
@@ -83,72 +84,88 @@ void main() {
 
   test('dislike takes only a key, hides the place and removes a like',
       () async {
-    await repo.like(pradoCard);
+    await repo.like(pradoCard, accountId: accountId);
 
-    expect(await repo.dislike(pradoCard.key), const Right(unit));
+    expect(await repo.dislike(pradoCard.key, accountId: accountId), const Right(unit));
 
-    expect(right(await repo.getFavorites()), isEmpty);
-    expect(right(await repo.getReactedKeys()), {pradoCard.key});
+    expect(right(await repo.getFavorites(accountId: accountId)), isEmpty);
+    expect(right(await repo.getReactedKeys(accountId: accountId)), {pradoCard.key});
   });
 
   test('like after dislike restores the favorite and drops the dislike',
       () async {
-    await repo.dislike(pradoCard.key);
+    await repo.dislike(pradoCard.key, accountId: accountId);
 
-    await repo.like(pradoCard);
+    await repo.like(pradoCard, accountId: accountId);
 
-    expect(right(await repo.getFavorites()).map((f) => f.key), [pradoCard.key]);
+    expect(right(await repo.getFavorites(accountId: accountId)).map((f) => f.key), [pradoCard.key]);
     expect(await db.query('place_dislikes'), isEmpty);
   });
 
   test('removeFavorite frees the place; it is not a dislike', () async {
-    await repo.like(pradoCard);
+    await repo.like(pradoCard, accountId: accountId);
 
-    expect(await repo.removeFavorite(pradoCard.key), const Right(unit));
+    expect(await repo.removeFavorite(pradoCard.key, accountId: accountId), const Right(unit));
 
-    expect(right(await repo.getReactedKeys()), isEmpty);
+    expect(right(await repo.getReactedKeys(accountId: accountId)), isEmpty);
   });
 
   test('removeDislike undoes a dislike', () async {
-    await repo.dislike(pradoCard.key);
+    await repo.dislike(pradoCard.key, accountId: accountId);
 
-    expect(await repo.removeDislike(pradoCard.key), const Right(unit));
+    expect(await repo.removeDislike(pradoCard.key, accountId: accountId), const Right(unit));
 
-    expect(right(await repo.getReactedKeys()), isEmpty);
+    expect(right(await repo.getReactedKeys(accountId: accountId)), isEmpty);
   });
 
   test('resetDislikes clears dislikes only', () async {
-    await repo.like(pradoCard);
-    await repo.dislike('someone-else');
+    await repo.like(pradoCard, accountId: accountId);
+    await repo.dislike('someone-else', accountId: accountId);
 
-    expect(await repo.resetDislikes(), const Right(unit));
+    expect(await repo.resetDislikes(accountId: accountId), const Right(unit));
 
-    expect(right(await repo.getReactedKeys()), {pradoCard.key});
+    expect(right(await repo.getReactedKeys(accountId: accountId)), {pradoCard.key});
   });
 
   test('watchFavorites streams the favorites as they change', () async {
-    final emissions = repo.watchFavorites().map((e) => right(e).map((f) => f.key).toList());
+    final emissions = repo.watchFavorites(accountId: accountId).map((e) => right(e).map((f) => f.key).toList());
     final expectation = expectLater(
         emissions.take(2), emitsInOrder([isEmpty, [pradoCard.key]]));
 
     await Future<void>.delayed(Duration.zero);
-    await repo.like(pradoCard);
+    await repo.like(pradoCard, accountId: accountId);
 
     await expectation;
+  });
+
+  test('reactions are scoped to the signed-in account', () async {
+    expect(await repo.like(pradoCard, accountId: 'account-a'),
+        const Right(unit));
+    expect(await repo.dislike(pradoCard.key, accountId: 'account-b'),
+        const Right(unit));
+
+    expect(right(await repo.getFavorites(accountId: 'account-a')),
+        hasLength(1),
+        reason: 'account A only sees its own like');
+    expect(right(await repo.getFavorites(accountId: 'account-b')), isEmpty,
+        reason: "account B never sees account A's like");
+    expect(right(await repo.getReactedKeys(accountId: 'account-b')),
+        {pradoCard.key},
+        reason: 'and only its own dislike');
   });
 
   test('storage errors become failures instead of exceptions', () async {
     await db.close();
 
-    expect((await repo.getFavorites()).isLeft(), isTrue);
-    expect((await repo.getReactedKeys()).isLeft(), isTrue);
-    expect((await repo.like(pradoCard)).isLeft(), isTrue);
-    expect((await repo.dislike('k')).isLeft(), isTrue);
-    expect((await repo.removeFavorite('k')).isLeft(), isTrue);
-    expect((await repo.removeDislike('k')).isLeft(), isTrue);
-    expect((await repo.resetDislikes()).isLeft(), isTrue);
+    expect((await repo.getFavorites(accountId: accountId)).isLeft(), isTrue);
+    expect((await repo.getReactedKeys(accountId: accountId)).isLeft(), isTrue);
+    expect((await repo.like(pradoCard, accountId: accountId)).isLeft(), isTrue);
+    expect((await repo.dislike('k', accountId: accountId)).isLeft(), isTrue);
+    expect((await repo.removeFavorite('k', accountId: accountId)).isLeft(), isTrue);
+    expect((await repo.removeDislike('k', accountId: accountId)).isLeft(), isTrue);
+    expect((await repo.resetDislikes(accountId: accountId)).isLeft(), isTrue);
     final failure =
-        (await repo.like(pradoCard)).swap().getOrElse((_) => fail('left'));
+        (await repo.like(pradoCard, accountId: accountId)).swap().getOrElse((_) => fail('left'));
     expect(failure, isA<ServerFailure>());
   });
 }

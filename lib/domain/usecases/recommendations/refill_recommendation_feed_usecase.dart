@@ -30,6 +30,7 @@ class RefillRecommendationFeedUseCase {
     required RecommendationFilter filter,
     String? destinationHint,
     required int seed,
+    required String accountId,
     required Set<String> seenKeys,
     required int remaining,
   }) async {
@@ -43,6 +44,7 @@ class RefillRecommendationFeedUseCase {
         filter: filter,
         destinationHint: destinationHint,
         seed: seed,
+        accountId: accountId,
         seenKeys: seen,
         limit: feedPageSize * (attempt + 1),
       );
