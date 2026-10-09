@@ -49,7 +49,8 @@ onData: (user) {
 No existe Hive en este proyecto. Todo lo local pasa por `sqflite` a través de
 `lib/core/database/database_helper.dart` y datasources tipados:
 users, trips, tripTransport, tripActivities, packingLists, packingItems,
-chats, chatMembers, messages, sessions, weatherCache.
+chats, chatMembers, messages, sessions, weatherCache, placeFavorites, placeDislikes
+(the last two arrived with schema v3; `place_dislikes` keeps the key and a timestamp only).
 
 ```dart
 // La tabla se declara en las migraciones de database_helper.dart
@@ -58,6 +59,17 @@ chats, chatMembers, messages, sessions, weatherCache.
 
 Al agregar una tabla nueva, declararla en `database_helper.dart` además del
 `CREATE TABLE IF NOT EXISTS` perezoso del datasource.
+
+### Swipe feed reactions — like and dislike are exclusive
+Right swipe likes, left swipe dislikes; one SQLite transaction clears the opposite reaction.
+A dislike stores the `place_key` and nothing else (no venue name). Never persist a provider id,
+photo reference or provider description: `FavoritePlace` is the retention boundary.
+`place_key` comes from `placeKeyOf(place)` (`lib/domain/entities/recommendations/place_key.dart`).
+
+### Widget tests — create blocs inside the test body
+A bloc built in `setUp` lives outside the `testWidgets` FakeAsync zone and its events never
+advance with `pump()`. Build it inside the test (or inside a `BlocProvider(create:)`), and
+initialise `AnimationController`s in `initState`, not as lazy `late final` fields.
 
 ### TripModel / PackingListModel — copyWith propio
 Ambos modelos tienen @override copyWith() que devuelve el tipo concreto
@@ -81,7 +93,7 @@ Stream<List<PackingList>> watchPackingLists(String tid)  // FirestoreDataSource
 | M6 Profile + idioma + tema | ✅ |
 | M7 Premium UI | ✅ (RevenueCat pendiente) |
 | M8 Discovery + itinerario | ✅ (gateway demo; Google Places real bloqueado por cuentas del owner) |
-| M9 Feed de recomendaciones con swipe | 📋 especificado — `docs/handoff/recommendations-feed.md` |
+| M9 Feed de recomendaciones con swipe | ✅ reacciones por cuenta, gateway demo, sin prueba en dispositivo — `odd/tasks/swipe-recommendations.md` |
 | M10 LLM del asistente | 📋 especificado — `docs/handoff/ai-assistant-llm.md` |
 
 ## Estado del repositorio (2026-10-09)

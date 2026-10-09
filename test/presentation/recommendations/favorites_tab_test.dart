@@ -95,8 +95,8 @@ void main() {
   });
 
   Future<void> likeFixtures() async {
-    await repo.like(RecommendedPlace.from(prado));
-    await repo.like(RecommendedPlace.from(retiro));
+    await repo.like(RecommendedPlace.from(prado), accountId: '');
+    await repo.like(RecommendedPlace.from(retiro), accountId: '');
   }
 
   Future<void> pumpPage(
@@ -324,13 +324,13 @@ void main() {
 
       expect(find.text('Parque del Retiro'), findsNothing);
       expect(find.text('Museo del Prado'), findsOneWidget);
-      expect(repo.dislikedKeys, isEmpty);
+      expect(repo.dislikesFor(''), isEmpty);
       expect(find.text('Quitado de favoritos'), findsOneWidget);
     });
 
     testWidgets('lets the place appear in the feed again', (t) async {
       gateway.catalog = [prado];
-      await repo.like(RecommendedPlace.from(prado));
+      await repo.like(RecommendedPlace.from(prado), accountId: '');
       await pumpPage(t);
       expect(find.byKey(_top), findsNothing,
           reason: 'a liked place is not offered');

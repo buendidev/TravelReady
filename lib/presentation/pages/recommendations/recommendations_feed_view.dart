@@ -19,7 +19,8 @@ import '../../widgets/recommendations/swipe_card_deck.dart';
 ///
 /// Dislikes have no list in the UI by design, so this is the traveller's way
 /// out of accidental swipes. Favorites are never touched.
-Future<void> confirmAndResetFeed(BuildContext context) async {
+Future<void> confirmAndResetFeed(BuildContext context,
+    {required String accountId}) async {
   final l10n = AppLocalizations.of(context);
   final bloc = context.read<RecommendationsBloc>();
   final confirmed = await showDialog<bool>(
@@ -37,7 +38,9 @@ Future<void> confirmAndResetFeed(BuildContext context) async {
       ],
     ),
   );
-  if (confirmed == true) bloc.add(const FeedDislikesResetRequested());
+  if (confirmed == true) {
+    bloc.add(FeedDislikesResetRequested(accountId: accountId));
+  }
 }
 
 /// The "Descubrir" content: location, filters, the provider label and the deck.
@@ -49,7 +52,11 @@ Future<void> confirmAndResetFeed(BuildContext context) async {
 class RecommendationsFeedView extends StatefulWidget {
   final Trip trip;
 
-  const RecommendationsFeedView({super.key, required this.trip});
+  /// The signed-in account whose reactions this feed reads and writes.
+  final String accountId;
+
+  const RecommendationsFeedView(
+      {super.key, required this.trip, required this.accountId});
 
   @override
   State<RecommendationsFeedView> createState() =>
@@ -69,7 +76,8 @@ class _RecommendationsFeedViewState extends State<RecommendationsFeedView> {
     // effect rather than always from the trip destination.
     _city = TextEditingController(
         text: bloc.state.destinationHint ?? widget.trip.destination);
-    bloc.add(FeedStarted(destination: widget.trip.destination));
+    bloc.add(FeedStarted(
+        destination: widget.trip.destination, accountId: widget.accountId));
   }
 
   @override
@@ -119,7 +127,8 @@ class _RecommendationsFeedViewState extends State<RecommendationsFeedView> {
       duration: const Duration(seconds: 5),
       action: SnackBarAction(
         label: l10n.feedUndo,
-        onPressed: () => bloc.add(const FeedUndoRequested()),
+        onPressed: () =>
+            bloc.add(FeedUndoRequested(accountId: widget.accountId)),
       ),
     ));
   }
@@ -143,14 +152,16 @@ class _RecommendationsFeedViewState extends State<RecommendationsFeedView> {
               child: TextField(
                 controller: _city,
                 textInputAction: TextInputAction.search,
-                onSubmitted: (text) => bloc.add(FeedLocationChanged(text)),
+                onSubmitted: (text) => bloc.add(
+                    FeedLocationChanged(text, accountId: widget.accountId)),
                 decoration: InputDecoration(
                   labelText: l10n.feedCityLabel,
                   prefixIcon: const Icon(Icons.location_on_rounded),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.arrow_forward_rounded),
                     tooltip: l10n.search,
-                    onPressed: () => bloc.add(FeedLocationChanged(_city.text)),
+                    onPressed: () => bloc.add(FeedLocationChanged(_city.text,
+                        accountId: widget.accountId)),
                   ),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppSizes.radiusLg)),
@@ -171,7 +182,9 @@ class _RecommendationsFeedViewState extends State<RecommendationsFeedView> {
                         visualDensity: VisualDensity.compact,
                         label: Text(_filterText(l10n, filter)),
                         selected: state.filter == filter,
-                        onSelected: (_) => bloc.add(FeedFilterChanged(filter)),
+                        onSelected: (_) => bloc.add(
+                            FeedFilterChanged(filter,
+                                accountId: widget.accountId)),
                       ),
                   ],
                 ),
@@ -221,7 +234,8 @@ class _RecommendationsFeedViewState extends State<RecommendationsFeedView> {
           actions: [
             TRButton(
                 label: l10n.retry,
-                onPressed: () => bloc.add(const FeedRetried())),
+                onPressed: () =>
+                    bloc.add(FeedRetried(accountId: widget.accountId))),
           ],
         );
       case FeedStatus.empty:
@@ -239,21 +253,25 @@ class _RecommendationsFeedViewState extends State<RecommendationsFeedView> {
             if (state.filter != RecommendationFilter.all)
               TRButton(
                 label: l10n.feedShowAll,
-                onPressed: () => bloc
-                    .add(const FeedFilterChanged(RecommendationFilter.all)),
+                onPressed: () => bloc.add(FeedFilterChanged(
+                    RecommendationFilter.all,
+                    accountId: widget.accountId)),
               ),
             TRButton(
               label: l10n.feedResetAction,
               isOutlined: true,
-              onPressed: () => confirmAndResetFeed(context),
+              onPressed: () => confirmAndResetFeed(context,
+                accountId: widget.accountId),
             ),
           ],
         );
       case FeedStatus.ready:
         return SwipeCardDeck(
           cards: state.cards,
-          onReact: (card, reaction) => bloc
-              .add(FeedCardReacted(key: card.key, reaction: reaction)),
+          onReact: (card, reaction) => bloc.add(FeedCardReacted(
+              key: card.key,
+              reaction: reaction,
+              accountId: widget.accountId)),
         );
     }
   }

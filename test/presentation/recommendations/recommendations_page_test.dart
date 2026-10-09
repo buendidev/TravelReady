@@ -183,8 +183,8 @@ void main() {
 
       await swipe(t, right: true);
 
-      expect(repo.favorites.map((f) => f.name), [name]);
-      expect(repo.dislikedKeys, isEmpty);
+      expect(repo.favoritesFor('').map((f) => f.name), [name]);
+      expect(repo.dislikesFor(''), isEmpty);
       expect(find.text('Guardado en favoritos'), findsOneWidget);
     });
 
@@ -194,8 +194,8 @@ void main() {
 
       await swipe(t, right: false);
 
-      expect(repo.favorites, isEmpty);
-      expect(repo.dislikedKeys, hasLength(1));
+      expect(repo.favoritesFor(''), isEmpty);
+      expect(repo.dislikesFor(''), hasLength(1));
       expect(find.text('No volverás a ver este lugar'), findsOneWidget);
       expect(topName(t), isNot(name));
     });
@@ -209,8 +209,8 @@ void main() {
       await t.tap(find.text('No me interesa'));
       await t.pumpAndSettle();
 
-      expect(repo.favorites.map((f) => f.name), [liked]);
-      expect(repo.dislikedKeys, hasLength(1));
+      expect(repo.favoritesFor('').map((f) => f.name), [liked]);
+      expect(repo.dislikesFor(''), hasLength(1));
       expect(skipped, isNot(liked));
     });
 
@@ -244,7 +244,7 @@ void main() {
       expect(topName(t), name);
       expect(find.text('No se pudo guardar tu elección. Inténtalo de nuevo.'),
           findsOneWidget);
-      expect(repo.favorites, isEmpty);
+      expect(repo.favoritesFor(''), isEmpty);
     });
   });
 
@@ -331,8 +331,8 @@ void main() {
       await t.pumpAndSettle();
 
       expect(topName(t), name);
-      expect(repo.favorites, isEmpty);
-      expect(repo.dislikedKeys, isEmpty);
+      expect(repo.favoritesFor(''), isEmpty);
+      expect(repo.dislikesFor(''), isEmpty);
     });
 
     testWidgets('the snackbar undoes a dislike', (t) async {
@@ -344,7 +344,7 @@ void main() {
       await t.pumpAndSettle();
 
       expect(topName(t), name);
-      expect(repo.dislikedKeys, isEmpty);
+      expect(repo.dislikesFor(''), isEmpty);
     });
 
     testWidgets('only the last swipe can be undone', (t) async {
@@ -358,7 +358,7 @@ void main() {
       await t.pumpAndSettle();
 
       expect(topName(t), second);
-      expect(repo.favorites.map((f) => f.name), [first]);
+      expect(repo.favoritesFor('').map((f) => f.name), [first]);
     });
 
     testWidgets('the undo snackbar is short-lived, not persistent', (t) async {
@@ -402,7 +402,7 @@ void main() {
       await openReset(t);
 
       expect(find.text('¿Reiniciar el feed?'), findsOneWidget);
-      expect(repo.dislikedKeys, hasLength(1), reason: 'nothing cleared yet');
+      expect(repo.dislikesFor(''), hasLength(1), reason: 'nothing cleared yet');
     });
 
     testWidgets('cancelling leaves the dislikes alone', (t) async {
@@ -413,7 +413,7 @@ void main() {
       await t.tap(find.text('Cancelar'));
       await t.pumpAndSettle();
 
-      expect(repo.dislikedKeys, hasLength(1));
+      expect(repo.dislikesFor(''), hasLength(1));
       expect(find.text('¿Reiniciar el feed?'), findsNothing);
     });
 
@@ -429,8 +429,8 @@ void main() {
       await t.tap(find.widgetWithText(TextButton, 'Reiniciar'));
       await t.pumpAndSettle();
 
-      expect(repo.dislikedKeys, isEmpty);
-      expect(repo.favorites.map((f) => f.name), [liked]);
+      expect(repo.dislikesFor(''), isEmpty);
+      expect(repo.favoritesFor('').map((f) => f.name), [liked]);
       expect(find.text('Feed reiniciado'), findsOneWidget);
       final shown = <String>{};
       for (var i = 0; i < 12; i++) {
@@ -471,6 +471,6 @@ void main() {
       await swipe(t, right: true);
     }
 
-    expect(repo.favorites.map((f) => f.key).toSet(), seen);
+    expect(repo.favoritesFor('').map((f) => f.key).toSet(), seen);
   });
 }

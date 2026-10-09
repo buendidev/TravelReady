@@ -35,6 +35,7 @@ void main() {
         filter: filter,
         destinationHint: 'Madrid',
         seed: 1,
+        accountId: 'me',
         seenKeys: seen,
         remaining: remaining,
       );
@@ -89,7 +90,7 @@ void main() {
 
   test('does not offer a place reacted to in the meantime', () async {
     final liked = fakePlace('nature-0', PlaceCategory.nature);
-    await favorites.like(RecommendedPlace.from(liked));
+    await favorites.like(RecommendedPlace.from(liked), accountId: 'me');
 
     final added = (await run(remaining: 0)).getOrElse((_) => []);
 

@@ -11,5 +11,6 @@ class ResetDislikesUseCase {
 
   ResetDislikesUseCase(this._repository);
 
-  Future<Either<Failure, Unit>> call() => _repository.resetDislikes();
+  Future<Either<Failure, Unit>> call({required String accountId}) =>
+      _repository.resetDislikes(accountId: accountId);
 }

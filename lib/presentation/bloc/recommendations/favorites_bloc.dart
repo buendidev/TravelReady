@@ -35,7 +35,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
     // need to wait for the cancellation to settle before starting the new one.
     unawaited(_subscription?.cancel());
     emit(const FavoritesLoading());
-    _subscription = _repo.watchFavorites().listen(
+    _subscription = _repo.watchFavorites(accountId: e.accountId).listen(
           (either) => add(_FavoritesChanged(either)),
           onError: (Object _) => add(const _FavoritesChanged(
               Left(UnexpectedFailure('Error cargando favoritos.')))),
@@ -50,7 +50,8 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
 
   Future<void> _onRemoved(
       FavoriteRemoved e, Emitter<FavoritesState> emit) async {
-    final result = await _repo.removeFavorite(e.key);
+    final result =
+        await _repo.removeFavorite(e.key, accountId: e.accountId);
     final current = state;
     if (result.isLeft() && current is FavoritesReady) {
       emit(FavoritesReady(

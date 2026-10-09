@@ -13,11 +13,14 @@ class ReactToPlaceUseCase {
 
   Future<Either<Failure, AppliedReaction>> call(
     RecommendedPlace place,
-    PlaceReaction reaction,
-  ) async {
+    PlaceReaction reaction, {
+    required String accountId,
+  }) async {
     final result = switch (reaction) {
-      PlaceReaction.like => await _repository.like(place),
-      PlaceReaction.dislike => await _repository.dislike(place.key),
+      PlaceReaction.like =>
+        await _repository.like(place, accountId: accountId),
+      PlaceReaction.dislike =>
+        await _repository.dislike(place.key, accountId: accountId),
     };
     return result.map((_) => AppliedReaction(place: place, reaction: reaction));
   }

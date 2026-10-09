@@ -73,12 +73,19 @@ class FakePlacesGateway implements PlacesGateway {
   }
 }
 
+/// Per-account state of [InMemoryFavoritesRepository]: favorites and dislikes
+/// are disjoint per account, like the SQLite tables.
+class _AccountReactions {
+  final Map<String, FavoritePlace> favorites = {};
+  final Set<String> dislikes = {};
+}
+
 /// Full in-memory [FavoritesRepository] that enforces the same contract as the
-/// SQLite one: like and dislike are mutually exclusive, removing a favorite is
-/// not a dislike, and a dislike keeps only the key.
+/// SQLite one: reactions are scoped to the account, like and dislike are
+/// mutually exclusive, removing a favorite is not a dislike, and a dislike
+/// keeps only the key.
 class InMemoryFavoritesRepository implements FavoritesRepository {
-  final Map<String, FavoritePlace> _favorites = {};
-  final Set<String> _dislikes = {};
+  final Map<String, _AccountReactions> _accounts = {};
   final StreamController<void> _changes = StreamController<void>.broadcast();
   int _tick = 0;
 
@@ -93,11 +100,19 @@ class InMemoryFavoritesRepository implements FavoritesRepository {
   /// Live [watchFavorites] subscriptions, to catch a consumer that stacks them.
   int activeWatchers = 0;
 
-  Set<String> get dislikedKeys => Set.unmodifiable(_dislikes);
-  List<FavoritePlace> get favorites => _sorted();
+  _AccountReactions _account(String accountId) =>
+      _accounts.putIfAbsent(accountId, _AccountReactions.new);
 
-  List<FavoritePlace> _sorted() => _favorites.values.toList()
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  /// The account [favoritesFor] and [dislikesFor] inspect.
+  String inspectedAccountId = '';
+
+  Set<String> dislikesFor(String accountId) =>
+      Set.unmodifiable(_account(accountId).dislikes);
+  List<FavoritePlace> favoritesFor(String accountId) => _sorted(accountId);
+
+  List<FavoritePlace> _sorted(String accountId) =>
+      _account(accountId).favorites.values.toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   Either<Failure, Unit> _write(void Function() action, String entry) {
     if (writeFailure != null) return Left(writeFailure!);
@@ -108,17 +123,22 @@ class InMemoryFavoritesRepository implements FavoritesRepository {
   }
 
   @override
-  Future<Either<Failure, List<FavoritePlace>>> getFavorites() async =>
-      readFailure != null ? Left(readFailure!) : Right(_sorted());
+  Future<Either<Failure, List<FavoritePlace>>> getFavorites(
+      {required String accountId}) async =>
+      readFailure != null
+          ? Left(readFailure!)
+          : Right(_sorted(accountId));
 
   @override
-  Stream<Either<Failure, List<FavoritePlace>>> watchFavorites() {
+  Stream<Either<Failure, List<FavoritePlace>>> watchFavorites(
+      {required String accountId}) {
     late StreamController<Either<Failure, List<FavoritePlace>>> controller;
     StreamSubscription<void>? subscription;
     void emit() {
       if (controller.isClosed) return;
-      controller.add(
-          readFailure != null ? Left(readFailure!) : Right(_sorted()));
+      controller.add(readFailure != null
+          ? Left(readFailure!)
+          : Right(_sorted(accountId)));
     }
 
     controller = StreamController(
@@ -136,36 +156,50 @@ class InMemoryFavoritesRepository implements FavoritesRepository {
   }
 
   @override
-  Future<Either<Failure, Set<String>>> getReactedKeys() async =>
+  Future<Either<Failure, Set<String>>> getReactedKeys(
+      {required String accountId}) async =>
       readFailure != null
           ? Left(readFailure!)
-          : Right({..._favorites.keys, ..._dislikes});
+          : Right({
+              ..._account(accountId).favorites.keys,
+              ..._account(accountId).dislikes
+            });
 
   @override
-  Future<Either<Failure, Unit>> like(RecommendedPlace place) async => _write(() {
-        _dislikes.remove(place.key);
-        _favorites[place.key] = FavoritePlace.fromRecommended(place,
+  Future<Either<Failure, Unit>> like(RecommendedPlace place,
+      {required String accountId}) async =>
+      _write(() {
+        final account = _account(accountId);
+        account.dislikes.remove(place.key);
+        account.favorites[place.key] = FavoritePlace.fromRecommended(place,
             createdAt: DateTime.utc(2026, 1, 1).add(Duration(minutes: _tick++)));
       }, 'like:${place.key}');
 
   @override
-  Future<Either<Failure, Unit>> dislike(String placeKey) async =>
+  Future<Either<Failure, Unit>> dislike(String placeKey,
+      {required String accountId}) async =>
       _write(() {
-        _favorites.remove(placeKey);
-        _dislikes.add(placeKey);
+        final account = _account(accountId);
+        account.favorites.remove(placeKey);
+        account.dislikes.add(placeKey);
       }, 'dislike:$placeKey');
 
   @override
-  Future<Either<Failure, Unit>> removeFavorite(String placeKey) async =>
-      _write(() => _favorites.remove(placeKey), 'removeFavorite:$placeKey');
+  Future<Either<Failure, Unit>> removeFavorite(String placeKey,
+          {required String accountId}) async =>
+      _write(() => _account(accountId).favorites.remove(placeKey),
+          'removeFavorite:$placeKey');
 
   @override
-  Future<Either<Failure, Unit>> removeDislike(String placeKey) async =>
-      _write(() => _dislikes.remove(placeKey), 'removeDislike:$placeKey');
+  Future<Either<Failure, Unit>> removeDislike(String placeKey,
+          {required String accountId}) async =>
+      _write(() => _account(accountId).dislikes.remove(placeKey),
+          'removeDislike:$placeKey');
 
   @override
-  Future<Either<Failure, Unit>> resetDislikes() async =>
-      _write(_dislikes.clear, 'resetDislikes');
+  Future<Either<Failure, Unit>> resetDislikes(
+          {required String accountId}) async =>
+      _write(() => _account(accountId).dislikes.clear(), 'resetDislikes');
 
   void dispose() => _changes.close();
 }

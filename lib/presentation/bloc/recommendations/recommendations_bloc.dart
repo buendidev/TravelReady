@@ -62,7 +62,7 @@ class RecommendationsBloc
     on<FeedStarted>(_onStarted);
     on<FeedFilterChanged>(_onFilterChanged);
     on<FeedLocationChanged>(_onLocationChanged);
-    on<FeedRetried>((_, emit) => _load(emit));
+    on<FeedRetried>((e, emit) => _load(emit, accountId: e.accountId));
     on<FeedCardReacted>(_onReacted);
     on<FeedUndoRequested>(_onUndo);
     on<FeedDislikesResetRequested>(_onReset);
@@ -78,19 +78,19 @@ class RecommendationsBloc
   Future<void> _onStarted(
       FeedStarted e, Emitter<RecommendationsState> emit) async {
     _defaultDestination = e.destination;
-    await _load(emit);
+    await _load(emit, accountId: e.accountId);
   }
 
   Future<void> _onFilterChanged(
       FeedFilterChanged e, Emitter<RecommendationsState> emit) async {
     _filter = e.filter;
-    await _load(emit);
+    await _load(emit, accountId: e.accountId);
   }
 
   Future<void> _onLocationChanged(
       FeedLocationChanged e, Emitter<RecommendationsState> emit) async {
     _typedLocation = e.text.trim();
-    await _load(emit);
+    await _load(emit, accountId: e.accountId);
   }
 
   RecommendationsState _snapshot(
@@ -110,7 +110,7 @@ class RecommendationsBloc
       );
 
   Future<void> _load(Emitter<RecommendationsState> emit,
-      {FeedNotice? notice}) async {
+      {required String accountId, FeedNotice? notice}) async {
     final token = ++_loadToken;
     _seen.clear();
     _providerExhausted = false;
@@ -121,6 +121,7 @@ class RecommendationsBloc
       filter: _filter,
       destinationHint: _location,
       seed: _seed,
+      accountId: accountId,
     );
     if (token != _loadToken) return;
 
@@ -144,7 +145,10 @@ class RecommendationsBloc
       return;
     }
 
-    cards = [...cards, ...await _topUp(cards.length, token)];
+    cards = [
+      ...cards,
+      ...await _topUp(cards.length, token, accountId: accountId),
+    ];
     if (token != _loadToken) return;
     emit(_snapshot(cards.isEmpty ? FeedStatus.exhausted : FeedStatus.ready,
         cards: cards, notice: notice));
@@ -153,13 +157,15 @@ class RecommendationsBloc
   /// Asks for more cards when the deck is running low. Returns only new ones.
   /// A provider that has nothing new is remembered, so later swipes do not
   /// repeat the request.
-  Future<List<RecommendedPlace>> _topUp(int remaining, int token) async {
+  Future<List<RecommendedPlace>> _topUp(int remaining, int token,
+      {required String accountId}) async {
     if (_providerExhausted || remaining >= feedRefillThreshold) return const [];
     final result = await _refill(
       filter: _filter,
       destinationHint: _location,
       seed: _seed,
       seenKeys: Set.of(_seen),
+      accountId: accountId,
       remaining: remaining,
     );
     if (token != _loadToken) return const [];
@@ -195,7 +201,7 @@ class RecommendationsBloc
       revision: ++_revision,
     ));
 
-    final result = await _react(card, e.reaction);
+    final result = await _react(card, e.reaction, accountId: e.accountId);
     if (token != _loadToken) return;
 
     final failure = result.fold<Failure?>((f) => f, (_) => null);
@@ -211,7 +217,8 @@ class RecommendationsBloc
       return;
     }
 
-    final added = await _topUp(state.cards.length, token);
+    final added =
+        await _topUp(state.cards.length, token, accountId: e.accountId);
     if (token != _loadToken) return;
     final current = state.cards.map((c) => c.key).toSet();
     final merged = [
@@ -229,7 +236,7 @@ class RecommendationsBloc
     final applied = state.lastReaction;
     if (applied == null) return;
 
-    final result = await _undo(applied);
+    final result = await _undo(applied, accountId: e.accountId);
     final failure = result.fold<Failure?>((f) => f, (_) => null);
     if (failure != null) {
       emit(state.copyWith(
@@ -249,13 +256,13 @@ class RecommendationsBloc
 
   Future<void> _onReset(FeedDislikesResetRequested e,
       Emitter<RecommendationsState> emit) async {
-    final result = await _resetDislikes();
+    final result = await _resetDislikes(accountId: e.accountId);
     final failure = result.fold<Failure?>((f) => f, (_) => null);
     if (failure != null) {
       emit(state.copyWith(
           notice: FeedNotice.resetFailed, revision: ++_revision));
       return;
     }
-    await _load(emit, notice: FeedNotice.resetDone);
+    await _load(emit, accountId: e.accountId, notice: FeedNotice.resetDone);
   }
 }

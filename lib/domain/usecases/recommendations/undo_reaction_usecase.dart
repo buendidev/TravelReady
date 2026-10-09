@@ -12,9 +12,12 @@ class UndoReactionUseCase {
 
   UndoReactionUseCase(this._repository);
 
-  Future<Either<Failure, Unit>> call(AppliedReaction applied) =>
+  Future<Either<Failure, Unit>> call(AppliedReaction applied,
+          {required String accountId}) =>
       switch (applied.reaction) {
-        PlaceReaction.like => _repository.removeFavorite(applied.place.key),
-        PlaceReaction.dislike => _repository.removeDislike(applied.place.key),
+        PlaceReaction.like => _repository.removeFavorite(applied.place.key,
+            accountId: accountId),
+        PlaceReaction.dislike => _repository.removeDislike(applied.place.key,
+            accountId: accountId),
       };
 }

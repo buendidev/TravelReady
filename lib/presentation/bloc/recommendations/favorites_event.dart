@@ -6,8 +6,13 @@ sealed class FavoritesEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Subscribes to the favorites of [accountId], the signed-in account.
 final class FavoritesStarted extends FavoritesEvent {
-  const FavoritesStarted();
+  final String accountId;
+  const FavoritesStarted({required this.accountId});
+
+  @override
+  List<Object?> get props => [accountId];
 }
 
 /// Internal: the repository stream produced a new list (or a failure).
@@ -21,7 +26,8 @@ final class _FavoritesChanged extends FavoritesEvent {
 /// "Quitar de favoritos": deletes the favorite. It is not a dislike.
 final class FavoriteRemoved extends FavoritesEvent {
   final String key;
-  const FavoriteRemoved(this.key);
+  final String accountId;
+  const FavoriteRemoved(this.key, {required this.accountId});
   @override
-  List<Object?> get props => [key];
+  List<Object?> get props => [key, accountId];
 }

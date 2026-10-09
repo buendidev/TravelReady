@@ -21,7 +21,11 @@ import '../../widgets/recommendations/feed_status_message.dart';
 class FavoritesView extends StatelessWidget {
   final Trip trip;
 
-  const FavoritesView({super.key, required this.trip});
+  /// The signed-in account whose favorites are listed.
+  final String accountId;
+
+  const FavoritesView(
+      {super.key, required this.trip, required this.accountId});
 
   @override
   Widget build(BuildContext context) {
@@ -52,8 +56,9 @@ class FavoritesView extends StatelessWidget {
             actions: [
               TRButton(
                 label: l10n.retry,
-                onPressed: () =>
-                    context.read<FavoritesBloc>().add(const FavoritesStarted()),
+                onPressed: () => context
+                    .read<FavoritesBloc>()
+                    .add(FavoritesStarted(accountId: accountId)),
               ),
             ],
           ),
@@ -77,7 +82,8 @@ class FavoritesView extends StatelessWidget {
                   label: l10n.favoritesRemove,
                   onPressed: () => context
                       .read<FavoritesBloc>()
-                      .add(FavoriteRemoved(favorite.key)),
+                      .add(FavoriteRemoved(favorite.key,
+                          accountId: accountId)),
                 ),
               );
             },
