@@ -86,9 +86,11 @@ Stream<List<PackingList>> watchPackingLists(String tid)  // FirestoreDataSource
 
 ## Estado del repositorio (2026-10-09)
 
-- `main` con CI verde: `analyze`, checker estructural del sitio, tests de `tool/`,
-  `flutter test` (46 archivos) y un job aparte con el emulador de Firestore
-  (`rules_test/firestore.rules.test.js`).
+- `main` con CI verde: `analyze`, checker estructural del sitio, tests de `tool/`
+  y `flutter test` (46 archivos). El job del emulador de Firestore
+  (`rules_test/firestore.rules.test.js`) **todavia NO esta en `main`**: vive en la
+  rama del PR #7, sin mergear. Antes de afirmar que un check corre, verificarlo en
+  `main` y no en la rama donde se escribio.
 - Endurecimiento de `firestore.rules` (el directorio de usuarios sigue abierto a
   propósito, con decisión de producto pendiente de implementar) más la suite del
   emulador en `rules_test/`, con job propio en CI.
