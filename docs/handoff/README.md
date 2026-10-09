@@ -21,10 +21,13 @@ opinions. Fix them first (they are cheap) or the handoff will produce fiction:
 1. **`AGENTS.md` documented Hive as a critical rule.** There is no Hive
    anywhere: `pubspec.yaml` has `sqflite: ^2.3.0` and no `hive`. Local
    persistence is SQLite through `lib/core/database/database_helper.dart`.
-   **Fixed in this pack**: the rule now describes the real SQLite path.
+   **Corrected in the working copy only**: the rule now describes the real
+   SQLite path, but `AGENTS.md` is not tracked (see item 7), so that correction
+   does not travel through git.
 2. **`AGENTS.md` pinned wrong Firebase versions** (`firebase_auth ^6.4`,
    `cloud_firestore ^6.3` against `^5.5.2` and `^5.6.5` in `pubspec.yaml`).
-   **Fixed in this pack.** (`google_sign_in: ^6.2.1` did match.)
+   **Corrected in the working copy only**, for the same reason as item 1 (see
+   item 7). (`google_sign_in: ^6.2.1` did match.)
 3. **`DATABASE_GUIDE.md`, `AWS_NOTES.md` and `MARIADB_SETUP.md` describe a
    backend and a persistence layer that do not exist.** There is no `functions/`,
    no EC2, no MariaDB, and **no Hive**: `DATABASE_GUIDE.md` (297 lines, the worst
