@@ -5,10 +5,11 @@ Owner-originated feature. Provider decided by the owner: **NaN Builders**
 
 ## 1. Today's state (verified)
 
-- The "Asistente IA" is local and rule-based:
-  `lib/presentation/pages/chats/chat_detail_page.dart:55` and `:211`
-  (comment `Asistente IA local`). It answers from canned logic, offline, with no
-  provider.
+- The "Asistente IA" is local and rule-based. All of it sits behind the
+  `Asistente IA local` marker inside
+  `lib/presentation/pages/chats/chat_detail_page.dart` — grep the marker rather
+  than a line number, which moves with the next edit. It answers from canned
+  logic, offline, with no provider.
 - There is no backend: no `functions/`, no Cloud Functions, no API of our own.
   The remote side is Firestore (rules + indexes + `storage.rules`).
 - `.env` carries only `OPENWEATHER_API_KEY`, `GOOGLE_MAPS_API_KEY` and
