@@ -42,3 +42,31 @@ jobs:
         run: flutter test
       - name: Check tracked build inputs
         run: python3 tool/check_tracked_inputs.py
+
+  firestore-rules:
+    name: Firestore rules emulator suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: rules_test
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: rules_test/package-lock.json
+      # The runner image ships an older JDK (17) and firebase-tools 15 refuses
+      # anything below Java 21, so the emulator does not start without this.
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Run Firestore rules suite against the emulator
+        run: npx firebase emulators:exec --only firestore --project demo-travelready "npm test"

@@ -40,8 +40,26 @@ service cloud.firestore {
       // memberIds se fija al crear el chat: un miembro puede actualizar lo
       // suyo (unreadBy, contadores) pero no sumar uids ni reescribir la
       // lista, que es como se conservaba acceso despues de una expulsión.
+      //
+      // Tras crear el chat el cliente solo escribe unreadBy, lastMessage y
+      // updatedAt (firestore_chats_datasource.dart:218-230 y 297-299);
+      // hasOnly fija ese conjunto para que ningún miembro reescriba otros
+      // campos (name, type, createdAt, ...).
+      //
+      // NO restrinjas qué clave de unreadBy puede tocar el llamador: al
+      // enviar un mensaje el remitente incrementa unreadBy de TODOS los
+      // miembros menos él mismo (:221-223), así que exigir solo la clave
+      // propia rompería el envío de mensajes. Es deliberado.
+      //
+      // hasOnly mira las claves cuyo VALOR cambia, no las que se escriben:
+      // reescribir name con el mismo valor que ya tenía pasa (el valor no
+      // cambia, así que no es un agujero), y borrar lastMessage o el mapa
+      // unreadBy entero también pasa, porque borrar es cambiar. Un miembro
+      // puede dejar su chat sin contadores, no puede cambiarle la forma.
       allow update: if isMember(resource.data) &&
-        request.resource.data.memberIds == resource.data.memberIds;
+        request.resource.data.memberIds == resource.data.memberIds &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['unreadBy', 'lastMessage', 'updatedAt']);
       allow delete: if false;
 
       match /messages/{msgId} {
